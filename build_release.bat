@@ -11,7 +11,7 @@ if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxi
 
 set compiler_flags=/LD /O2 /Ob3 /TC /I include
 set linker_flags=/OUT:bin\sesame-sdk.dll
-set build_targets=lib\csgo-sdk\*.c lib\hashmap\*.c lib\str\*.c lib\vector\*.c lib\minhook\*.c lib\minhook\hde\*.c src\*.c
+set build_targets=lib\csgo-sdk\*.c lib\hashmap\*.c lib\str\*.c lib\vector\*.c lib\minhook\*.c lib\minhook\hde\*.c lib\yyjson\*.c src\*.c
 set include_dirs=/I"C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/Include" /I"."
 
 cl.exe %compiler_flags% %include_dirs% %build_targets% /link %linker_flags%
