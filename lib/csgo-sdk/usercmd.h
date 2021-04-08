@@ -58,7 +58,7 @@ typedef struct {
 	PAD ( 24 );
 } usercmd;
 
-crc32 usercmd_get_checksum ( usercmd* this ) {
+static inline crc32 usercmd_get_checksum ( usercmd* this ) {
 	crc32 crc;
 	crc32_init ( crc );
 	

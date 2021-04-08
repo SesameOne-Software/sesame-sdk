@@ -43,6 +43,6 @@ typedef struct {
 
 typedef struct iclient iclient;
 
-VIRTUAL ( iclient, client_class*, get_classes, 8, ( this ) );
+VIRTUAL ( iclient, client_class*, get_classes, 8, ( this, NULL ) );
 
 #endif // !SDK_CLIENT_H

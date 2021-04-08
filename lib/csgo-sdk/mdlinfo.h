@@ -97,9 +97,9 @@ static inline mstudiobone* studiohdr_bone ( studiohdr* this, int i ) {
 typedef struct mdl mdl;
 typedef struct imdlinfo imdlinfo;
 
-VIRTUAL ( imdlinfo, mdl*, get_mdl, 1, ( this, idx ), uint32_t idx );
-VIRTUAL ( imdlinfo, uint32_t, get_mdl_idx, 2, ( this, name ), const char* name );
-VIRTUAL ( imdlinfo, const char*, get_mdl_name, 3, ( this, pmdl ), mdl* pmdl );
-VIRTUAL ( imdlinfo, studiohdr*, get_studio_mdl, 32, ( this, pmdl ), mdl* pmdl );
+VIRTUAL ( imdlinfo, mdl*, get_mdl, 1, ( this, NULL, idx ), uint32_t idx );
+VIRTUAL ( imdlinfo, uint32_t, get_mdl_idx, 2, ( this, NULL, name ), const char* name );
+VIRTUAL ( imdlinfo, const char*, get_mdl_name, 3, ( this, NULL, pmdl ), mdl* pmdl );
+VIRTUAL ( imdlinfo, studiohdr*, get_studio_mdl, 32, ( this, NULL, pmdl ), mdl* pmdl );
 
 #endif // !SDK_MDLINFO_H

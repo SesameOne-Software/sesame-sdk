@@ -137,7 +137,7 @@ OFFSET ( econitem, uint32_t, account_id, 0x1C );
 OFFSET ( econitem, const char*, icon_name, 0x198 );
 OFFSET ( econitem, const char*, mdl_name, 0x94 );
 OFFSET ( econitem, const char*, world_mdl_name, 0x9C );
-VIRTUAL ( econitem, const char*, mdl_name, 5, (this) );
+VIRTUAL ( econitem, const char*, mdl_name, 5, (this, NULL) );
 OFFSET ( econitem, uint64_t, item_id, 0x8 );
 OFFSET ( econitem, uint64_t, original_id, 0x10 );
 OFFSET ( econitem, uint16_t, item_definition_index, 0x24 );
@@ -250,9 +250,9 @@ NETVAR ( weapon, float, cycle, "DT_BaseAnimating->m_flCycle" );
 NETVAR ( weapon, float, anim_time, "DT_BaseEntity->m_flAnimTime" );
 NETVAR ( weapon, econitem, econ_item, "DT_BaseAttributableItem->m_Item" );
 
-VIRTUAL ( weapon, void, update_accuracy, 483, ( this ) );
-VIRTUAL ( weapon, float, innacuracy, 482, ( this ) );
-VIRTUAL ( weapon, float, spread, 452, ( this ) );
-VIRTUAL ( weapon, float, max_speed, 441, ( this ) );
+VIRTUAL ( weapon, void, update_accuracy, 483, ( this , NULL) );
+VIRTUAL ( weapon, float, innacuracy, 482, ( this, NULL ) );
+VIRTUAL ( weapon, float, spread, 452, ( this , NULL) );
+VIRTUAL ( weapon, float, max_speed, 441, ( this, NULL ) );
 
 #endif // !SDK_WEAPON_H

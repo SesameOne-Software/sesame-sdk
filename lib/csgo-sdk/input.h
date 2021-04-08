@@ -33,11 +33,11 @@ typedef struct {
 	verified_usercmd* verified_cmds;
 } iinput;
 
-usercmd* iinput_get_cmd ( iinput* this, int sequence_number ) {
+static inline usercmd* iinput_get_cmd ( iinput* this, int sequence_number ) {
 	return &this->cmds [ sequence_number % MULTIPLAYER_BACKUP ];
 }
 
-verified_usercmd* iinput_get_verified_cmd ( iinput* this, int sequence_number ) {
+static inline verified_usercmd* iinput_get_verified_cmd ( iinput* this, int sequence_number ) {
 	return &this->verified_cmds [ sequence_number % MULTIPLAYER_BACKUP ];
 }
 

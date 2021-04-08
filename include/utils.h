@@ -9,8 +9,10 @@
 #include "lib/vector/vector.h"
 #include "lib/hashmap/hashmap.h"
 #include "lib/str/str.h"
+#include "lib/yyjson/yyjson.h"
 
 /* utility macros */
+#define clamp(x, a, b) max(a, min(x, b))
 
 /* from google's chromium project */
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
@@ -27,7 +29,7 @@
 
 #define VIRTUAL( _struct, type, name, idx, _args, ... ) \
 static inline type COMBINE( COMBINE(_struct, _), name ) ( _struct* this, __VA_ARGS__ ) { \
-	return ((##type##(__thiscall*)(_struct*, __VA_ARGS__))utils_vfunc ( this, idx ))##_args##; \
+	return ((##type##(__fastcall*)(_struct*, void*, __VA_ARGS__))utils_vfunc ( this, idx ))##_args##; \
 }
 
 /* generic utility functions */

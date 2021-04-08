@@ -29,17 +29,17 @@ typedef struct {
 
 typedef struct nci nci;
 
-VIRTUAL ( nci, const char*, name, 0, ( this ) );
-VIRTUAL ( nci, const char*, address, 1, ( this ) );
-VIRTUAL ( nci, float, time, 2, ( this ) );
-VIRTUAL ( nci, float, time_connected, 3, ( this ) );
-VIRTUAL ( nci, int, buffer_size, 4, ( this ) );
-VIRTUAL ( nci, int, data_rate, 5, ( this ) );
-VIRTUAL ( nci, bool, is_loopback, 6, ( this ) );
-VIRTUAL ( nci, bool, is_timing_out, 7, ( this ) );
-VIRTUAL ( nci, bool, is_playback, 8, ( this ) );
-VIRTUAL ( nci, float, latency, 9, ( this, flow ), int flow );
-VIRTUAL ( nci, float, avg_latency, 10, ( this, flow ), int flow );
+VIRTUAL ( nci, const char*, name, 0, ( this, NULL ) );
+VIRTUAL ( nci, const char*, address, 1, ( this, NULL ) );
+VIRTUAL ( nci, float, time, 2, ( this , NULL) );
+VIRTUAL ( nci, float, time_connected, 3, ( this , NULL) );
+VIRTUAL ( nci, int, buffer_size, 4, ( this , NULL) );
+VIRTUAL ( nci, int, data_rate, 5, ( this, NULL ) );
+VIRTUAL ( nci, bool, is_loopback, 6, ( this, NULL ) );
+VIRTUAL ( nci, bool, is_timing_out, 7, ( this, NULL ) );
+VIRTUAL ( nci, bool, is_playback, 8, ( this, NULL ) );
+VIRTUAL ( nci, float, latency, 9, ( this, NULL, flow ), int flow );
+VIRTUAL ( nci, float, avg_latency, 10, ( this, NULL, flow ), int flow );
 
 typedef struct {
 	PAD ( 20 );
@@ -91,16 +91,16 @@ static inline int* iclientstate_get_out_seq_num ( iclientstate* this ) {
 
 typedef struct iengine iengine;
 
-VIRTUAL ( iengine, void, get_screen_size, 5, ( this, w, h ), int* w, int* h );
-VIRTUAL ( iengine, void, server_cmd, 6, ( this, cmd, reliable ), const char* cmd, bool reliable );
-VIRTUAL ( iengine, void, client_cmd, 7, ( this, cmd ), const char* cmd );
-VIRTUAL ( iengine, bool, get_player_info, 8, ( this, idx, pinfo ), int idx, player_info* pinfo );
-VIRTUAL ( iengine, int, get_local_player, 12, ( this ) );
-VIRTUAL ( iengine, void, get_angles, 18, ( this, ang ), vec3* ang );
-VIRTUAL ( iengine, void, set_angles, 19, ( this, ang ), vec3* ang );
-VIRTUAL ( iengine, bool, is_in_game, 26, ( this ) );
-VIRTUAL ( iengine, bool, is_connected, 27, ( this ) );
-VIRTUAL ( iengine, nci*, get_nci, 78, ( this ) );
-VIRTUAL ( iengine, void, execute_cmd, 108, ( this, cmd ), const char* cmd );
+VIRTUAL ( iengine, void, get_screen_size, 5, ( this, NULL, w, h ), int* w, int* h );
+VIRTUAL ( iengine, void, server_cmd, 6, ( this, NULL, cmd, reliable ), const char* cmd, bool reliable );
+VIRTUAL ( iengine, void, client_cmd, 7, ( this, NULL, cmd ), const char* cmd );
+VIRTUAL ( iengine, bool, get_player_info, 8, ( this, NULL, idx, pinfo ), int idx, player_info* pinfo );
+VIRTUAL ( iengine, int, get_local_player, 12, ( this, NULL ) );
+VIRTUAL ( iengine, void, get_angles, 18, ( this, NULL, ang ), vec3* ang );
+VIRTUAL ( iengine, void, set_angles, 19, ( this, NULL, ang ), vec3* ang );
+VIRTUAL ( iengine, bool, is_in_game, 26, ( this, NULL ) );
+VIRTUAL ( iengine, bool, is_connected, 27, ( this, NULL ) );
+VIRTUAL ( iengine, nci*, get_nci, 78, ( this, NULL ) );
+VIRTUAL ( iengine, void, execute_cmd, 108, ( this, NULL, cmd ), const char* cmd );
 
 #endif // !SDK_ENGINE_H

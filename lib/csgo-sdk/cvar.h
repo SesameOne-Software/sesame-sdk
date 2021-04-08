@@ -78,12 +78,12 @@ static inline void cvar_null_cb ( cvar* this ) {
 	*( int* ) ( ( uintptr_t ) &this->callbacks + 0xC ) = 0;
 }
 
-VIRTUAL ( cvar, void, set_value, 14, ( this, value ), const char* value );
-VIRTUAL ( cvar, void, set_value, 15, ( this, value ), float value );
-VIRTUAL ( cvar, void, set_value, 16, ( this, value ), int value );
+VIRTUAL ( cvar, void, set_value, 14, ( this, NULL, value ), const char* value );
+VIRTUAL ( cvar, void, set_value, 15, ( this, NULL, value ), float value );
+VIRTUAL ( cvar, void, set_value, 16, ( this, NULL, value ), int value );
 
 typedef struct icvar icvar;
 
-VIRTUAL ( icvar, cvar*, find, 14, ( this, name ), const char* name );
+VIRTUAL ( icvar, cvar*, find, 14, ( this, NULL, name ), const char* name );
 
 #endif // !SDK_CVAR_H

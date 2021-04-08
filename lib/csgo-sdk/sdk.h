@@ -27,7 +27,7 @@
 #include "netvars.h"
 #include "physics.h"
 #include "player.h"
-#include "prediction.h"
+#include "pred.h"
 #include "quat.h"
 #include "renderview.h"
 #include "surface.h"
@@ -49,16 +49,16 @@ extern iglobals* cs_iglobals;
 extern iphys* cs_iphys;
 extern itrace* cs_itrace;
 extern iclientstate* cs_iclientstate;
-extern imem_alloc* cs_imemalloc;
-extern iprediction* cs_ipred;
-extern imove_helper* cs_imovehelper;
-extern imovement* cs_imove;
+extern imemalloc* cs_imemalloc;
+extern ipred* cs_ipred;
+extern imovehelper* cs_imovehelper;
+extern imove* cs_imove;
 extern imdlcache* cs_imdlcache;
 extern iinput* cs_iinput;
 extern icvar* cs_icvar;
 extern ievents* cs_ievents;
 extern ibeams* cs_ibeams;
-extern IDirect3DDevice9* cs_idev;
+extern IDirect3DDevice9* cs_id3ddev;
 
 static inline void* cs_create_interface ( const char* module, const char* name ) {
 	const void* ( *create_interface_export )( const char*, int ) = GetProcAddress ( GetModuleHandleA ( module ), "CreateInterface" );

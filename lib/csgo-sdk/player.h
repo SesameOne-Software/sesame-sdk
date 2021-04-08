@@ -219,10 +219,10 @@ static inline void* player_seq_desc( player* this, int seq ) {
 	return (void* )( (uintptr_t)group_hdr + *(uintptr_t* )( (uintptr_t)group_hdr + 0xC0 ) + 0xD4 * i );
 }
 
-VIRTUAL ( player, void, set_local_viewangles, 371, ( this, angles ), vec3* angles );
-VIRTUAL ( player, void, think, 138, ( this ) );
-VIRTUAL ( player, void, pre_think, 317, ( this ) );
-VIRTUAL ( player, void, post_think, 318, ( this ) );
+VIRTUAL ( player, void, set_local_viewangles, 371, ( this, NULL, angles ), vec3* angles );
+VIRTUAL ( player, void, think, 138, ( this, NULL ) );
+VIRTUAL ( player, void, pre_think, 317, ( this , NULL) );
+VIRTUAL ( player, void, post_think, 318, ( this, NULL ) );
 
 bool player_physics_run_think( player* this, int unk01 );
 
@@ -230,7 +230,7 @@ static inline vec3 player_world_space(player* this, ) {
 	vec3 wspace;
 	vec3 va, vb;
 
-	((void( __thiscall* )( renderable*, vec3*, vec3* ))utils_get_vfunc( entity_renderable((entity*)this), 17 ))( entity_renderable((entity*)this), &va, &vb );
+	((void( __thiscall* )( renderable*, vec3*, vec3* ))utils_vfunc( entity_renderable((entity*)this), 17 ))( entity_renderable((entity*)this), &va, &vb );
 	
 	wspace = *entity_origin((entity*)this );
 	wspace.z += ( va.z + vb.z ) * 0.5f;
@@ -245,24 +245,24 @@ static inline float* player_old_simtime(player* this) {
 animstate* player_animstate( player* this );
 
 static inline void* player_mdl(player* this ) {
-	return ((void* ( __thiscall* )( renderable* ))utils_get_vfunc( entity_renderable((entity*)this ), 8 ))( entity_renderable((entity*)this ) );
+	return ((void* ( __thiscall* )( renderable* ))utils_vfunc( entity_renderable((entity*)this ), 8 ))( entity_renderable((entity*)this ) );
 }
 
 static inline studiohdr_t* player_studio_mdl( player* this, void* mdl ) {
-	return ((studiohdr*( __thiscall* )( player*, void* ))utils_get_vfunc( this, 32 ))( this, mdl );
+	return ((studiohdr*( __thiscall* )( player*, void* ))utils_vfunc( this, 32 ))( this, mdl );
 }
 
 static inline bool player_is_alive(player* this){
 	return player_health(this) > 0;
 }
 
-VIRTUAL ( player, vec3*, abs_origin, 10, ( this ) );
-VIRTUAL ( player, vec3*, abs_angles, 11, ( this ) );
+VIRTUAL ( player, vec3*, abs_origin, 10, ( this, NULL ) );
+VIRTUAL ( player, vec3*, abs_angles, 11, ( this, NULL ) );
 
 ehandle player_handle( player* this );
 
 static inline vec3* player_mdl(player* this ) {
-	return ((vec3* ( __thiscall* )( renderable* ))utils_get_vfunc( entity_renderable((entity*)this ), 1 ))( entity_renderable((entity*)this ) );
+	return ((vec3* ( __thiscall* )( renderable* ))utils_vfunc( entity_renderable((entity*)this ), 1 ))( entity_renderable((entity*)this ) );
 }
 
 void player_create_animstate( player* this, animstate* state );
@@ -276,33 +276,30 @@ weapon* player_get_weapon( player* this );
 typedef weapon** vec_weapons; 
 typedef weapon** vec_wearables; 
 
+void get_sequence_linear_motion (player* this, void* studio_hdr, int sequence, float* poses, vec3* vec );
+float get_sequence_move_distance ( player* this,void* studio_hdr, int sequence );
+int lookup_sequence (player* this, const char* seq );
+float sequence_duration (player* this, int sequence );
+float get_sequence_cycle_rate_server ( player* this,int sequence );
+
 vec_weapons player_weapons (player* this );
 vec_wearables player_wearables ( player* this);
 
-class player_t : public entity_t {
-public:
-	float desync_amount( ) {
-		auto state = animstate( );
+static inline float player_get_max_desync(player* this ) {
+	animstate* state = player_animstate(this );
 
-		if ( !state )
-			return 0.0f;
+	if ( !state )
+		return 0.0f;
 
-		auto running_speed = std::clamp( state->m_run_speed, 0.0f, 1.0f );
-		auto yaw_modifier = ( ( ( state->m_ground_fraction * -0.3f ) - 0.2f ) * running_speed ) + 1.0f;
+	const float running_speed = clamp( state->m_run_speed, 0.0f, 1.0f );
+	float yaw_modifier = ( ( ( state->m_ground_fraction * -0.3f ) - 0.2f ) * running_speed ) + 1.0f;
 
-		if ( state->m_duck_amount > 0.0f ) {
-			auto speed_factor = std::clamp( state->m_unk_feet_speed_ratio, 0.0f, 1.0f );
-			yaw_modifier += ( ( state->m_duck_amount * speed_factor ) * ( 0.5f - yaw_modifier ) );
-		}
-
-		return yaw_modifier * state->m_max_yaw;
+	if ( state->m_duck_amount > 0.0f ) {
+		const float speed_factor = clamp( state->m_unk_feet_speed_ratio, 0.0f, 1.0f );
+		yaw_modifier += ( ( state->m_duck_amount * speed_factor ) * ( 0.5f - yaw_modifier ) );
 	}
 
-	void get_sequence_linear_motion ( void* studio_hdr, int sequence, float* poses, vec3_t* vec );
-	float get_sequence_move_distance ( void* studio_hdr, int sequence );
-	int lookup_sequence ( const char* seq );
-	float sequence_duration ( int sequence );
-	float get_sequence_cycle_rate_server ( int sequence );
-};
+	return yaw_modifier * state->m_max_yaw;
+}
 
 #endif // !SDK_PLAYER_H
