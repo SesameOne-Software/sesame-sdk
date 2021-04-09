@@ -5,14 +5,34 @@
 #include <windows.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <math.h>
 
 #include "lib/vector/vector.h"
 #include "lib/hashmap/hashmap.h"
-#include "lib/str/str.h"
+#include "lib/sds/sds.h"
 #include "lib/yyjson/yyjson.h"
 
 /* utility macros */
-#define clamp(x, a, b) max(a, min(x, b))
+//#define _CLAMP_TYPE(type, extension)\
+//static inline type clamp##extension(type x, type a, type b) {\
+//	return max(a, min(x, b));\
+//}
+//_CLAMP_TYPE(int, i)
+//_CLAMP_TYPE(long, l)
+//_CLAMP_TYPE(float, f)
+//_CLAMP_TYPE(double, d)
+//
+//#define clamp(x, a, b) _Generic((x), \
+//	int: clampi, \
+//	long: clampl, \
+//	float: clampf, \
+//	double: clampd, \
+//	default: clampf \
+//)(x, a, b)
+
+static inline float clampf(float x, float a, float b) {\
+	return max(a, min(x, b));\
+}
 
 /* from google's chromium project */
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))

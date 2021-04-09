@@ -1,12 +1,10 @@
 #include "include/ses.h"
-
 #include "include/utils.h"
+
+#include "lib/csgo-sdk/sdk.h"
 
 #include <windows.h>
 #include <process.h>
-
-#include <stdbool.h>
-#include <stdint.h>
 
 static bool ses_should_shutdown = false;
 
@@ -19,9 +17,15 @@ int __stdcall ses_init ( HMODULE mod ) {
     while ( !GetModuleHandleA ( "serverbrowser.dll" ) )
         utils_sleep ( 100 );
 
+    cs_init();
+    netvars_init();
+
     /* wait for self-destruct key */
     while ( !ses_should_shutdown )
         utils_sleep ( 100 );
+        
+    netvars_free();
+    cs_free();
 
     FreeLibraryAndExitThread ( mod, EXIT_SUCCESS );
     return 0;

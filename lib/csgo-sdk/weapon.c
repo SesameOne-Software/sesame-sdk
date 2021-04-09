@@ -1,63 +1,63 @@
 #include "sdk.h"
 
 econitem* econitem_static_data ( econitem* this ) {
-	static econitem* ( __fastcall* get_static_data )( econitem*, void* ) = NULL;
+	static econitem* ( __fastcall* fn )( econitem*, void* ) = NULL;
 
-	if ( !get_static_data )
-		get_static_data = pattern_search ( "client.dll", "55 8B EC 51 53 8B D9 8B 0D ? ? ? ? 56 57 8B B9" );
+	if ( !fn )
+		fn = pattern_search ( "client.dll", "55 8B EC 51 53 8B D9 8B 0D ? ? ? ? 56 57 8B B9" );
 
-	return get_static_data ( this, NULL );
+	return fn ( this, NULL );
 }
 
 void econitem_update_equipped_state ( econitem* this, bool state ) {
-	static int ( __fastcall * update_equipped_state )( econitem*, void*, uint32_t ) = NULL;
+	static int ( __fastcall * fn )( econitem*, void*, uint32_t ) = NULL;
 
-	if (!update_equipped_state)
-		update_equipped_state = pattern_search ( "client.dll", "55 8B EC 8B 45 08 8B D0 C1 EA 10" );
+	if (!fn)
+		fn = pattern_search ( "client.dll", "55 8B EC 8B 45 08 8B D0 C1 EA 10" );
 
-	update_equipped_state ( this, NULL, state );
+	fn ( this, NULL, state );
 }
 
 /* XREF: "resource/flash/econ/weapons/cached/*.iic" string is inside the function */
 void econitem_clean_inventory_image_cache_dir ( econitem* this ) {
-	static void ( __fastcall* clean_inventory_image_cache_dir )( econitem*, void* ) = NULL;
+	static void ( __fastcall* fn )( econitem*, void* ) = NULL;
 
-	if ( !clean_inventory_image_cache_dir )
-		clean_inventory_image_cache_dir = pattern_search ( "client.dll", "55 8B EC 81 EC ? ? ? ? 80 3D ? ? ? ? ? 56 0F 85" );
+	if ( !fn )
+		fn = pattern_search ( "client.dll", "55 8B EC 81 EC ? ? ? ? 80 3D ? ? ? ? ? 56 0F 85" );
 
-	clean_inventory_image_cache_dir ( this, NULL );
+	fn ( this, NULL );
 }
 
 void econitem_set_or_add_attribute_by_name ( econitem* this, float val, const char* attribute_name ) {
-	static void* set_or_add_attribute_by_name = NULL;
+	static void* fn = NULL;
 	
-	if ( !set_or_add_attribute_by_name )
-		set_or_add_attribute_by_name = pattern_search ( "client.dll", "55 8B EC 83 EC 30 53 56 8B F1 F3" );
+	if ( !fn )
+		fn = pattern_search ( "client.dll", "55 8B EC 83 EC 30 53 56 8B F1 F3" );
 
 	__asm {
 		mov ecx, this
 		movss xmm2, val
 		push attribute_name
-		call set_or_add_attribute_by_name
+		call fn
 	}
 }
 
 void econitem_set_custom_name ( econitem* this, const char* name ) {
-	static econitem* ( __fastcall * set_custom_name_fn )( econitem*, void*, const char* ) = NULL;
+	static econitem* ( __fastcall * fn )( econitem*, void*, const char* ) = NULL;
 
-	if (!set_custom_name_fn)
-		set_custom_name_fn = pattern_rip( pattern_search ( "client.dll", "E8 ? ? ? ? 8B 46 78 C1 E8 0A A8 01 74 13 8B 46 34" ) );
+	if (!fn)
+		fn = pattern_rip( pattern_search ( "client.dll", "E8 ? ? ? ? 8B 46 78 C1 E8 0A A8 01 74 13 8B 46 34" ) );
 
-	set_custom_name_fn ( this, NULL, name );
+	fn ( this, NULL, name );
 }
 
 void econitem_set_custom_desc ( econitem* this, const char* name ) {
-	static econitem* ( __fastcall* set_custom_desc_fn )( econitem*, void*, const char* ) = NULL;
+	static econitem* ( __fastcall* fn )( econitem*, void*, const char* ) = NULL;
 
-	if ( !set_custom_desc_fn )
-		set_custom_desc_fn = pattern_rip ( pattern_search ( "client.dll", "E8 ? ? ? ? 33 DB 39 5E 3C 7E 5E" ) );
+	if ( !fn )
+		fn = pattern_rip ( pattern_search ( "client.dll", "E8 ? ? ? ? 33 DB 39 5E 3C 7E 5E" ) );
 
-	set_custom_desc_fn ( this, NULL, name );
+	fn ( this, NULL, name );
 }
 
 void econitem_set_attributei ( econitem* this, int index, int val ) {
@@ -81,12 +81,12 @@ void econitem_set_attributef ( econitem* this, int index, float val ) {
 }
 
 econitem* econitem_soc_data ( econitem* this ) {
-	static econitem* ( __fastcall* get_soc_data )( econitem*, void* ) = NULL;
+	static econitem* ( __fastcall* fn )( econitem*, void* ) = NULL;
 
-	if ( !get_soc_data )
-		get_soc_data = pattern_search ( "client.dll", "55 8B EC 83 E4 F0 83 EC 18 56 8B F1 57 8B 86" );
+	if ( !fn )
+		fn = pattern_search ( "client.dll", "55 8B EC 83 E4 F0 83 EC 18 56 8B F1 57 8B 86" );
 
-	return get_soc_data ( this, NULL );
+	return fn ( this, NULL );
 }
 
 weapon_info* weapon_data( weapon* this ) {

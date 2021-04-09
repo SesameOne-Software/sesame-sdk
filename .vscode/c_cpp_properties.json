@@ -9,7 +9,8 @@
             "defines": [
                 "_DEBUG",
                 "UNICODE",
-                "_UNICODE"
+                "_UNICODE",
+                "_USE_MATH_DEFINES"
             ],
             "cStandard": "c11",
             "intelliSenseMode": "msvc-x86"

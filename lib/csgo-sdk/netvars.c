@@ -1,84 +1,74 @@
 #include "netvars.h"
+#include "sdk.h"
+
+#include "include/utils.h"
 
 typedef struct {
-	const char* name;
+	sds name;
 	ptrdiff_t offset;
 } netvar_offset;
 
-typedef struct {
-	const char* table;
-	netvar_offset* vars;
-} netvar_table;
-
 hashmap* netvars_offsets_map = NULL;
 
+static int netvar_offset_compare(const void *a, const void *b, void *udata) {
+    const netvar_offset* lhs = a;
+    const netvar_offset* rhs = b;
+    return sdscmp(lhs->name, rhs->name);
+}
+
+static bool netvar_offset_free(const void *item, void *udata) {
+    const netvar_offset* entry = item;
+	sdsfree(entry->name);
+    return true;
+}
+
+static uint64_t netvar_offset_hash(const void* item, uint64_t seed0, uint64_t seed1) {
+    const netvar_offset* entry = item;
+    return hashmap_sip(entry->name, sdslen(entry->name), seed0, seed1);
+}
+
+static void netvars_store_table( const char* table_name, recv_table* table, ptrdiff_t offset ) {
+	for ( int i = 0; i < table->num_props; i++ ) {
+		const recv_prop* prop = (recv_prop*)((uintptr_t)table->props + i);
+		const recv_table* child = prop->data_table;
+
+		if ( child && child->num_props > 0 )
+			netvars_store_table( table_name, child, prop->offset + offset );
+
+		sds entry_name = sdscat(sdscat(sdsnew(table_name), "->"), prop->var_name);
+
+		/* add netvar to list if it doesnt exist already */
+		if ( !hashmap_get(netvars_offsets_map, &(netvar_offset){ entry_name } ) )
+			hashmap_set(netvars_offsets_map, &(netvar_offset){ entry_name, prop->offset + offset });
+		/* free string if it is a duplicate netvar */
+		else
+			sdsfree(entry_name);
+	}
+}
+
 bool netvars_init ( ) {
-	if ( !cs::i::client ) {
+	/* new hashmap containing all netvars */
+	netvars_offsets_map = hashmap_new(sizeof(netvar_offset), 0, 0, 0, netvar_offset_hash, netvar_offset_compare, NULL);
+
+	client_class* list = iclient_get_classes(cs_iclient);
+
+	if ( !list )
 		return false;
-	}
 
-	auto list = cs::i::client->get_all_classes ( );
-
-	if ( !list ) {
-
-		return false;
-	}
-
-	for ( ; list != nullptr; list = list->next )
-		store_table ( list->recv_table->net_table_name, list->recv_table );
+	for ( ; list != NULL; list = list->next )
+		store_table ( list->recv_table->net_table_name, list->recv_table, 0 );
 
 	return true;
 }
 
 void netvars_free ( ) {
+	/* free all strings first */
+	hashmap_scan(netvars_offsets_map, netvar_offset_free, NULL);
+	/* then free the netvar map */
 	hashmap_free ( netvars_offsets_map );
 }
 
-std::unordered_map< const char*, std::unordered_map< std::string, netvars::netvar_data_t > > netvars::offsets;
-
-std::vector< std::string > split( std::string to_split, std::string delimeter ) {
-	std::vector< std::string > split;
-	int start = 0;
-	int end = 0;
-
-	while ( ( end = to_split.find( delimeter, start ) ) < to_split.size( ) ) {
-		std::string val = to_split.substr( start, end - start );
-		split.push_back( val );
-		start = end + delimeter.size( );
-	}
-
-	if ( start < to_split.size( ) ) {
-		std::string val = to_split.substr( start );
-		split.push_back( val );
-	}
-
-	return split;
-}
-
-void netvars_store_table( const std::string& name, recv_table_t* table, std::size_t offset ) {
-	for ( int i { }; i < table->num_props; ++i ) {
-		auto prop = &table->props [ i ];
-		auto child = prop->data_table;
-
-		// we have a child table, that contains props.
-		if ( child && child->num_props > 0 )
-			store_table( name, child, prop->offset + offset );
-
-		// insert if not present.
-		if ( !offsets [ name ][ prop->var_name ].offset ) {
-			offsets [ name ][ prop->var_name ].datamap_var = false;
-			offsets [ name ][ prop->var_name ].prop_ptr = prop;
-			offsets [ name ][ prop->var_name ].offset = static_cast< size_t >( prop->offset + offset );
-		}
-	}
-}
-
-// get netvar offset.
-int netvars_get( const std::string& table, const std::string& prop ) {
-	return offsets [ table ][ prop ].offset;
-}
-
-int netvars_get_offset( const char* name ) {
-	const auto items = split( name, "->" );
-	return offsets [ items.front( ) ][ items.back( ) ].offset;
+ptrdiff_t netvars_get_offset ( const char* name ) {
+	const netvar_offset* offset = hashmap_get(netvars_offsets_map, &(netvar_offset){ name } );
+	return offset ? offset->offset : 0;
 }

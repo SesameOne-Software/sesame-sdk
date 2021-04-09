@@ -3,18 +3,19 @@
 
 #include "include/utils.h"
 
-typedef struct recv_table recv_table;
 typedef struct recv_prop recv_prop;
+typedef struct recv_table recv_table;
+typedef struct client_class client_class;
 
-typedef struct {
+struct recv_table {
 	recv_prop* props;
 	int num_props;
 	void* decoder;
 	const char* net_table_name;
 	PAD( 2 );
-} recv_table;
+};
 
-typedef struct {
+struct recv_prop {
 	const char* var_name;
 	int recv_type;
 	int flags;
@@ -30,16 +31,16 @@ typedef struct {
 	int element_stride;
 	int num_elements;
 	const char* parent_array_prop_name;
-} recv_prop;
+};
 
-typedef struct {
+struct client_class {
 	void* ( *create_fn )( int, int );
 	void* ( *create_event_fn )( );
 	const char* network_name;
 	recv_table* recv_table;
 	client_class* next;
 	int class_id;
-} client_class;
+};
 
 typedef struct iclient iclient;
 

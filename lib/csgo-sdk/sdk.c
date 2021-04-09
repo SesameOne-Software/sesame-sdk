@@ -40,74 +40,68 @@ bool cs_init ( ) {
 	cs_itrace = create_interface( "engine.dll", "EngineTraceClient004" );
 	cs_ipred = create_interface ( "client.dll", "VClientPrediction001" );
 	cs_imove = create_interface( "client.dll", "GameMovement001" );
-	cs_imdlcache = pattern_search ( "client.dll", "8B 35 ? ? ? ? 8B CE 8B 06 FF 90 ? ? ? ? 8B 4F" ).add ( 2 ).deref ( ).deref ( ).get< mdl_cache_t* > ( );
+	cs_imdlcache = **( imdlcache*** )(pattern_search ( "client.dll", "8B 35 ? ? ? ? 8B CE 8B 06 FF 90 ? ? ? ? 8B 4F" ) + 2);
 	cs_ievents = create_interface ( "engine.dll", "GAMEEVENTSMANAGER002" );
-	cs_iinput = pattern_search ( "client.dll", "B9 ? ? ? ? FF 60 60" ).add ( 1 ).deref ( ).get< c_input* > ( );
+	cs_iinput = *( iinput** )(pattern_search ( "client.dll", "B9 ? ? ? ? FF 60 60" ) + 1);
 	cs_icvar = create_interface ( "vstdlib.dll", "VEngineCvar007" );
-	cs_imovehelper = **( imovehelper*** )( pattern_search ( "client.dll", "8B 0D ? ? ? ? 8B 45 ? 51 8B D4 89 02 8B 01" ).add ( 2 ).get< std::uintptr_t > ( ) );
-	cs_iclientstate = pattern_search ( "engine.dll", "A1 ? ? ? ? 8B 88 ? ? ? ? 85 C9 75 07" ).add ( 1 ).deref ( ).deref ( ).get< c_clientstate* > ( );
-	cs_ibeams = pattern_search ( "client.dll", "A1 ? ? ? ? 56 8B F1 B9 ? ? ? ? FF 50 08" ).add ( 1 ).deref ( ).get< c_view_render_beams* > ( );
-	cs_imemalloc = *( c_mem_alloc** ) GetProcAddress ( GetModuleHandleA ( "tier0.dll" ), "g_pMemAlloc" );
-	cs_id3ddev = pattern_search ( "shaderapidx9.dll", "A1 ? ? ? ? 50 8B 08 FF 51 0C" ).add ( 1 ).deref ( ).deref ( ).get< IDirect3DDevice9* > ( );
+	cs_imovehelper = **( imovehelper*** )( pattern_search ( "client.dll", "8B 0D ? ? ? ? 8B 45 ? 51 8B D4 89 02 8B 01" ) + 2 );
+	cs_iclientstate = **( iclientstate*** )(pattern_search ( "engine.dll", "A1 ? ? ? ? 8B 88 ? ? ? ? 85 C9 75 07" ) + 1);
+	cs_ibeams = *( ibeams** )(pattern_search ( "client.dll", "A1 ? ? ? ? 56 8B F1 B9 ? ? ? ? FF 50 08" )+ 1);
+	cs_imemalloc = *( imemalloc** ) GetProcAddress ( GetModuleHandleA ( "tier0.dll" ), "g_pMemAlloc" );
+	cs_id3ddev = **(IDirect3DDevice9*** )(pattern_search ( "shaderapidx9.dll", "A1 ? ? ? ? 50 8B 08 FF 51 0C" ) + 1);
 }
 
-c_mdl_cache_critical_section::c_mdl_cache_critical_section( ) {
-	cs::i::mdl_cache->begin_lock( );
+static inline void cs_screen_transform( vec3* origin, vec3* screen ) {
+	static mat3x4* viewmat_ptr = NULL;
+
+	if (!viewmat_ptr)
+		viewmat_ptr = ( mat3x4* )(*(uintptr_t*)(pattern_search( "client.dll", "0F 10 05 ? ? ? ? 8D 85 ? ? ? ? B9" ) + 3 ) + 176);
+
+	screen->x = *mat3x4_at(viewmat_ptr, 0, 0) * origin->x + *mat3x4_at(viewmat_ptr, 0, 1) * origin->y + *mat3x4_at(viewmat_ptr, 0, 2) * origin->z + *mat3x4_at(viewmat_ptr, 0, 3);
+	screen->y = *mat3x4_at(viewmat_ptr, 1, 0) * origin->x + *mat3x4_at(viewmat_ptr, 1, 1) * origin->y + *mat3x4_at(viewmat_ptr, 1, 2) * origin->z + *mat3x4_at(viewmat_ptr, 1, 3);
+	screen->z = 0.0f;
+
+	const float w = abs(*mat3x4_at(viewmat_ptr, 3, 0) * origin->x + *mat3x4_at(viewmat_ptr, 3, 1) * origin->y + *mat3x4_at(viewmat_ptr, 3, 2) * origin->z + *mat3x4_at(viewmat_ptr, 3, 3));
+
+	screen->x *= 1.0f / w;
+	screen->y *= 1.0f / w;
 }
 
-c_mdl_cache_critical_section::~c_mdl_cache_critical_section( ) {
-	cs::i::mdl_cache->end_lock( );
-}
+bool cs_world_to_screen( vec3* origin, vec3* screen ) {
+	int w, h;
+	iengine_get_screen_size(cs_iengine, &w, &h);
 
-bool cs::render::screen_transform( vec3_t& screen, vec3_t& origin ) {
-	static auto view_matrix = pattern::search( _( "client.dll" ), _( "0F 10 05 ? ? ? ? 8D 85 ? ? ? ? B9" ) ).add( 3 ).deref( ).add( 176 ).get< std::uintptr_t >( );
+	float wf = (float)w;
+	float hf = (float)h;
 
-	const auto& world_matrix = *( matrix3x4_t* ) view_matrix;
+	screen_transform( origin, screen );
 
-	screen.x = world_matrix [ 0 ][ 0 ] * origin.x + world_matrix [ 0 ][ 1 ] * origin.y + world_matrix [ 0 ][ 2 ] * origin.z + world_matrix [ 0 ][ 3 ];
-	screen.y = world_matrix [ 1 ][ 0 ] * origin.x + world_matrix [ 1 ][ 1 ] * origin.y + world_matrix [ 1 ][ 2 ] * origin.z + world_matrix [ 1 ][ 3 ];
-	screen.z = 0.0f;
+	vec3_zero(screen);
 
-	const auto w = world_matrix [ 3 ][ 0 ] * origin.x + world_matrix [ 3 ][ 1 ] * origin.y + world_matrix [ 3 ][ 2 ] * origin.z + world_matrix [ 3 ][ 3 ];
-
-	if ( w < 0.001f ) {
-		screen.x *= -1.0f / w;
-		screen.y *= -1.0f / w;
-
-		return true;
-	}
-
-	screen.x *= 1.0f / w;
-	screen.y *= 1.0f / w;
-
-	return false;
-}
-
-bool cs::render::world_to_screen( vec3_t& screen , vec3_t& origin ) {
-	const auto find_point = [ ] ( vec3_t& point , int screen_w , int screen_h , float deg ) {
-		const auto x2 = screen_w / 2.0f;
-		const auto y2 = screen_h / 2.0f;
-		const auto one = point.x - x2;
-		const auto two = point.y - y2;
-		const auto d = sqrt( one * one + two * two );
-		const auto r = deg / d;
-
-		point.x = r * point.x + ( 1.0f - r ) * x2;
-		point.y = r * point.y + ( 1.0f - r ) * y2;
-	};
-
-	int w , h;
-	cs::i::engine->get_screen_size( w , h );
-
-	const bool transform = screen_transform( screen , origin );
-
-	screen.x = ( w * 0.5f ) + ( screen.x * w ) * 0.5f;
-	screen.y = ( h * 0.5f ) - ( screen.y * h ) * 0.5f;
-
-	if ( transform ) {
-		find_point( screen , w , h , sqrt( w * w + h * h ) );
-		return false;
-	}
+	screen->x = ( wf * 0.5f ) + ( screen->x * wf ) * 0.5f;
+	screen->y = ( hf * 0.5f ) - ( screen->y * hf ) * 0.5f;
 
 	return true;
+}
+
+bool cs_is_valve_server( ) {
+	static uintptr_t* cs_game_rules = NULL;
+
+	if (!cs_game_rules)
+		cs_game_rules = *(uintptr_t**)(pattern_search( "client.dll", "A1 ? ? ? ? 74 38" ) + 1);
+
+	return *cs_game_rules && *(bool* ) ( *cs_game_rules + 0x7C );
+}
+
+void cs_add_box_overlay ( const vec3* origin, const vec3* mins, const vec3* maxs, const vec3* angles, int r, int g, int b, int a, float duration ) {
+	static void* debug_overlay = NULL;
+
+	if (!debug_overlay)
+		debug_overlay = **(void***)(pattern_search( "client.dll", "A1 ? ? ? ? F3 0F 11 44 24 ? 8B 30 8B" ) + 1);
+
+	((void(__fastcall*)( void*, void*, const vec3*, const vec3*, const vec3*, const vec3*, int, int, int, int, float ))utils_vfunc ( debug_overlay, 1 ))( debug_overlay, NULL, origin, mins, maxs, angles, r, g, b, a, duration );
+}
+
+void cs_free() {
+
 }
