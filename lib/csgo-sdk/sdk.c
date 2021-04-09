@@ -103,5 +103,4 @@ void cs_add_box_overlay ( const vec3* origin, const vec3* mins, const vec3* maxs
 }
 
 void cs_free() {
-
 }
