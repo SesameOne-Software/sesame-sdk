@@ -55,10 +55,10 @@ static inline void beam_info_init ( beam_info* this ) {
 
 typedef struct ibeams ibeams;
 
-VIRTUAL ( ibeams, void, init, 1, ( this, NULL ) );
-VIRTUAL ( ibeams, void, shutdown, 2, ( this, NULL ) );
-VIRTUAL ( ibeams, void, clear, 3, ( this, NULL ) );
-VIRTUAL ( ibeams, void, draw, 5, ( this, NULL, pbeam ), beam* pbeam );
-VIRTUAL ( ibeams, beam*, create_points, 13, ( this, NULL, pbeam_info ), beam_info* pbeam_info );
+VIRTUAL ( ibeams, void, init, 1, ( ) );
+VIRTUAL ( ibeams, void, shutdown, 2, ( ) );
+VIRTUAL ( ibeams, void, clear, 3, ( ) );
+VIRTUAL ( ibeams, void, draw, 5, ( pbeam ), beam* pbeam );
+VIRTUAL ( ibeams, beam*, create_points, 13, ( pbeam_info ), beam_info* pbeam_info );
 
 #endif // !SDK_BEAMS_H

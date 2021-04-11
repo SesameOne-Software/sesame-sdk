@@ -32,7 +32,7 @@ NETVAR ( entity, vec3, origin, "DT_BaseEntity->m_vecOrigin" );
 NETVAR ( entity, uint32_t, team, "DT_BaseEntity->m_iTeamNum" );
 
 static inline client_class* entity_get_client_class ( entity* this ) {
-	return ( ( client_class * ( __fastcall* )( networkable*, void* ) )utils_vfunc ( entity_get_networkable ( this ), 2 ) )( entity_get_networkable ( this ), NULL );
+	return ( ( client_class * ( __fastcall* )( networkable*, void* ) )utils_vfunc ( entity_networkable ( this ), 2 ) )( entity_get_networkable ( this ), NULL );
 }
 
 static inline bool entity_is_player(entity* this) {

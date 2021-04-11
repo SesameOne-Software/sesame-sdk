@@ -95,7 +95,7 @@ weapon_info* weapon_data( weapon* this ) {
 	if ( !weapon_system )
 		weapon_system = *( void** ) ( pattern_search ( "client.dll", "8B 35 ? ? ? ? FF 10 0F B7 C0" ) + 2 );
 
-	return (( weapon_info * ( __fastcall* )( void*, void*, weapon_idx ) )utils_vfunc( weapon_system, 2 ))( weapon_system, NULL, weapon_item_def_idx ( this ) );
+	return (( weapon_info * ( __fastcall* )( void*, void*, uint16_t ) )utils_vfunc( weapon_system, 2 ))( weapon_system, NULL, weapon_item_def_idx ( this ) );
 }
 
 weapon* weapon_world_mdl ( weapon* this ) {

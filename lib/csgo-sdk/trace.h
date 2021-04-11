@@ -159,12 +159,12 @@ static inline bool trace_is_visible ( trace* this ) {
 	return ( ( base_trace* ) this )->fraction > 0.97f;
 }
 
-typedef struct itrace_filter;
+typedef struct itrace_filter itrace_filter;
 
-typedef struct {
+struct itrace_filter {
 	bool ( __fastcall* should_hit_entity ) ( itrace_filter*, void*, entity*, int );
 	trace_type ( __fastcall* get_trace_type ) ( itrace_filter*, void*, entity*, int );
-} itrace_filter;
+};
 
 typedef struct {
 	itrace_filter base;
@@ -252,11 +252,11 @@ static inline ray* ray_bbox_init ( ray* ray, vec3* src, vec3* dst, vec3* mins, v
 
 typedef struct itrace itrace;
 
-VIRTUAL ( itrace, int, get_point_contents, 0, ( this, NULL, pos, mask, ent ), vec3* pos, trace_mask mask, entity* ent );
-VIRTUAL ( itrace, int, get_point_contents_world_only, 1, ( this, NULL, pos, mask ), vec3* pos, trace_mask mask );
-VIRTUAL ( itrace, int, get_point_contents_collideable, 2, ( this, NULL, collideable, pos ), void* collideable, vec3* pos );
-VIRTUAL ( itrace, void, clip_ray_to_entity, 3, ( this, NULL, r, mask, ent, tr ), ray* r, trace_mask mask, entity* ent, trace* tr );
-VIRTUAL ( itrace, void, clip_ray_to_collideable, 4, ( this, NULL, r, mask, collideable, tr ), ray* r, trace_mask mask, void* collideable, trace* tr );
-VIRTUAL ( itrace, void, trace_ray, 5, ( this, NULL, r, mask, filter, tr ), ray* r, trace_mask mask, trace_filter* filter, trace* tr );
+VIRTUAL ( itrace, int, get_point_contents, 0, (  pos, mask, ent ), vec3* pos, trace_mask mask, entity* ent );
+VIRTUAL ( itrace, int, get_point_contents_world_only, 1, (  pos, mask ), vec3* pos, trace_mask mask );
+VIRTUAL ( itrace, int, get_point_contents_collideable, 2, (  collideable, pos ), void* collideable, vec3* pos );
+VIRTUAL ( itrace, void, clip_ray_to_entity, 3, (  r, mask, ent, tr ), ray* r, trace_mask mask, entity* ent, trace* tr );
+VIRTUAL ( itrace, void, clip_ray_to_collideable, 4, (  r, mask, collideable, tr ), ray* r, trace_mask mask, void* collideable, trace* tr );
+VIRTUAL ( itrace, void, trace_ray, 5, (  r, mask, filter, tr ), ray* r, trace_mask mask, trace_filter* filter, trace* tr );
 
 #endif // !SDK_TRACE_H

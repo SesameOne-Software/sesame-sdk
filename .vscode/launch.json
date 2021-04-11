@@ -4,14 +4,8 @@
         {
             "name": "C Debug (Windows)",
             "type": "cppvsdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/bin/injector.exe",
-            "preLaunchTask": "Build Debug Project",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
-            "environment": [],
-            "externalConsole": true,
+            "request": "attach",
+            "processId": "${command:pickProcess}"
         }
     ]
 }

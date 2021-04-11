@@ -17,7 +17,7 @@
                 "kind": "test",
                 "isDefault": true
             },
-            "command": ".\\build_debug.bat && .\\bin\\injector.exe"
+            "command": ".\\build_debug.bat"
         }
     ]
 }

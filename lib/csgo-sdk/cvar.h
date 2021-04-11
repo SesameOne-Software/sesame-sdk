@@ -36,7 +36,9 @@ typedef struct {
 	int i;
 } cvar_val;
 
-typedef struct {
+typedef struct cvar cvar;
+
+struct cvar {
 	PAD ( 4 );
 	cvar* next;
 	int registered;
@@ -52,7 +54,7 @@ typedef struct {
 	int has_max;
 	float max;
 	void* callbacks;
-} cvar;
+};
 
 static inline void cvar_get_string ( cvar* this ) {
 	if ( this->flags & fcvar_never_as_string )
@@ -78,12 +80,12 @@ static inline void cvar_null_cb ( cvar* this ) {
 	*( int* ) ( ( uintptr_t ) &this->callbacks + 0xC ) = 0;
 }
 
-VIRTUAL ( cvar, void, set_value, 14, ( this, NULL, value ), const char* value );
-VIRTUAL ( cvar, void, set_value, 15, ( this, NULL, value ), float value );
-VIRTUAL ( cvar, void, set_value, 16, ( this, NULL, value ), int value );
+VIRTUAL ( cvar, void, set_value_sz, 14, ( value ), const char* value );
+VIRTUAL ( cvar, void, set_valuef, 15, ( value ), float value );
+VIRTUAL ( cvar, void, set_valuei, 16, ( value ), int value );
 
 typedef struct icvar icvar;
 
-VIRTUAL ( icvar, cvar*, find, 14, ( this, NULL, name ), const char* name );
+VIRTUAL ( icvar, cvar*, find, 14, ( name ), const char* name );
 
 #endif // !SDK_CVAR_H

@@ -7,7 +7,7 @@
 
 typedef struct imdlrender imdlrender;
 
-VIRTUAL ( imdlrender, void, force_mat, 1, ( this, NULL, pmat ), mat* pmat );
-VIRTUAL ( imdlrender, bool, is_forced_mat_override, 2, ( this, NULL ) );
+VIRTUAL ( imdlrender, void, force_mat, 1, ( pmat ), mat* pmat );
+VIRTUAL ( imdlrender, bool, is_forced_mat_override, 2, ( ) );
 
 #endif // !SDK_MDLRENDER_H

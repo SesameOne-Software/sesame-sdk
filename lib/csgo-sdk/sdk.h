@@ -59,18 +59,23 @@ extern icvar* cs_icvar;
 extern ievents* cs_ievents;
 extern ibeams* cs_ibeams;
 extern IDirect3DDevice9* cs_id3ddev;
+extern player** cs_local_ptr;
 
-static inline void* cs_create_interface ( const char* module, const char* name ) {
-	const void* ( *create_interface_export )( const char*, int ) = GetProcAddress ( GetModuleHandleA ( module ), "CreateInterface" );
+static inline player* cs_get_local( ) {
+	return *cs_local_ptr;
+}
+
+static inline void* cs_create_interface( const char* module, const char* name ) {
+	void* ( *create_interface_export )( const char*, int ) = ( void* ( * )( const char*, int ) )GetProcAddress( GetModuleHandleA( module ), "CreateInterface" );
 	return create_interface_export( name, 0 );
 }
 
 static inline int cs_time2ticks( float t ) {
-	return (int)( t / cs_iglobals->tick_interval + 0.5f );
+	return ( int )( t / cs_iglobals->tick_interval + 0.5f );
 }
 
 static inline float cs_ticks2time( int t ) {
-	return (float) t * cs_iglobals->tick_interval;
+	return ( float )t * cs_iglobals->tick_interval;
 }
 
 #define cs_for_each_player() \
@@ -103,47 +108,47 @@ static inline mat3x4* cs_angle_matrix( const vec3* angles, mat3x4* mat ) {
 	cs_sincos( cs_deg2rad( angles->y ), &sy, &cy );
 	cs_sincos( cs_deg2rad( angles->x ), &sp, &cp );
 	cs_sincos( cs_deg2rad( angles->z ), &sr, &cr );
-	
+
 	const float crcy = cr * cy;
 	const float crsy = cr * sy;
 	const float srcy = sr * cy;
 	const float srsy = sr * sy;
 
-	*mat3x4_at( mat, 0, 0) = cp * cy;
-	*mat3x4_at( mat, 1, 0) = cp * sy;
-	*mat3x4_at( mat, 2, 0) = -sp;
-	*mat3x4_at( mat, 0, 1) = sp * srcy - crsy;
-	*mat3x4_at( mat, 1, 1) = sp * srsy + crcy;
-	*mat3x4_at( mat, 2, 1) = sr * cp;
-	*mat3x4_at( mat, 0, 2) = ( sp * crcy + srsy );
-	*mat3x4_at( mat, 1, 2) = ( sp * crsy - srcy );
-	*mat3x4_at( mat, 2, 2) = cr * cp;
-	*mat3x4_at( mat, 0, 3) = 0.0f;
-	*mat3x4_at( mat, 1, 3) = 0.0f;
-	*mat3x4_at( mat, 2, 3) = 0.0f;
+	*mat3x4_at( mat, 0, 0 ) = cp * cy;
+	*mat3x4_at( mat, 1, 0 ) = cp * sy;
+	*mat3x4_at( mat, 2, 0 ) = -sp;
+	*mat3x4_at( mat, 0, 1 ) = sp * srcy - crsy;
+	*mat3x4_at( mat, 1, 1 ) = sp * srsy + crcy;
+	*mat3x4_at( mat, 2, 1 ) = sr * cp;
+	*mat3x4_at( mat, 0, 2 ) = ( sp * crcy + srsy );
+	*mat3x4_at( mat, 1, 2 ) = ( sp * crsy - srcy );
+	*mat3x4_at( mat, 2, 2 ) = cr * cp;
+	*mat3x4_at( mat, 0, 3 ) = 0.0f;
+	*mat3x4_at( mat, 1, 3 ) = 0.0f;
+	*mat3x4_at( mat, 2, 3 ) = 0.0f;
 
 	return mat;
 }
 
 static inline void cs_angle_matrix_pos( const vec3* angles, const vec3* origin, mat3x4* mat ) {
 	cs_angle_matrix( angles, mat );
-	mat3x4_set_origin(mat, origin);
+	mat3x4_set_origin( mat, origin );
 }
 
 static inline void cs_vector_transform( const vec3* in, const mat3x4* mat, vec3* out ) {
-	vec3_add( mat3x4_get_origin(mat, vec3_zero(out)), 
-	&(vec3){
-		vec3_dot( in, (vec3*)mat3x4_at(mat, 0, 0) ),
-		vec3_dot( in, (vec3*)mat3x4_at(mat, 1, 0) ),
-		vec3_dot( in, (vec3*)mat3x4_at(mat, 2, 0) )
-		});
+	vec3_add( mat3x4_get_origin( mat, vec3_zero( out ) ),
+		&( vec3 ) {
+		vec3_dot( in, ( vec3* )mat3x4_at( mat, 0, 0 ) ),
+			vec3_dot( in, ( vec3* )mat3x4_at( mat, 1, 0 ) ),
+			vec3_dot( in, ( vec3* )mat3x4_at( mat, 2, 0 ) )
+	} );
 }
 
 bool cs_is_valve_server( );
-void cs_add_box_overlay ( const vec3* origin, const vec3* mins, const vec3* maxs, const vec3* angles, int r, int g, int b, int a, float duration );
+void cs_add_box_overlay( const vec3* origin, const vec3* mins, const vec3* maxs, const vec3* angles, int r, int g, int b, int a, float duration );
 
 bool cs_world_to_screen( vec3* origin, vec3* screen );
-bool cs_init ( );
-void cs_free();
+bool cs_init( );
+bool cs_free( );
 
 #endif // !SDK_H

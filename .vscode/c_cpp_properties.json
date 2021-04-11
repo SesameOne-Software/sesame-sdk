@@ -7,12 +7,11 @@
                 "C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/Include"
             ],
             "defines": [
-                "_DEBUG",
-                "UNICODE",
-                "_UNICODE",
-                "_USE_MATH_DEFINES"
+                "_USE_MATH_DEFINES",
+                "SUBHOOK_STATIC",
+                "SUBHOOK_SEPARATE_SOURCE_FILES"
             ],
-            "cStandard": "c11",
+            "cStandard": "${default}",
             "intelliSenseMode": "msvc-x86"
         }
     ],

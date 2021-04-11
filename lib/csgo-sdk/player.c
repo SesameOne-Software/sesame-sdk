@@ -36,8 +36,8 @@ void player_get_sequence_linear_motion ( player* this, void* studio_hdr, int seq
 
 float player_get_sequence_move_distance ( player* this, void* studio_hdr, int sequence ) {
 	vec3 ret;
-	get_sequence_linear_motion ( studio_hdr, sequence, poses().data(), &ret );
-	return ret.length ( );
+	player_get_sequence_linear_motion ( this, studio_hdr, sequence, player_poses(this), &ret );
+	return vec3_len(&ret);
 }
 
 int player_lookup_sequence ( player* this, const char* seq ) {
@@ -46,7 +46,7 @@ int player_lookup_sequence ( player* this, const char* seq ) {
 	if ( !fn )
 		fn = pattern_rip(pattern_search ( "client.dll", "E8 ? ? ? ? 5E 83 F8 FF" ));
 
-	return addr ( this, NULL, seq );
+	return fn ( this, NULL, seq );
 }
 
 float player_sequence_duration ( player* this, int sequence ) {
@@ -62,7 +62,7 @@ float player_sequence_duration ( player* this, int sequence ) {
 }
 
 float player_get_sequence_cycle_rate_server ( player* this, int sequence ) {
-	float t = sequence_duration ( sequence );
+	float t = player_sequence_duration( this, sequence );
 
 	if ( t > 0.0f )
 		return 1.0f / t;
@@ -135,7 +135,7 @@ void player_get_eye_pos( player* this, vec3* pos) {
 	/* eye position */
 	((void( __fastcall* )( player*, void*, vec3* ))utils_vfunc( this, 168 )) ( this, NULL, pos );
 
-	if ( *reinterpret_cast< bool* > ( uintptr_t ( this ) + 0x3AC8 ) && player_animstate (this ) )
+	if ( *( bool* ) ( (uintptr_t ) this  + 0x3AC8 ) && player_animstate (this ) )
 		modify_eye_pos ( player_animstate (this ), NULL, pos );
 }
 
@@ -145,7 +145,7 @@ uint32_t* player_bone_count( player* this) {
 	if ( !offset )
 		offset = *(ptrdiff_t*)(pattern_search ( "client.dll", "8B 87 ? ? ? ? 8B 4D 0C" ) + 2);
 
-	return ( uint32_t* )( (uintptr_t)entity_get_renderable((entity*)this) + offset );
+	return ( uint32_t* )( (uintptr_t)entity_renderable((entity*)this) + offset );
 }
 
 mat3x4* player_bone_cache( player* this) {
@@ -154,11 +154,11 @@ mat3x4* player_bone_cache( player* this) {
 	if ( !offset )
 		offset = *(ptrdiff_t*)(pattern_search ( "client.dll", "FF B7 ? ? ? ? 52" ) + 2);
 
-	return *( mat3x4** )( (uintptr_t)entity_get_renderable((entity*)this) + offset );
+	return *( mat3x4** )( (uintptr_t)entity_renderable((entity*)this) + offset );
 }
 
 weapon* player_get_weapon( player* this ) {
-	return (weapon*)ientlist_get_entity_from_handle ( cs_ientlist, weapon_handle( ) );
+	return (weapon*)ientlist_get_entity_from_handle ( cs_ientlist, player_weapon_handle( this ) );
 }
 
 vec_weapons player_weapons ( player* this) {

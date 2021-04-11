@@ -51,7 +51,9 @@ static inline mstudiobbox* mstudiohitboxset_hitbox ( mstudiohitboxset* this, int
 	return ( mstudiobbox* )( ( uintptr_t ) this + this->hitbox_idx ) + i;
 }
 
-typedef struct {
+typedef struct studiohdr studiohdr;
+
+struct studiohdr {
 	int id;
 	int version;
 	long checksum;
@@ -78,7 +80,7 @@ typedef struct {
 	int events_indexed;
 	int num_textures;
 	int texture_idx;
-} studiohdr;
+};
 
 static inline mstudiohitboxset* studiohdr_hitbox_set ( studiohdr* this, int i ) {
 	if ( i > this->num_hitbox_sets )
@@ -97,9 +99,9 @@ static inline mstudiobone* studiohdr_bone ( studiohdr* this, int i ) {
 typedef struct mdl mdl;
 typedef struct imdlinfo imdlinfo;
 
-VIRTUAL ( imdlinfo, mdl*, get_mdl, 1, ( this, NULL, idx ), uint32_t idx );
-VIRTUAL ( imdlinfo, uint32_t, get_mdl_idx, 2, ( this, NULL, name ), const char* name );
-VIRTUAL ( imdlinfo, const char*, get_mdl_name, 3, ( this, NULL, pmdl ), mdl* pmdl );
-VIRTUAL ( imdlinfo, studiohdr*, get_studio_mdl, 32, ( this, NULL, pmdl ), mdl* pmdl );
+VIRTUAL ( imdlinfo, mdl*, get_mdl, 1, (  idx ), uint32_t idx );
+VIRTUAL ( imdlinfo, uint32_t, get_mdl_idx, 2, (  name ), const char* name );
+VIRTUAL ( imdlinfo, const char*, get_mdl_name, 3, (  pmdl ), mdl* pmdl );
+VIRTUAL ( imdlinfo, studiohdr*, get_studio_mdl, 32, (  pmdl ), mdl* pmdl );
 
 #endif // !SDK_MDLINFO_H

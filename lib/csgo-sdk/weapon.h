@@ -137,7 +137,7 @@ OFFSET ( econitem, uint32_t, account_id, 0x1C );
 OFFSET ( econitem, const char*, icon_name, 0x198 );
 OFFSET ( econitem, const char*, mdl_name, 0x94 );
 OFFSET ( econitem, const char*, world_mdl_name, 0x9C );
-VIRTUAL ( econitem, const char*, mdl_name, 5, (this, NULL) );
+VIRTUAL ( econitem, const char*, inventory_img, 5, () );
 OFFSET ( econitem, uint64_t, item_id, 0x8 );
 OFFSET ( econitem, uint64_t, original_id, 0x10 );
 OFFSET ( econitem, uint16_t, item_definition_index, 0x24 );
@@ -224,7 +224,7 @@ NETVAR ( weapon, float, next_secondary_attack, "DT_BaseCombatWeapon->m_flNextSec
 NETVAR ( weapon, int, ammo, "DT_BaseCombatWeapon->m_iClip1" );
 NETVAR ( weapon, int, ammo2, "DT_BaseCombatWeapon->m_iClip2" );
 NETVAR ( weapon, float, postpone_fire_time, "DT_BaseCombatWeapon->m_flPostponeFireReadyTime" );
-NETVAR ( weapon, uint32_t, world_model_handle, "DT_BaseCombatWeapon->m_hWeaponWorldModel" );
+NETVAR ( weapon, uint32_t, world_mdl_handle, "DT_BaseCombatWeapon->m_hWeaponWorldModel" );
 NETVAR ( weapon, float, throw_time, "DT_BaseCSGrenade->m_fThrowTime" );
 NETVAR ( weapon, bool, pin_pulled, "DT_BaseCSGrenade->m_bPinPulled" );
 NETVAR ( weapon, float, throw_strength, "DT_BaseCSGrenade->m_flThrowStrength" );
@@ -250,9 +250,9 @@ NETVAR ( weapon, float, cycle, "DT_BaseAnimating->m_flCycle" );
 NETVAR ( weapon, float, anim_time, "DT_BaseEntity->m_flAnimTime" );
 NETVAR ( weapon, econitem, econ_item, "DT_BaseAttributableItem->m_Item" );
 
-VIRTUAL ( weapon, void, update_accuracy, 483, ( this , NULL) );
-VIRTUAL ( weapon, float, innacuracy, 482, ( this, NULL ) );
-VIRTUAL ( weapon, float, spread, 452, ( this , NULL) );
-VIRTUAL ( weapon, float, max_speed, 441, ( this, NULL ) );
+VIRTUAL ( weapon, void, update_accuracy, 483, ( ) );
+VIRTUAL ( weapon, float, innacuracy, 482, (  ) );
+VIRTUAL ( weapon, float, spread, 452, ( ) );
+VIRTUAL ( weapon, float, max_speed, 441, ( ) );
 
 #endif // !SDK_WEAPON_H
