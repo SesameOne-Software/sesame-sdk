@@ -62,16 +62,16 @@ SUBHOOK_EXPORT void SUBHOOK_API subhook_set_disasm_handler(
   subhook_disasm_handler = handler;
 }
 
-#ifndef SUBHOOK_SEPARATE_SOURCE_FILES
-
-#if defined SUBHOOK_WINDOWS
-  #include "subhook_windows.c"
-#elif defined SUBHOOK_UNIX
-  #include "subhook_unix.c"
-#endif
-
-#if defined SUBHOOK_X86 || defined SUBHOOK_X86_64
-  #include "subhook_x86.c"
-#endif
-
-#endif
+//#ifndef SUBHOOK_SEPARATE_SOURCE_FILES
+//
+//#if defined SUBHOOK_WINDOWS
+//  #include "subhook_windows.c"
+//#elif defined SUBHOOK_UNIX
+//  #include "subhook_unix.c"
+//#endif
+//
+//#if defined SUBHOOK_X86 || defined SUBHOOK_X86_64
+//  #include "subhook_x86.c"
+//#endif
+//
+//#endif

@@ -29,17 +29,17 @@ typedef struct {
 
 typedef struct nci nci;
 
-VIRTUAL ( nci, const char*, name, 0, (  ) );
-VIRTUAL ( nci, const char*, address, 1, (  ) );
-VIRTUAL ( nci, float, time, 2, ( ) );
-VIRTUAL ( nci, float, time_connected, 3, ( ) );
-VIRTUAL ( nci, int, buffer_size, 4, ( ) );
-VIRTUAL ( nci, int, data_rate, 5, (  ) );
-VIRTUAL ( nci, bool, is_loopback, 6, (  ) );
-VIRTUAL ( nci, bool, is_timing_out, 7, (  ) );
-VIRTUAL ( nci, bool, is_playback, 8, (  ) );
-VIRTUAL ( nci, float, latency, 9, (  flow ), int flow );
-VIRTUAL ( nci, float, avg_latency, 10, (  flow ), int flow );
+VIRTUAL ( nci, const char*, name, cs_idx_nci_name, (  ) );
+VIRTUAL ( nci, const char*, address, cs_idx_nci_address, (  ) );
+VIRTUAL ( nci, float, time, cs_idx_nci_time, ( ) );
+VIRTUAL ( nci, float, time_connected, cs_idx_nci_time_connected, ( ) );
+VIRTUAL ( nci, int, buffer_size, cs_idx_nci_buffer_size, ( ) );
+VIRTUAL ( nci, int, data_rate, cs_idx_nci_data_rate, (  ) );
+VIRTUAL ( nci, bool, is_loopback, cs_idx_nci_is_loopback, (  ) );
+VIRTUAL ( nci, bool, is_timing_out, cs_idx_nci_is_timing_out, (  ) );
+VIRTUAL ( nci, bool, is_playback, cs_idx_nci_is_playback, (  ) );
+VIRTUAL ( nci, float, latency, cs_idx_nci_latency, (  flow ), int flow );
+VIRTUAL ( nci, float, avg_latency, cs_idx_nci_avg_latency, (  flow ), int flow );
 
 typedef struct {
 	PAD ( 20 );
@@ -58,49 +58,49 @@ typedef struct {
 typedef struct iclientstate iclientstate;
 
 static inline nc* iclientstate_get_nc ( iclientstate* this ) {
-	return *( nc** ) ( ( uintptr_t ) this + 0x9C );
+	return *( nc** ) ( ( uintptr_t ) this + cs_offsets.iclientstate_nc );
 }
 
 static inline int* iclientstate_get_choked ( iclientstate* this ) {
-	return ( int* ) ( ( uintptr_t ) this + 0x4D30 );
+	return ( int* ) ( ( uintptr_t ) this + cs_offsets.iclientstate_choked );
 }
 
 static inline int* iclientstate_get_last_cmd_ack ( iclientstate* this ) {
-	return ( int* ) ( ( uintptr_t ) this + 0x4D34 );
+	return ( int* ) ( ( uintptr_t ) this + cs_offsets.iclientstate_last_cmd_ack );
 }
 
 static inline int* iclientstate_get_last_out_cmd ( iclientstate* this ) {
-	return ( int* ) ( ( uintptr_t ) this + 0x4D2C );
+	return ( int* ) ( ( uintptr_t ) this + cs_offsets.iclientstate_last_out_cmd );
 }
 
 static inline int* iclientstate_get_server_tick ( iclientstate* this ) {
-	return ( int* ) ( ( uintptr_t ) this + 0x164 );
+	return ( int* ) ( ( uintptr_t ) this + cs_offsets.iclientstate_server_tick );
 }
 
 static inline int* iclientstate_get_delta_tick ( iclientstate* this ) {
-	return ( int* ) ( ( uintptr_t ) this + 0x174 );
+	return ( int* ) ( ( uintptr_t ) this + cs_offsets.iclientstate_delta_tick );
 }
 
 static inline float* iclientstate_get_next_cmd_time ( iclientstate* this ) {
-	return ( float* ) ( ( uintptr_t ) this + 0x114 );
+	return ( float* ) ( ( uintptr_t ) this + cs_offsets.iclientstate_next_cmd_time );
 }
 
 static inline int* iclientstate_get_out_seq_num ( iclientstate* this ) {
-	return ( int* ) ( ( uintptr_t ) this + 0x4D24 );
+	return ( int* ) ( ( uintptr_t ) this + cs_offsets.iclientstate_out_seq_num );
 }
 
 typedef struct iengine iengine;
 
-VIRTUAL ( iengine, void, get_screen_size, 5, (  w, h ), int* w, int* h );
-VIRTUAL ( iengine, void, server_cmd, 6, (  cmd, reliable ), const char* cmd, bool reliable );
-VIRTUAL ( iengine, void, client_cmd, 7, (  cmd ), const char* cmd );
-VIRTUAL ( iengine, bool, get_player_info, 8, (  idx, pinfo ), int idx, player_info* pinfo );
-VIRTUAL ( iengine, int, get_local_player, 12, (  ) );
-VIRTUAL ( iengine, void, get_angles, 18, (  ang ), vec3* ang );
-VIRTUAL ( iengine, void, set_angles, 19, (  ang ), vec3* ang );
-VIRTUAL ( iengine, bool, is_in_game, 26, (  ) );
-VIRTUAL ( iengine, bool, is_connected, 27, (  ) );
-VIRTUAL ( iengine, nci*, get_nci, 78, (  ) );
-VIRTUAL ( iengine, void, execute_cmd, 108, (  cmd ), const char* cmd );
+VIRTUAL ( iengine, void, get_screen_size, cs_idx_iengine_get_screen_size, (  w, h ), int* w, int* h );
+VIRTUAL ( iengine, void, server_cmd, cs_idx_iengine_server_cmd, (  cmd, reliable ), const char* cmd, bool reliable );
+VIRTUAL ( iengine, void, client_cmd, cs_idx_iengine_client_cmd, (  cmd ), const char* cmd );
+VIRTUAL ( iengine, bool, get_player_info, cs_idx_iengine_get_player_info, (  idx, pinfo ), int idx, player_info* pinfo );
+VIRTUAL ( iengine, int, get_local_player, cs_idx_iengine_get_local_player, (  ) );
+VIRTUAL ( iengine, void, get_angles, cs_idx_iengine_get_angles, (  ang ), vec3* ang );
+VIRTUAL ( iengine, void, set_angles, cs_idx_iengine_set_angles, (  ang ), vec3* ang );
+VIRTUAL ( iengine, bool, is_in_game, cs_idx_iengine_is_in_game, (  ) );
+VIRTUAL ( iengine, bool, is_connected, cs_idx_iengine_is_connected, (  ) );
+VIRTUAL ( iengine, nci*, get_nci, cs_idx_iengine_get_nci, (  ) );
+VIRTUAL ( iengine, void, execute_cmd, cs_idx_iengine_execute_cmd, (  cmd ), const char* cmd );
 
 #endif // !SDK_ENGINE_H

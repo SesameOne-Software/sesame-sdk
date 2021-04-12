@@ -5,8 +5,8 @@
 
 typedef struct imemalloc imemalloc;
 
-VIRTUAL ( imemalloc, void*, alloc, 1, (  size ), size_t size );
-VIRTUAL ( imemalloc, void*, realloc, 2, (  mem, size ), void* mem, size_t size );
-VIRTUAL ( imemalloc, void, free, 3, (  mem ), void* mem );
+VIRTUAL ( imemalloc, void*, alloc, cs_idx_imemalloc_alloc, (  size ), size_t size );
+VIRTUAL ( imemalloc, void*, realloc, cs_idx_imemalloc_realloc, (  mem, size ), void* mem, size_t size );
+VIRTUAL ( imemalloc, void, free, cs_idx_imemalloc_free, (  mem ), void* mem );
 
 #endif // !SDK_MEMALLOC_H

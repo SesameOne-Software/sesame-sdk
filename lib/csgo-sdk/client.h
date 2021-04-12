@@ -44,6 +44,6 @@ struct client_class {
 
 typedef struct iclient iclient;
 
-VIRTUAL( iclient, client_class*, get_classes, 8, ( ) );
+VIRTUAL( iclient, client_class*, get_classes, cs_idx_iclient_get_classes, ( ) );
 
 #endif // !SDK_CLIENT_H

@@ -7,8 +7,8 @@
 
 typedef struct ientlist ientlist;
 
-VIRTUAL ( ientlist, entity*, get_entity, 3, ( idx ), int idx );
-VIRTUAL ( ientlist, entity*, get_entity_from_handle, 4, (  handle ), ehandle handle );
-VIRTUAL ( ientlist, int, get_highest_idx, 6, ( ) );
+VIRTUAL ( ientlist, entity*, get_entity, cs_idx_ientlist_get_entity, ( idx ), int idx );
+VIRTUAL ( ientlist, entity*, get_entity_from_handle, cs_idx_ientlist_get_entity_from_handle, (  handle ), ehandle handle );
+VIRTUAL ( ientlist, int, get_highest_idx, cs_idx_ientlist_get_highest_idx, ( ) );
 
 #endif // !SDK_ENTLIST_H

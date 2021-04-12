@@ -50,3 +50,9 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+.vs
+bin
+Debug
+Release
+themida_release._ini
+themida_release.tmd

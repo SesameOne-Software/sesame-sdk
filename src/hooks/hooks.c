@@ -1,3 +1,3 @@
 #include "include/hooks/hooks.h"
 
-subhook_vec hooks_subhooks;
+subhook_t hooks_subhooks [ subhook_max ];

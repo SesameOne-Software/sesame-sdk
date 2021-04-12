@@ -5,20 +5,20 @@
 
 typedef struct event event;
 
-VIRTUAL ( event, const char*, get_name, 1, ( ) );
-VIRTUAL ( event, bool, is_empty, 4, ( key ), const char* key );
-VIRTUAL ( event, bool, get_bool, 5, ( key, val ), const char* key, bool val );
-VIRTUAL ( event, int32_t, get_int, 6, ( key, val ), const char* key, int32_t val );
-VIRTUAL ( event, int64_t, get_uint64, 7, (  key, val ), const char* key, int64_t val );
-VIRTUAL ( event, float, get_float, 8, (  key, val ), const char* key, float val );
-VIRTUAL ( event, const char*, get_string, 9, (  key, val ), const char* key, const char* val );
-VIRTUAL ( event, const wchar_t*, get_wstring, 10, (  key, val ), const char* key, const wchar_t* val );
-VIRTUAL ( event, void, set_bool, 11, (  key, val ), const char* key, bool val );
-VIRTUAL ( event, void, set_int, 12, (  key, val ), const char* key, int32_t val );
-VIRTUAL ( event, void, set_uint64, 13, (  key, val ), const char* key, int64_t val );
-VIRTUAL ( event, void, set_float, 14, (  key, val ), const char* key, float val );
-VIRTUAL ( event, void, set_string, 15, (  key, val ), const char* key, const char* val );
-VIRTUAL ( event, void, set_wstring, 16, (  key, val ), const char* key, const wchar_t* val );
+VIRTUAL ( event, const char*, get_name, cs_idx_event_get_name, ( ) );
+VIRTUAL ( event, bool, is_empty, cs_idx_event_is_empty, ( key ), const char* key );
+VIRTUAL ( event, bool, get_bool, cs_idx_event_get_bool, ( key, val ), const char* key, bool val );
+VIRTUAL ( event, int32_t, get_int, cs_idx_event_get_int, ( key, val ), const char* key, int32_t val );
+VIRTUAL ( event, int64_t, get_int64, cs_idx_event_get_int64, (  key, val ), const char* key, int64_t val );
+VIRTUAL ( event, float, get_float, cs_idx_event_get_float, (  key, val ), const char* key, float val );
+VIRTUAL ( event, const char*, get_string, cs_idx_event_get_string, (  key, val ), const char* key, const char* val );
+VIRTUAL ( event, const wchar_t*, get_wstring, cs_idx_event_get_wstring, (  key, val ), const char* key, const wchar_t* val );
+VIRTUAL ( event, void, set_bool, cs_idx_event_set_bool, (  key, val ), const char* key, bool val );
+VIRTUAL ( event, void, set_int, cs_idx_event_set_int, (  key, val ), const char* key, int32_t val );
+VIRTUAL ( event, void, set_int64, cs_idx_event_set_int64, (  key, val ), const char* key, int64_t val );
+VIRTUAL ( event, void, set_float, cs_idx_event_set_float, (  key, val ), const char* key, float val );
+VIRTUAL ( event, void, set_string, cs_idx_event_set_string, (  key, val ), const char* key, const char* val );
+VIRTUAL ( event, void, set_wstring, cs_idx_event_set_wstring, (  key, val ), const char* key, const wchar_t* val );
 
 typedef struct event_listener event_listener;
 
@@ -33,8 +33,8 @@ event_listener* event_listener_init ( event_listener* this, void ( __fastcall* c
 
 typedef struct ievents ievents;
 
-VIRTUAL ( ievents, bool, add_listener, 3, (  listener, name, server_side ), event_listener* listener, const char* name, bool server_side );
-VIRTUAL ( ievents, bool, find_listener, 4, (  listener, name ), event_listener* listener, const char* name );
-VIRTUAL ( ievents, int, remove_listener, 5, (  listener ), event_listener* listener );
+VIRTUAL ( ievents, bool, add_listener, cs_idx_ievents_add_listener, (  listener, name, server_side ), event_listener* listener, const char* name, bool server_side );
+VIRTUAL ( ievents, bool, find_listener, cs_idx_ievents_find_listener, (  listener, name ), event_listener* listener, const char* name );
+VIRTUAL ( ievents, int, remove_listener, cs_idx_ievents_remove_listener, (  listener ), event_listener* listener );
 
 #endif // !SDK_EVENTS_H

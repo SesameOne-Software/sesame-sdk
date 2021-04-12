@@ -60,6 +60,7 @@ extern ievents* cs_ievents;
 extern ibeams* cs_ibeams;
 extern IDirect3DDevice9* cs_id3ddev;
 extern player** cs_local_ptr;
+extern HWND cs_window;
 
 static inline player* cs_get_local( ) {
 	return *cs_local_ptr;
@@ -144,11 +145,140 @@ static inline void cs_vector_transform( const vec3* in, const mat3x4* mat, vec3*
 	} );
 }
 
-bool cs_is_valve_server( );
-void cs_add_box_overlay( const vec3* origin, const vec3* mins, const vec3* maxs, const vec3* angles, int r, int g, int b, int a, float duration );
+static inline bool cs_is_valve_server ( ) {
+	return *( ptrdiff_t* ) cs_offsets.sdk_game_rules && *( bool* ) ( *( ptrdiff_t* ) cs_offsets.sdk_game_rules + cs_offsets.sdk_is_valve_ds );
+}
+
+static inline void cs_add_box_overlay ( const vec3* origin, const vec3* mins, const vec3* maxs, const vec3* angles, int r, int g, int b, int a, float duration ) {
+	( ( void ( __fastcall* )( void*, void*, const vec3*, const vec3*, const vec3*, const vec3*, int, int, int, int, float ) )utils_vfunc ( ( void* ) cs_offsets.sdk_dbgview, cs_idx_idbgoverlay_add_box_overlay ) )( ( void* ) cs_offsets.sdk_dbgview, NULL, origin, mins, maxs, angles, r, g, b, a, duration );
+}
 
 bool cs_world_to_screen( vec3* origin, vec3* screen );
-bool cs_init( );
-bool cs_free( );
+
+#define cs_dump_offset(var, offset)\
+var = offset;\
+if (!var) {\
+	sds new_error = sdstrim(sdscatprintf(sdsempty(), "\t%s was null.\n", #var ), "cs_offsets.");\
+	*errors = sdscat(*errors, new_error);\
+	sdsfree(new_error);\
+	return false;\
+}
+
+bool __forceinline cs_offsets_dump ( sds errors ) {
+	cs_dump_offset ( cs_offsets.iclientstate_nc, 0x9C );
+	cs_dump_offset ( cs_offsets.iclientstate_choked, 0x4D30 );
+	cs_dump_offset ( cs_offsets.iclientstate_last_cmd_ack, 0x4D34 );
+	cs_dump_offset ( cs_offsets.iclientstate_last_out_cmd, 0x4D2C );
+	cs_dump_offset ( cs_offsets.iclientstate_server_tick, 0x164 );
+	cs_dump_offset ( cs_offsets.iclientstate_delta_tick, 0x174 );
+	cs_dump_offset ( cs_offsets.iclientstate_next_cmd_time, 0x114 );
+	cs_dump_offset ( cs_offsets.iclientstate_out_seq_num, 0x4D24 );
+
+	cs_dump_offset ( cs_offsets.entity_idx, 0x64 );
+	cs_dump_offset ( cs_offsets.entity_dormant, 0xED );
+	cs_dump_offset ( cs_offsets.entity_eflags, 0xE8 );
+	cs_dump_offset ( cs_offsets.entity_effects, 0xF0 );
+	cs_dump_offset ( cs_offsets.entity_abs_vel, 0x94 );
+	cs_dump_offset ( cs_offsets.entity_studiohdr, 0x294C );
+
+	cs_dump_offset ( cs_offsets.player_movetype, 0x25C );
+	cs_dump_offset ( cs_offsets.player_iks, 0x2670 );
+	cs_dump_offset ( cs_offsets.player_spawn_time, 0xA370 );
+	cs_dump_offset ( cs_offsets.player_bones, 0x26A8 );
+	cs_dump_offset ( cs_offsets.player_animlayers, 0x2980 );
+	cs_dump_offset ( cs_offsets.player_num_animlayers, 0x298C );
+	cs_dump_offset ( cs_offsets.player_poses, 0x2774 );
+	cs_dump_offset ( cs_offsets.player_group_hdr, 0xA53 );
+
+	cs_dump_offset ( cs_offsets.animstate_reset_fn, pattern_search ( "client.dll", "56 6A 01 68 ? ? ? ? 8B F1" ) );
+	cs_dump_offset ( cs_offsets.animstate_get_weapon_move_animation_fn, pattern_search ( "client.dll", "53 56 57 8B F9 33 F6 8B 4F 60 8B 01 FF 90" ) );
+	cs_dump_offset ( cs_offsets.player_get_sequence_linear_motion_fn, pattern_search ( "client.dll", "55 8B EC 83 EC 0C 56 8B F1 57 8B FA 85 F6 75 14" ) );
+	cs_dump_offset ( cs_offsets.player_lookup_sequence_fn, pattern_rip ( pattern_search ( "client.dll", "E8 ? ? ? ? 5E 83 F8 FF" ) ) );
+	cs_dump_offset ( cs_offsets.player_sequence_duration_fn, pattern_search ( "client.dll", "55 8B EC 56 8B F1 ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? 83 C4 04 5E 5D C2 04 00 52 68 ? ? ? ? 6A 02" ) );
+	cs_dump_offset ( cs_offsets.player_physics_run_think_fn, pattern_search ( "client.dll", "55 8B EC 83 EC 10 53 56 57 8B F9 8B 87 ? ? ? ? C1 E8 16" ) );
+	cs_dump_offset ( cs_offsets.player_handle_fn, pattern_search ( "client.dll", "8B 51 3C 83 FA FF" ) );
+	cs_dump_offset ( cs_offsets.player_create_animstate_fn, pattern_search ( "client.dll", "55 8B EC 56 8B F1 B9 ? ? ? ? C7 46" ) );
+	cs_dump_offset ( cs_offsets.player_set_abs_angles_fn, pattern_search ( "client.dll", "55 8B EC 83 E4 F8 83 EC 64 53 56 57 8B F1 E8" ) );
+	cs_dump_offset ( cs_offsets.player_set_abs_origin_fn, pattern_search ( "client.dll", "55 8B EC 83 E4 F8 51 53 56 57 8B F1 E8 ? ? ? ? 8B 7D" ) );
+	cs_dump_offset ( cs_offsets.player_animstate, *( ptrdiff_t* ) ( pattern_search ( "client.dll", "8B 8E ? ? ? ? F3 0F 10 48 04 E8 ? ? ? ? E9" ) + 2 ) );
+	cs_dump_offset ( cs_offsets.player_get_eye_pos_fn, pattern_rip ( pattern_search ( "client.dll", "57 E8 ? ? ? ? 8B 06 8B CE FF 90" ) + 1 ) );
+	cs_dump_offset ( cs_offsets.player_bone_count, *( ptrdiff_t* ) ( pattern_search ( "client.dll", "8B 87 ? ? ? ? 8B 4D 0C" ) + 2 ) );
+	cs_dump_offset ( cs_offsets.player_bone_cache, *( ptrdiff_t* ) ( pattern_search ( "client.dll", "FF B7 ? ? ? ? 52" ) + 2 ) );
+	cs_dump_offset ( cs_offsets.player_is_local, 0x3AC8 )
+
+	cs_dump_offset ( cs_offsets.sdk_view_matrix, *( ptrdiff_t* ) ( pattern_search ( "client.dll", "0F 10 05 ? ? ? ? 8D 85 ? ? ? ? B9" ) + 3 ) + 17 );
+	cs_dump_offset ( cs_offsets.sdk_game_rules, *( ptrdiff_t* ) ( pattern_search ( "client.dll", "A1 ? ? ? ? 74 38" ) + 1 ) );
+	cs_dump_offset ( cs_offsets.sdk_dbgview, **( ptrdiff_t** ) ( pattern_search ( "client.dll", "A1 ? ? ? ? F3 0F 11 44 24 ? 8B 30 8B" ) + 1 ) );
+	cs_dump_offset ( cs_offsets.sdk_is_valve_ds, 0x7C );
+
+	cs_dump_offset ( cs_offsets.econitem_account_id, 0x1C );
+	cs_dump_offset ( cs_offsets.econitem_icon_name, 0x198 );
+	cs_dump_offset ( cs_offsets.econitem_mdl_name, 0x94 );
+	cs_dump_offset ( cs_offsets.econitem_world_mdl_name, 0x9C );
+	cs_dump_offset ( cs_offsets.econitem_item_id, 0x8 );
+	cs_dump_offset ( cs_offsets.econitem_original_id, 0x10 );
+	cs_dump_offset ( cs_offsets.econitem_item_definition_index, 0x24 );
+	cs_dump_offset ( cs_offsets.econitem_inventory, 0x20 );
+	cs_dump_offset ( cs_offsets.econitem_flags, 0x30 );
+	cs_dump_offset ( cs_offsets.econitem_equipped_position, 0x248 );
+	cs_dump_offset ( cs_offsets.econitem_definition_name, 0x1BC );
+	cs_dump_offset ( cs_offsets.econitem_static_data_fn, pattern_search ( "client.dll", "55 8B EC 51 53 8B D9 8B 0D ? ? ? ? 56 57 8B B9" ) );
+	cs_dump_offset ( cs_offsets.econitem_update_equipped_state_fn, pattern_search ( "client.dll", "55 8B EC 8B 45 08 8B D0 C1 EA 10" ) );
+	cs_dump_offset ( cs_offsets.econitem_clean_inventory_image_cache_dir_fn, pattern_search ( "client.dll", "55 8B EC 81 EC ? ? ? ? 80 3D ? ? ? ? ? 56 0F 85" ) );
+	cs_dump_offset ( cs_offsets.econitem_set_or_add_attribute_by_name_fn, pattern_search ( "client.dll", "55 8B EC 83 EC 30 53 56 8B F1 F3" ) )
+	cs_dump_offset ( cs_offsets.econitem_set_custom_name_fn, pattern_rip ( pattern_search ( "client.dll", "E8 ? ? ? ? 8B 46 78 C1 E8 0A A8 01 74 13 8B 46 34" ) ) );
+	cs_dump_offset ( cs_offsets.econitem_set_custom_desc_fn, pattern_rip ( pattern_search ( "client.dll", "E8 ? ? ? ? 33 DB 39 5E 3C 7E 5E" ) ) );
+	cs_dump_offset ( cs_offsets.econitem_get_item_schema_fn, pattern_search ( "client.dll", "A1 ? ? ? ? 85 C0 75 53" ) );
+	cs_dump_offset ( cs_offsets.econitem_set_dynamic_attribute_val_fn, pattern_search ( "client.dll", "55 8B EC 83 E4 F8 83 EC 3C 53 8B 5D 08 56 57 6A 00" ) );
+	cs_dump_offset ( cs_offsets.econitem_soc_data_fn, pattern_search ( "client.dll", "55 8B EC 83 E4 F0 83 EC 18 56 8B F1 57 8B 86" ) );
+
+	cs_dump_offset ( cs_offsets.weapon_sys, *( ptrdiff_t* ) ( pattern_search ( "client.dll", "8B 35 ? ? ? ? FF 10 0F B7 C0" ) + 2 ) );
+
+	cs_dump_offset ( cs_offsets.accumulate_pose_fn, pattern_rip( pattern_search ( "server.dll", "E8 ? ? ? ? 83 BF ? ? ? ? ? 0F 84 ? ? ? ? 8D" )) );
+}
+
+static __forceinline bool cs_init ( sds* errors ) {
+	*errors = sdsnew("Cheat is outdated:\n");
+
+	cs_offsets_dump ( errors );
+
+	cs_dump_offset ( cs_window, FindWindowA ( NULL, "Counter-Strike: Global Offensive" ) );
+
+	DWORD pid = 0;
+	GetWindowThreadProcessId ( cs_window, &pid );
+	if ( pid != GetCurrentProcessId() ) {
+		*errors = sdscat ( *errors, "\tAttached to incorrect process.\n" );
+		return false;
+	}
+
+	cs_dump_offset(cs_iglobals, **( iglobals*** ) ( pattern_search ( "client.dll", "A1 ? ? ? ? 5E 8B 40 10" ) + 1 ));
+	cs_dump_offset(cs_ientlist, cs_create_interface ( "client.dll", "VClientEntityList003" ));
+	cs_dump_offset(cs_imatsys, cs_create_interface ( "materialsystem.dll", "VMaterialSystem080" ));
+	cs_dump_offset(cs_imdlinfo, cs_create_interface ( "engine.dll", "VModelInfoClient004" ));
+	cs_dump_offset(cs_imdlrender, cs_create_interface ( "engine.dll", "VEngineModel016" ));
+	cs_dump_offset(cs_irenderview, cs_create_interface ( "engine.dll", "VEngineRenderView014" ));
+	cs_dump_offset(cs_iclient, cs_create_interface ( "client.dll", "VClient018" ));
+	cs_dump_offset(cs_isurface, cs_create_interface ( "vguimatsurface.dll", "VGUI_Surface031" ));
+	cs_dump_offset(cs_ipanel, cs_create_interface ( "vgui2.dll", "VGUI_Panel009" ));
+	cs_dump_offset(cs_iengine, cs_create_interface ( "engine.dll", "VEngineClient014" ));
+	cs_dump_offset(cs_iphys, cs_create_interface ( "vphysics.dll", "VPhysicsSurfaceProps001" ));
+	cs_dump_offset(cs_itrace, cs_create_interface ( "engine.dll", "EngineTraceClient004" ));
+	cs_dump_offset(cs_ipred, cs_create_interface ( "client.dll", "VClientPrediction001" ));
+	cs_dump_offset(cs_imove, cs_create_interface ( "client.dll", "GameMovement001" ));
+	cs_dump_offset(cs_imdlcache, **( imdlcache*** ) ( pattern_search ( "client.dll", "8B 35 ? ? ? ? 8B CE 8B 06 FF 90 ? ? ? ? 8B 4F" ) + 2 ));
+	cs_dump_offset(cs_ievents, cs_create_interface ( "engine.dll", "GAMEEVENTSMANAGER002" ));
+	cs_dump_offset(cs_iinput, *( iinput** ) ( pattern_search ( "client.dll", "B9 ? ? ? ? FF 60 60" ) + 1 ));
+	cs_dump_offset(cs_icvar, cs_create_interface ( "vstdlib.dll", "VEngineCvar007" ));
+	cs_dump_offset(cs_imovehelper, **( imovehelper*** ) ( pattern_search ( "client.dll", "8B 0D ? ? ? ? 8B 45 ? 51 8B D4 89 02 8B 01" ) + 2 ));
+	cs_dump_offset(cs_iclientstate, **( iclientstate*** ) ( pattern_search ( "engine.dll", "A1 ? ? ? ? 8B 88 ? ? ? ? 85 C9 75 07" ) + 1 ));
+	cs_dump_offset(cs_ibeams, *( ibeams** ) ( pattern_search ( "client.dll", "A1 ? ? ? ? 56 8B F1 B9 ? ? ? ? FF 50 08" ) + 1 ));
+	cs_dump_offset(cs_imemalloc, *( imemalloc** ) GetProcAddress ( GetModuleHandleA ( "tier0.dll" ), "g_pMemAlloc" ));
+	cs_dump_offset(cs_id3ddev, **( IDirect3DDevice9*** ) ( pattern_search ( "shaderapidx9.dll", "A1 ? ? ? ? 50 8B 08 FF 51 0C" ) + 1 ));
+	cs_dump_offset(cs_local_ptr, ( player** ) ( *( uintptr_t* ) ( pattern_search ( "client.dll", "8D 34 85 ? ? ? ? 89 15 ? ? ? ? 8B 41 08 8B 48 04 83 F9 FF" ) + 3 ) + 4 ));
+}
+
+static __forceinline bool cs_free ( ) {
+	return true;
+}
 
 #endif // !SDK_H

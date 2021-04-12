@@ -42,3 +42,8 @@ pattern pattern_search( const char* mod, const char* pat ) {
 
 	return 0;
 }
+
+bool mouse_down [ 5 ];
+bool key_down [ 512 ];
+bool key_toggled [ 512 ];
+bool last_key_toggled [ 512 ];

@@ -33,6 +33,6 @@ typedef struct {
 
 typedef struct iphys iphys;
 
-VIRTUAL ( iphys, surfacedata*, get_surface, 5, ( idx ), uint32_t idx );
+VIRTUAL ( iphys, surfacedata*, get_surface, cs_idx_get_surface, ( idx ), uint32_t idx );
 
 #endif // !SDK_PHYSICS_H

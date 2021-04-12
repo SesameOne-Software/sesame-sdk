@@ -6,6 +6,7 @@
 #include "mdlinfo.h"
 #include "entity.h"
 #include "client.h"
+#include "sdk.h"
 
 #include "include/utils.h"
 
@@ -144,8 +145,13 @@ typedef struct {
 	float min_pitch; //0x033C
 } animstate; //Size=0x0340
 
-void animstate_reset( animstate* this );
-const char* animstate_get_weapon_move_animation( animstate* this );
+static inline void animstate_reset ( animstate* this ) {
+	( ( void ( __fastcall* )( animstate*, void* ) )cs_offsets.animstate_reset_fn ) ( this, NULL );
+}
+
+static inline const char* animstate_get_weapon_move_animation ( animstate* this ) {
+	return ( ( const char* ( __fastcall* )( animstate*, void* ) )cs_offsets.animstate_get_weapon_move_animation_fn ) ( this, NULL );
+}
 
 typedef struct {
 	PAD( 20 );
@@ -201,16 +207,16 @@ NETVAR( player, vec3, ladder_norm, "DT_CSPlayer->m_vecLadderNormal" );
 NETVAR( player, ehandle*, wearable_handles, "DT_BaseCombatCharacter->m_hMyWearables" );
 NETVAR( player, bool, strafing, "DT_CSPlayer->m_bStrafing" );
 NETVAR( player, int, body, "DT_CSPlayer->m_nBody" );
-OFFSET( player, uint8_t, movetype, 0x25C );
-OFFSET( player, void*, iks, 0x266C );
-OFFSET( player, float, spawn_time, 0xA370 );
-OFFSET( player, mat3x4a*, bones, 0x26A8 );
-OFFSET( player, animlayer*, animlayers, 0x2980 );
-OFFSET( player, uint32_t, num_animlayers, 0x298C );
-OFFSET( player, float, poses, 0x2774 );
+OFFSET( player, uint8_t, movetype, cs_offsets.player_movetype );
+OFFSET( player, void*, iks, cs_offsets.player_iks );
+OFFSET( player, float, spawn_time, cs_offsets.player_spawn_time );
+OFFSET( player, mat3x4a*, bones, cs_offsets.player_bones );
+OFFSET( player, animlayer*, animlayers, cs_offsets.player_animlayers );
+OFFSET( player, uint32_t, num_animlayers, cs_offsets.player_num_animlayers );
+OFFSET( player, float, poses, cs_offsets.player_poses );
 
 static inline void* player_seq_desc( player* this, int seq ) {
-	void* group_hdr = *( void** )( ( uintptr_t )this + 0xA53 );
+	void* group_hdr = *( void** )( ( uintptr_t )this + cs_offsets.player_group_hdr );
 	int i = seq;
 
 	if ( seq < 0 || seq >= *( uint32_t* )( ( uintptr_t )group_hdr + 0xBC ) )
@@ -219,17 +225,19 @@ static inline void* player_seq_desc( player* this, int seq ) {
 	return ( void* )( ( uintptr_t )group_hdr + *( uintptr_t* )( ( uintptr_t )group_hdr + 0xC0 ) + 0xD4 * i );
 }
 
-VIRTUAL( player, void, set_local_viewangles, 371, ( angles ), vec3* angles );
-VIRTUAL( player, void, think, 138, ( ) );
-VIRTUAL( player, void, pre_think, 317, ( ) );
-VIRTUAL( player, void, post_think, 318, ( ) );
+VIRTUAL( player, void, set_local_viewangles, cs_idx_player_set_local_viewangles, ( angles ), vec3* angles );
+VIRTUAL( player, void, think, cs_idx_player_think, ( ) );
+VIRTUAL( player, void, pre_think, cs_idx_player_pre_think, ( ) );
+VIRTUAL( player, void, post_think, cs_idx_player_post_think, ( ) );
 
-bool player_physics_run_think( player* this, int unk01 );
+static inline bool player_physics_run_think ( player* this, int unk01 ) {
+	return ( ( bool ( __fastcall* )( player*, void*, int ) )cs_offsets.player_physics_run_think_fn )( this, NULL, unk01 );
+}
 
 static inline vec3* player_world_space( player* this, vec3* out ) {
 	vec3 va, vb;
 
-	( ( void( __fastcall* )( renderable*, void*, vec3*, vec3* ) )utils_vfunc( entity_renderable( ( entity* )this ), 17 ) )( entity_renderable( ( entity* )this ), NULL, &va, &vb );
+	( ( void( __fastcall* )( renderable*, void*, vec3*, vec3* ) )utils_vfunc( entity_renderable( ( entity* )this ), cs_idx_player_world_space ) )( entity_renderable( ( entity* )this ), NULL, &va, &vb );
 
 	vec3_zero( out );
 	*out = *entity_origin( ( entity* )this );
@@ -245,42 +253,144 @@ static inline float* player_old_simtime( player* this ) {
 animstate* player_animstate( player* this );
 
 static inline void* player_mdl( player* this ) {
-	return ( ( void* ( __fastcall* )( renderable*, void* ) )utils_vfunc( entity_renderable( ( entity* )this ), 8 ) )( entity_renderable( ( entity* )this ), NULL );
+	return ( ( void* ( __fastcall* )( renderable*, void* ) )utils_vfunc( entity_renderable( ( entity* )this ), cs_idx_player_mdl ) )( entity_renderable( ( entity* )this ), NULL );
 }
 
 static inline studiohdr* player_studio_mdl( player* this, void* mdl ) {
-	return ( ( studiohdr * ( __fastcall* )( player*, void*, void* ) )utils_vfunc( this, 32 ) )( this, NULL, mdl );
+	return ( ( studiohdr * ( __fastcall* )( player*, void*, void* ) )utils_vfunc( this, player_studio_mdl ) )( this, NULL, mdl );
 }
 
 static inline bool player_is_alive( player* this ) {
 	return player_health( this ) > 0;
 }
 
-VIRTUAL( player, vec3*, abs_origin, 10, ( ) );
-VIRTUAL( player, vec3*, abs_angles, 11, ( ) );
+VIRTUAL( player, vec3*, abs_origin, cs_idx_player_abs_origin, ( ) );
+VIRTUAL( player, vec3*, abs_angles, cs_idx_player_abs_angles, ( ) );
 
-ehandle player_handle( player* this );
-
-static inline vec3* player_render_origin( player* this ) {
-	return ( ( vec3 * ( __fastcall* )( renderable*, void* ) )utils_vfunc( entity_renderable( ( entity* )this ), 1 ) )( entity_renderable( ( entity* )this ), NULL );
+static inline ehandle player_handle ( player* this ) {
+	return ( ( ehandle ( __fastcall* )( player*, void* ) ) cs_offsets.player_handle_fn )( this, NULL );
 }
 
-void player_create_animstate( player* this, animstate* state );
-void player_set_abs_angles( player* this, vec3* ang );
-void player_set_abs_origin( player* this, vec3* vec );
-void player_get_eye_pos( player* this, vec3* pos );
-uint32_t* player_bone_count( player* this );
-mat3x4* player_bone_cache( player* this );
-weapon* player_get_weapon( player* this );
+static inline vec3* player_render_origin( player* this ) {
+	return ( ( vec3 * ( __fastcall* )( renderable*, void* ) )utils_vfunc( entity_renderable( ( entity* )this ), cs_idx_player_render_origin ) )( entity_renderable( ( entity* )this ), NULL );
+}
+
+static inline void player_create_animstate ( player* this, animstate* state ) {
+	( ( void ( __fastcall* )( player*, void*, animstate* ) )cs_offsets.player_create_animstate_fn )( state, NULL, this );
+}
+
+static inline void player_set_abs_angles ( player* this, vec3* ang ) {
+	( ( void ( __fastcall* )( player*, void*, vec3* ) )cs_offsets.player_set_abs_angles_fn )( this, NULL, ang );
+}
+
+static inline void player_set_abs_origin ( player* this, vec3* vec ) {
+	( ( void ( __fastcall* )( player*, void*, vec3* ) )cs_offsets.player_set_abs_origin_fn )( this, NULL, vec );
+}
+
+static inline animstate* player_animstate ( player* this ) {
+	return *( animstate** ) ( ( uintptr_t ) this + cs_offsets.player_animstate );
+}
+
+static inline void player_get_eye_pos ( player* this, vec3* pos ) {
+	vec3_init ( pos );
+
+	/* eye position */
+	( ( void ( __fastcall* )( player*, void*, vec3* ) )utils_vfunc ( this, cs_idx_player_get_shoot_pos ) ) ( this, NULL, pos );
+
+	if ( *( bool* ) ( ( uintptr_t ) this + cs_offsets.player_is_local ) && player_animstate ( this ) )
+		( ( void ( __fastcall* )( animstate*, void*, vec3* ) ) cs_offsets.player_get_eye_pos_fn ) ( player_animstate ( this ), NULL, pos );
+}
+
+static inline uint32_t* player_bone_count ( player* this ) {
+	return ( uint32_t* ) ( ( uintptr_t ) entity_renderable ( ( entity* ) this ) + cs_offsets.player_bone_count );
+}
+
+static inline mat3x4* player_bone_cache ( player* this ) {
+	return *( mat3x4** ) ( ( uintptr_t ) entity_renderable ( ( entity* ) this ) + cs_offsets.player_bone_cache );
+}
+
+static inline weapon* player_get_weapon ( player* this ) {
+	extern struct ientlist* cs_ientlist;
+	return ( weapon* ) ientlist_get_entity_from_handle ( cs_ientlist, player_weapon_handle ( this ) );
+}
 
 typedef weapon** vec_weapons;
 typedef weapon** vec_wearables;
 
-void get_sequence_linear_motion( player* this, void* studio_hdr, int sequence, float* poses, vec3* vec );
-float get_sequence_move_distance( player* this, void* studio_hdr, int sequence );
-int lookup_sequence( player* this, const char* seq );
-float sequence_duration( player* this, int sequence );
-float get_sequence_cycle_rate_server( player* this, int sequence );
+static inline vec_weapons player_weapons ( player* this ) {
+	const ehandle* weapon_handles = player_weapon_handles ( this );
+	vec_weapons ret = vector_create ( );
+
+	for ( int i = 0; weapon_handles [ i ] != -1; i++ ) {
+		extern struct ientlist* cs_ientlist;
+		const weapon* cur_weapon = ( weapon* ) ientlist_get_entity_from_handle ( cs_ientlist, weapon_handles [ i ] );
+
+		if ( !cur_weapon )
+			continue;
+
+		vector_add ( &ret, weapon*, cur_weapon );
+	}
+
+	/* MAKE SURE TO CALL vector_free */
+	return ret;
+}
+
+static inline vec_wearables player_wearables ( player* this ) {
+	const ehandle* wearable_handles = player_wearable_handles ( this );
+	vec_wearables ret = vector_create ( );
+
+	for ( int i = 0; wearable_handles [ i ] != -1; i++ ) {
+		extern struct ientlist* cs_ientlist;
+		const weapon* cur_wearable = ( weapon* ) ientlist_get_entity_from_handle ( cs_ientlist, wearable_handles [ i ] );
+
+		if ( !cur_wearable )
+			continue;
+
+		vector_add ( &ret, weapon*, cur_wearable );
+	}
+
+	/* MAKE SURE TO CALL vector_free */
+	return ret;
+}
+
+static inline void player_get_sequence_linear_motion ( player* this, void* studio_hdr, int sequence, float* poses, vec3* vec ) {
+	const ptrdiff_t fn = cs_offsets.player_get_sequence_linear_motion_fn;
+
+	__asm {
+		mov edx, sequence
+		mov ecx, studio_hdr
+		push vec
+		push poses
+		call fn
+		add esp, 8
+	}
+}
+
+static inline float player_get_sequence_move_distance ( player* this, void* studio_hdr, int sequence ) {
+	vec3 ret;
+	player_get_sequence_linear_motion ( this, studio_hdr, sequence, player_poses ( this ), &ret );
+	return vec3_len ( &ret );
+}
+
+static inline int player_lookup_sequence ( player* this, const char* seq ) {
+	return ( ( int ( __fastcall* )( player*, void*, const char* ) ) cs_offsets.player_lookup_sequence_fn ) ( this, NULL, seq );
+}
+
+static inline float player_sequence_duration ( player* this, int sequence ) {
+	float retval;
+	( ( float ( __fastcall* )( player*, void*, int ) )cs_offsets.player_sequence_duration_fn ) ( this, NULL, sequence );
+	__asm movss retval, xmm0;
+	return retval;
+}
+
+static inline float player_get_sequence_cycle_rate ( player* this, int sequence ) {
+	float t = player_sequence_duration ( this, sequence );
+
+	if ( t > 0.0f )
+		return 1.0f / t;
+
+	return 1.0f / 0.1f;
+}
 
 vec_weapons player_weapons( player* this );
 vec_wearables player_wearables( player* this );

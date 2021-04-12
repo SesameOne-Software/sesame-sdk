@@ -133,33 +133,70 @@ typedef struct {
 
 typedef struct econitem econitem;
 
-OFFSET ( econitem, uint32_t, account_id, 0x1C );
-OFFSET ( econitem, const char*, icon_name, 0x198 );
-OFFSET ( econitem, const char*, mdl_name, 0x94 );
-OFFSET ( econitem, const char*, world_mdl_name, 0x9C );
-VIRTUAL ( econitem, const char*, inventory_img, 5, () );
-OFFSET ( econitem, uint64_t, item_id, 0x8 );
-OFFSET ( econitem, uint64_t, original_id, 0x10 );
-OFFSET ( econitem, uint16_t, item_definition_index, 0x24 );
-OFFSET ( econitem, uint32_t, inventory, 0x20 );
-OFFSET ( econitem, uint8_t, flags, 0x30 );
-OFFSET ( econitem, int, equipped_position, 0x248 );
+OFFSET ( econitem, uint32_t, account_id, cs_offsets.econitem_account_id );
+OFFSET ( econitem, const char*, icon_name, cs_offsets.econitem_icon_name );
+OFFSET ( econitem, const char*, mdl_name, cs_offsets.econitem_mdl_name );
+OFFSET ( econitem, const char*, world_mdl_name, cs_offsets.econitem_world_mdl_name );
+VIRTUAL ( econitem, const char*, inventory_img, cs_idx_econitem_inventory_img, () );
+OFFSET ( econitem, uint64_t, item_id, cs_offsets.econitem_item_id );
+OFFSET ( econitem, uint64_t, original_id, cs_offsets.econitem_original_id );
+OFFSET ( econitem, uint16_t, item_definition_index, cs_offsets.econitem_item_definition_index );
+OFFSET ( econitem, uint32_t, inventory, cs_offsets.econitem_inventory );
+OFFSET ( econitem, uint8_t, flags, cs_offsets.econitem_flags );
+OFFSET ( econitem, int, equipped_position, cs_offsets.econitem_equipped_position );
 
 /*
 *	XREF: "Error Parsing PaintData in %s! \n" offset is in same function call
 *	https://github.com/perilouswithadollarsign/cstrike15_src/blob/29e4c1fda9698d5cebcdaf1a0de4b829fa149bf8/game/shared/cstrike15/cstrike15_item_schema.cpp#L188
 */
-OFFSET ( econitem, const char*, definition_name, 0x1BC );
+OFFSET ( econitem, const char*, definition_name, cs_offsets.econitem_definition_name );
 
-econitem* econitem_static_data ( econitem* this );
-void econitem_update_equipped_state ( econitem* this, bool state );
-void econitem_clean_inventory_image_cache_dir ( econitem* this );
-void econitem_set_or_add_attribute_by_name ( econitem* this, float val, const char* attribute_name );
-void econitem_set_custom_name ( econitem* this, const char* name );
-void econitem_set_custom_desc ( econitem* this, const char* name );
-void econitem_set_attributei ( econitem* this, int index, int val );
-void econitem_set_attributef ( econitem* this, int index, float val );
-econitem* econitem_soc_data ( econitem* this );
+static inline econitem* econitem_static_data ( econitem* this ) {
+	return ( ( econitem * ( __fastcall* )( econitem*, void* ) )cs_offsets.econitem_static_data_fn ) ( this, NULL );
+}
+
+static inline void econitem_update_equipped_state ( econitem* this, bool state ) {
+	( ( int ( __fastcall* )( econitem*, void*, uint32_t ) )cs_offsets.econitem_update_equipped_state_fn ) ( this, NULL, state );
+}
+
+/* XREF: "resource/flash/econ/weapons/cached/*.iic" string is inside the function */
+static inline void econitem_clean_inventory_image_cache_dir ( econitem* this ) {
+	( ( void ( __fastcall* )( econitem*, void* ) )cs_offsets.econitem_clean_inventory_image_cache_dir_fn ) ( this, NULL );
+}
+
+static inline void econitem_set_or_add_attribute_by_name ( econitem* this, float val, const char* attribute_name ) {
+	const void* fn = ( void* ) cs_offsets.econitem_set_or_add_attribute_by_name_fn;
+
+	__asm {
+		mov ecx, this
+		movss xmm2, val
+		push attribute_name
+		call fn
+	}
+}
+
+static inline void econitem_set_custom_name ( econitem* this, const char* name ) {
+	( ( econitem * ( __fastcall* )( econitem*, void*, const char* ) )cs_offsets.econitem_set_custom_name_fn ) ( this, NULL, name );
+}
+
+static inline void econitem_set_custom_desc ( econitem* this, const char* name ) {
+	( ( econitem * ( __fastcall* )( econitem*, void*, const char* ) )cs_offsets.econitem_set_custom_desc_fn ) ( this, NULL, name );
+}
+
+static inline void econitem_set_attributei ( econitem* this, int index, int val ) {
+	uint32_t* v15 = ( uint32_t* ) ( ( ( void* ( __cdecl* )( ) )cs_offsets.econitem_get_item_schema_fn ) ( ) );
+	uint32_t v16 = *( uint32_t* ) ( v15 [ 72 ] + 4 * index );
+
+	( ( int ( __fastcall* )( econitem*, void*, uint32_t, void* ) )cs_offsets.econitem_set_dynamic_attribute_val_fn ) ( this, NULL, v16, &val );
+}
+
+static inline void econitem_set_attributef ( econitem* this, int index, float val ) {
+	econitem_set_attributei ( this, index, *( int* ) &val );
+}
+
+static inline econitem* econitem_soc_data ( econitem* this ) {
+	return ( ( econitem * ( __fastcall* )( econitem*, void* ) )cs_offsets.econitem_soc_data_fn ) ( this, NULL );
+}
 
 static inline uint16_t* econitem_item_data ( econitem* this ) {
 	return ( uint16_t* ) ( ( uintptr_t ) this + 0x26 );
@@ -250,9 +287,18 @@ NETVAR ( weapon, float, cycle, "DT_BaseAnimating->m_flCycle" );
 NETVAR ( weapon, float, anim_time, "DT_BaseEntity->m_flAnimTime" );
 NETVAR ( weapon, econitem, econ_item, "DT_BaseAttributableItem->m_Item" );
 
-VIRTUAL ( weapon, void, update_accuracy, 483, ( ) );
-VIRTUAL ( weapon, float, innacuracy, 482, (  ) );
-VIRTUAL ( weapon, float, spread, 452, ( ) );
-VIRTUAL ( weapon, float, max_speed, 441, ( ) );
+VIRTUAL ( weapon, void, update_accuracy, cs_idx_weapon_update_accuracy, ( ) );
+VIRTUAL ( weapon, float, innacuracy, cs_idx_weapon_innacuracy, (  ) );
+VIRTUAL ( weapon, float, spread, cs_idx_weapon_spread, ( ) );
+VIRTUAL ( weapon, float, max_speed, cs_idx_weapon_max_speed, ( ) );
+
+static inline weapon_info* weapon_data ( weapon* this ) {
+	return ( ( weapon_info * ( __fastcall* )( void*, void*, uint16_t ) )utils_vfunc ( ( void* ) cs_offsets.weapon_sys, cs_idx_weaponsys_data ) )( ( void* ) cs_offsets.weapon_sys, NULL, weapon_item_def_idx ( this ) );
+}
+
+static inline weapon* weapon_world_mdl ( weapon* this ) {
+	extern struct ientlist* cs_ientlist;
+	return ientlist_get_entity_from_handle ( cs_ientlist, weapon_world_mdl_handle ( this ) );
+}
 
 #endif // !SDK_WEAPON_H

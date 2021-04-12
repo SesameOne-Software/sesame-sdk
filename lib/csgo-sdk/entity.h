@@ -20,19 +20,19 @@ typedef struct planted_c4 planted_c4;
 typedef struct tonemap tonemap;
 typedef struct player player;
 
-OFFSET ( entity, uint32_t, idx, 0x64 );
-OFFSET ( entity, bool, dormant, 0xED );
+OFFSET ( entity, uint32_t, idx, cs_offsets.entity_idx );
+OFFSET ( entity, bool, dormant, cs_offsets.entity_dormant );
 OFFSET ( entity, renderable, renderable, 0x4 );
 OFFSET ( entity, networkable, networkable, 0x8 );
-OFFSET ( entity, uint32_t, eflags, 0xE8 );
-OFFSET ( entity, uint32_t, effects, 0xF0 );
-OFFSET ( entity, vec3, abs_vel, 0x94 );
-OFFSET ( entity, studiohdr*, studiohdr, 0x294C );
+OFFSET ( entity, uint32_t, eflags, cs_offsets.entity_eflags );
+OFFSET ( entity, uint32_t, effects, cs_offsets.entity_effects );
+OFFSET ( entity, vec3, abs_vel, cs_offsets.entity_abs_vel );
+OFFSET ( entity, studiohdr*, studiohdr, cs_offsets.entity_studiohdr );
 NETVAR ( entity, vec3, origin, "DT_BaseEntity->m_vecOrigin" );
 NETVAR ( entity, uint32_t, team, "DT_BaseEntity->m_iTeamNum" );
 
 static inline client_class* entity_get_client_class ( entity* this ) {
-	return ( ( client_class * ( __fastcall* )( networkable*, void* ) )utils_vfunc ( entity_networkable ( this ), 2 ) )( entity_get_networkable ( this ), NULL );
+	return ( ( client_class * ( __fastcall* )( networkable*, void* ) )utils_vfunc ( entity_networkable ( this ), cs_idx_entity_get_client_class ) )( entity_networkable ( this ), NULL );
 }
 
 static inline bool entity_is_player(entity* this) {

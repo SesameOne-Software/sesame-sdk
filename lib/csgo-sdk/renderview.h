@@ -24,7 +24,7 @@ typedef struct {
 
 typedef struct irenderview irenderview;
 
-VIRTUAL ( irenderview, void, set_alpha, 4, ( a ), float a );
-VIRTUAL ( irenderview, void, set_color, 6, ( c ), float* c );
+VIRTUAL ( irenderview, void, set_alpha, cs_idx_irenderview_set_alpha, ( a ), float a );
+VIRTUAL ( irenderview, void, set_color, cs_idx_irenderview_set_color, ( c ), float* c );
 
 #endif // !SDK_RENDERVIEW_H

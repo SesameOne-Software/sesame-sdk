@@ -5,8 +5,8 @@
 
 typedef struct imdlcache imdlcache;
 
-VIRTUAL ( imdlcache, void, begin_lock, 33, ( ) );
-VIRTUAL ( imdlcache, void, end_lock, 34, (  ) );
+VIRTUAL ( imdlcache, void, begin_lock, cs_idx_imdlcache_begin_lock, ( ) );
+VIRTUAL ( imdlcache, void, end_lock, cs_idx_imdlcache_end_lock, (  ) );
 
 #define MDLCACHE_CRITICAL_SECTION_START imdlcache_begin_lock(cs_imdlcache)
 #define MDLCACHE_CRITICAL_SECTION_END imdlcache_end_lock(cs_imdlcache)

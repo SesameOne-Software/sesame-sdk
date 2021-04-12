@@ -4,6 +4,7 @@
 #include "vec3.h"
 #include "entity.h"
 #include "trace.h"
+#include "offsets.h"
 
 #include "include/utils.h"
 
@@ -55,10 +56,10 @@ static inline void beam_info_init ( beam_info* this ) {
 
 typedef struct ibeams ibeams;
 
-VIRTUAL ( ibeams, void, init, 1, ( ) );
-VIRTUAL ( ibeams, void, shutdown, 2, ( ) );
-VIRTUAL ( ibeams, void, clear, 3, ( ) );
-VIRTUAL ( ibeams, void, draw, 5, ( pbeam ), beam* pbeam );
-VIRTUAL ( ibeams, beam*, create_points, 13, ( pbeam_info ), beam_info* pbeam_info );
+VIRTUAL ( ibeams, void, init, cs_idx_ibeams_init, ( ) );
+VIRTUAL ( ibeams, void, shutdown, cs_idx_ibeams_shutdown, ( ) );
+VIRTUAL ( ibeams, void, clear, cs_idx_ibeams_clear, ( ) );
+VIRTUAL ( ibeams, void, draw, cs_idx_ibeams_draw, ( pbeam ), beam* pbeam );
+VIRTUAL ( ibeams, beam*, create_points, cs_idx_ibeams_create_points, ( pbeam_info ), beam_info* pbeam_info );
 
 #endif // !SDK_BEAMS_H

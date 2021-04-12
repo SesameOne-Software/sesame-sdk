@@ -25,39 +25,10 @@ ievents* cs_ievents = NULL;
 ibeams* cs_ibeams = NULL;
 IDirect3DDevice9* cs_id3ddev = NULL;
 player** cs_local_ptr = NULL;
-
-bool cs_init( ) {
-	cs_iglobals = **( iglobals*** )( pattern_search( "client.dll", "A1 ? ? ? ? 5E 8B 40 10" ) + 1 );
-	cs_ientlist = cs_create_interface( "client.dll", "VClientEntityList003" );
-	cs_imatsys = cs_create_interface( "materialsystem.dll", "VMaterialSystem080" );
-	cs_imdlinfo = cs_create_interface( "engine.dll", "VModelInfoClient004" );
-	cs_imdlrender = cs_create_interface( "engine.dll", "VEngineModel016" );
-	cs_irenderview = cs_create_interface( "engine.dll", "VEngineRenderView014" );
-	cs_iclient = cs_create_interface( "client.dll", "VClient018" );
-	cs_isurface = cs_create_interface( "vguimatsurface.dll", "VGUI_Surface031" );
-	cs_ipanel = cs_create_interface( "vgui2.dll", "VGUI_Panel009" );
-	cs_iengine = cs_create_interface( "engine.dll", "VEngineClient014" );
-	cs_iphys = cs_create_interface( "vphysics.dll", "VPhysicsSurfaceProps001" );
-	cs_itrace = cs_create_interface( "engine.dll", "EngineTraceClient004" );
-	cs_ipred = cs_create_interface( "client.dll", "VClientPrediction001" );
-	cs_imove = cs_create_interface( "client.dll", "GameMovement001" );
-	cs_imdlcache = **( imdlcache*** )( pattern_search( "client.dll", "8B 35 ? ? ? ? 8B CE 8B 06 FF 90 ? ? ? ? 8B 4F" ) + 2 );
-	cs_ievents = cs_create_interface( "engine.dll", "GAMEEVENTSMANAGER002" );
-	cs_iinput = *( iinput** )( pattern_search( "client.dll", "B9 ? ? ? ? FF 60 60" ) + 1 );
-	cs_icvar = cs_create_interface( "vstdlib.dll", "VEngineCvar007" );
-	cs_imovehelper = **( imovehelper*** )( pattern_search( "client.dll", "8B 0D ? ? ? ? 8B 45 ? 51 8B D4 89 02 8B 01" ) + 2 );
-	cs_iclientstate = **( iclientstate*** )( pattern_search( "engine.dll", "A1 ? ? ? ? 8B 88 ? ? ? ? 85 C9 75 07" ) + 1 );
-	cs_ibeams = *( ibeams** )( pattern_search( "client.dll", "A1 ? ? ? ? 56 8B F1 B9 ? ? ? ? FF 50 08" ) + 1 );
-	cs_imemalloc = *( imemalloc** )GetProcAddress( GetModuleHandleA( "tier0.dll" ), "g_pMemAlloc" );
-	cs_id3ddev = **( IDirect3DDevice9*** )( pattern_search( "shaderapidx9.dll", "A1 ? ? ? ? 50 8B 08 FF 51 0C" ) + 1 );
-	cs_local_ptr = ( player** )( *( uintptr_t* )( pattern_search( "client.dll", "8D 34 85 ? ? ? ? 89 15 ? ? ? ? 8B 41 08 8B 48 04 83 F9 FF" ) + 3 ) + 4 );
-}
+HWND cs_window = NULL;
 
 static inline void cs_screen_transform( vec3* origin, vec3* screen ) {
-	static mat3x4* viewmat_ptr = NULL;
-
-	if ( !viewmat_ptr )
-		viewmat_ptr = ( mat3x4* )( *( uintptr_t* )( pattern_search( "client.dll", "0F 10 05 ? ? ? ? 8D 85 ? ? ? ? B9" ) + 3 ) + 176 );
+	const mat3x4* viewmat_ptr = ( mat3x4* ) cs_offsets.sdk_view_matrix;
 
 	screen->x = *mat3x4_at( viewmat_ptr, 0, 0 ) * origin->x + *mat3x4_at( viewmat_ptr, 0, 1 ) * origin->y + *mat3x4_at( viewmat_ptr, 0, 2 ) * origin->z + *mat3x4_at( viewmat_ptr, 0, 3 );
 	screen->y = *mat3x4_at( viewmat_ptr, 1, 0 ) * origin->x + *mat3x4_at( viewmat_ptr, 1, 1 ) * origin->y + *mat3x4_at( viewmat_ptr, 1, 2 ) * origin->z + *mat3x4_at( viewmat_ptr, 1, 3 );
@@ -83,27 +54,5 @@ bool cs_world_to_screen( vec3* origin, vec3* screen ) {
 	screen->x = ( wf * 0.5f ) + ( screen->x * wf ) * 0.5f;
 	screen->y = ( hf * 0.5f ) - ( screen->y * hf ) * 0.5f;
 
-	return true;
-}
-
-bool cs_is_valve_server( ) {
-	static uintptr_t* cs_game_rules = NULL;
-
-	if ( !cs_game_rules )
-		cs_game_rules = *( uintptr_t** )( pattern_search( "client.dll", "A1 ? ? ? ? 74 38" ) + 1 );
-
-	return *cs_game_rules && *( bool* )( *cs_game_rules + 0x7C );
-}
-
-void cs_add_box_overlay( const vec3* origin, const vec3* mins, const vec3* maxs, const vec3* angles, int r, int g, int b, int a, float duration ) {
-	static void* debug_overlay = NULL;
-
-	if ( !debug_overlay )
-		debug_overlay = **( void*** )( pattern_search( "client.dll", "A1 ? ? ? ? F3 0F 11 44 24 ? 8B 30 8B" ) + 1 );
-
-	( ( void( __fastcall* )( void*, void*, const vec3*, const vec3*, const vec3*, const vec3*, int, int, int, int, float ) )utils_vfunc( debug_overlay, 1 ) )( debug_overlay, NULL, origin, mins, maxs, angles, r, g, b, a, duration );
-}
-
-bool cs_free( ) {
 	return true;
 }
