@@ -89,9 +89,6 @@ static inline bool hooks_init( ) {
     backup_window_proc = ( WNDPROC ) SetWindowLongA ( cs_window, GWLP_WNDPROC, ( LONG ) window_proc );
 
     /* start menu opened */
-    key_toggled [ VK_INSERT ] = true;
-    last_key_toggled [ VK_INSERT ] = true;
-    key_down [ VK_INSERT ] = false;
     menu_set_opened ( true );
 
     menu_init ( );

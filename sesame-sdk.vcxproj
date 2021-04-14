@@ -259,7 +259,7 @@
     <ClCompile Include="src\hooks\setup_bones.c" />
     <ClCompile Include="src\hooks\should_skip_anim_frame.c" />
     <ClCompile Include="src\hooks\window_proc.c" />
-    <ClCompile Include="src\resources\roboto.c" />
+    <ClCompile Include="src\resources\noto.c" />
     <ClCompile Include="src\ses.c" />
     <ClCompile Include="src\utils.c" />
   </ItemGroup>

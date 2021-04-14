@@ -1,6 +1,8 @@
 #include "include/gui/menu.h"
 #include "lib/csgo-sdk/sdk.h"
 
+#include "include/gui/config.h"
+
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_STANDARD_BOOL
 #define NK_INCLUDE_DEFAULT_ALLOCATOR
@@ -9,7 +11,6 @@
 #define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
 #define NK_INCLUDE_FONT_BAKING
 #define NK_INCLUDE_DEFAULT_FONT
-#define NK_BUTTON_TRIGGER_ON_RELEASE
 #define NK_IMPLEMENTATION
 #include "lib/nuklear/nuklear.h"
 #define NK_D3D9_IMPLEMENTATION
@@ -20,7 +21,33 @@
 
 static bool menu_open = false;
 static struct nk_colorf bg;
+static struct nk_font* main_font = NULL;
 struct nk_context* nk_ctx = NULL;
+
+static inline void menu_set_theme ( ) {
+    struct nk_color table [ NK_COLOR_COUNT ];
+
+    table [ NK_COLOR_TEXT ] = nk_rgba ( 255, 255, 255, 255 );
+    table [ NK_COLOR_WINDOW ] = nk_rgba ( 32, 38, 45, 255 );
+    table [ NK_COLOR_HEADER ] = nk_rgba ( 33, 42, 54, 255 );
+    table [ NK_COLOR_BORDER ] = nk_rgba ( 46, 46, 46, 255 );
+    table [ NK_COLOR_BUTTON ] = table [ NK_COLOR_TOGGLE_CURSOR ] = table [ NK_COLOR_SELECT_ACTIVE ]
+        = table [ NK_COLOR_SLIDER_CURSOR ] = table [ NK_COLOR_CHART_COLOR ] = table [ NK_COLOR_SCROLLBAR_CURSOR ]
+        = table [ NK_COLOR_TAB_HEADER ] = nk_rgba ( 204, 82, 224, 255 );
+    table [ NK_COLOR_BUTTON_HOVER ] = table [ NK_COLOR_SLIDER_CURSOR_ACTIVE ] = table [ NK_COLOR_SCROLLBAR_CURSOR_ACTIVE ] = nk_rgba ( 204, 82, 224, 255 );
+    table [ NK_COLOR_BUTTON_ACTIVE ] = nk_rgba ( 0, 123, 255, 255 );
+    table [ NK_COLOR_TOGGLE ] = table [ NK_COLOR_SLIDER ] = table [ NK_COLOR_PROPERTY ]
+        = table [ NK_COLOR_EDIT ] = table [ NK_COLOR_COMBO ] = table [ NK_COLOR_CHART ]
+        = table [ NK_COLOR_SCROLLBAR ] = nk_rgba ( 33, 42, 54, 255 );
+    table [ NK_COLOR_TOGGLE_HOVER ] = nk_rgba ( 0, 123, 255, 255 );
+    table [ NK_COLOR_SELECT ] = nk_rgba ( 0, 123, 255, 255 );
+    table [ NK_COLOR_SLIDER_CURSOR_HOVER ] = nk_rgba ( 0, 123, 255, 255 );
+    table [ NK_COLOR_EDIT_CURSOR ] = nk_rgba ( 210, 210, 210, 255 );
+    table [ NK_COLOR_CHART_COLOR_HIGHLIGHT ] = nk_rgba ( 204, 82, 224, 255 );
+    table [ NK_COLOR_SCROLLBAR_CURSOR_HOVER ] = nk_rgba ( 0, 123, 255, 255 );
+
+    nk_style_from_table ( nk_ctx, table );
+}
 
 bool menu_is_open ( ) {
     return menu_open;
@@ -47,13 +74,36 @@ void menu_init ( ) {
 
         nk_ctx = nk_d3d9_init ( cs_id3ddev, w, h );
 
-        struct nk_font_atlas* atlas = NULL;
-        nk_d3d9_font_stash_begin ( &atlas );
-        struct nk_font* droid = nk_font_atlas_add_from_memory ( atlas, resources_roboto, sizeof ( resources_roboto ), 16.0f, NULL );
-        nk_d3d9_font_stash_end ( );
-        nk_style_set_font ( nk_ctx, &droid->handle );
+        static const nk_rune custom_font_range[] = {
+            //0x0020, 0x00FF,
+            //0x0102, 0x0103,
+            //0x0110, 0x0111,
+            //0x0128, 0x0129,
+            //0x0168, 0x0169,
+            //0x01A0, 0x01A1,
+            //0x01AF, 0x01B0,
+            //0x0400, 0x052F,
+            //0x1EA0, 0x1EF9,
+            //0x2DE0, 0x2DFF,
+            //0x3000, 0x30FF,
+            //0x31F0, 0x31FF,
+            //0x4e00, 0x9FAF,
+            //0xA640, 0xA69F,
+            //0xFF00, 0xFFEF,
+            0x0020, 0xFFFF,
+            0
+        };
 
-        set_style ( nk_ctx, THEME_DARK );
+        static struct nk_font_atlas* atlas = NULL;
+        nk_d3d9_font_stash_begin ( &atlas );
+        struct nk_font_config config = nk_font_config ( 18.0f );
+        config.pixel_snap = true;
+        config.range = custom_font_range;
+        main_font = nk_font_atlas_add_compressed ( atlas, resources_noto_compressed_data, resources_noto_compressed_size, 18.0f, &config );
+        nk_d3d9_font_stash_end ( );
+        nk_style_set_font ( nk_ctx, &main_font->handle );
+
+        menu_set_theme( );
     }
 }
 
@@ -66,8 +116,9 @@ void menu_draw ( ) {
 
     menu_set_opened ( utils_keybind_active ( VK_INSERT, keybind_mode_toggle ) );
 
+    nk_input_end ( nk_ctx );
     if ( menu_is_open ( ) ) {
-        if ( nk_begin ( nk_ctx, "Demo", nk_rect ( 50, 50, 230, 250 ),
+        if ( nk_begin ( nk_ctx, "Demo", nk_rect ( 300, 300, 420, 420 ),
             NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE |
             NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE ) )
         {
@@ -75,8 +126,11 @@ void menu_draw ( ) {
             static int op = EASY;
             static int property = 20;
 
-            nk_layout_row_static ( nk_ctx, 30, 80, 1 );
-            if ( nk_button_label ( nk_ctx, "button" ) );
+            nk_layout_row_dynamic ( nk_ctx, 30, 1 );
+
+            if ( nk_button_label ( nk_ctx, "Reload Theme" ) )
+                menu_set_theme ( );
+
             nk_layout_row_dynamic ( nk_ctx, 30, 2 );
             if ( nk_option_label ( nk_ctx, "easy", op == EASY ) ) op = EASY;
             if ( nk_option_label ( nk_ctx, "hard", op == HARD ) ) op = HARD;
@@ -84,18 +138,27 @@ void menu_draw ( ) {
             nk_property_int ( nk_ctx, "Compression:", 0, &property, 100, 10, 1 );
 
             nk_layout_row_dynamic ( nk_ctx, 20, 1 );
-            nk_label ( nk_ctx, "background:", NK_TEXT_LEFT );
+            nk_label ( nk_ctx, "Background (Label):", NK_TEXT_LEFT );
             nk_layout_row_dynamic ( nk_ctx, 25, 1 );
+
             if ( nk_combo_begin_color ( nk_ctx, nk_rgb_cf ( bg ), nk_vec2 ( nk_widget_width ( nk_ctx ), 400 ) ) ) {
                 nk_layout_row_dynamic ( nk_ctx, 120, 1 );
                 bg = nk_color_picker ( nk_ctx, bg, NK_RGBA );
                 nk_layout_row_dynamic ( nk_ctx, 25, 1 );
-                bg.r = nk_propertyf ( nk_ctx, "#R:", 0, bg.r, 1.0f, 0.01f, 0.005f );
-                bg.g = nk_propertyf ( nk_ctx, "#G:", 0, bg.g, 1.0f, 0.01f, 0.005f );
-                bg.b = nk_propertyf ( nk_ctx, "#B:", 0, bg.b, 1.0f, 0.01f, 0.005f );
-                bg.a = nk_propertyf ( nk_ctx, "#A:", 0, bg.a, 1.0f, 0.01f, 0.005f );
                 nk_combo_end ( nk_ctx );
             }
+
+            static float sliderf_test = 0.0f;
+            static int slideri_test = 0;
+            static bool checkbox_test = false;
+            nk_label ( nk_ctx, "Slider Float", NK_TEXT_LEFT );
+            nk_slider_float ( nk_ctx, -180.0f, &sliderf_test, 180.0f, 2.0f );
+            nk_label ( nk_ctx, "Slider Int", NK_TEXT_LEFT );
+            nk_slider_int ( nk_ctx, 0, &slideri_test, 100, 1 );
+            
+            ses_cfg_get_item ( &ses_cfg, gui, state, test_int,  );
+
+            nk_checkbox_label ( nk_ctx, "Checkbox", &checkbox_test );
         }
 
         nk_end ( nk_ctx );

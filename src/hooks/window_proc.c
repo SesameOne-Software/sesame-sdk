@@ -60,10 +60,7 @@ LRESULT __stdcall window_proc ( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 	}
 
 	MUTATE_START;
-	extern struct nk_context* nk_ctx;
-	
 	nk_d3d9_handle_event ( hWnd, uMsg, wParam, lParam );
-	nk_input_end ( nk_ctx );
 	MUTATE_END;
 
 	if ( menu_is_open() && ( ( skip_mouse_input_processing || wParam <= VK_XBUTTON2 ) || ( uMsg == WM_MOUSEWHEEL ) ) )

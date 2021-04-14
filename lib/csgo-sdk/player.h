@@ -321,7 +321,7 @@ static inline vec_weapons player_weapons ( player* this ) {
 	const ehandle* weapon_handles = player_weapon_handles ( this );
 	vec_weapons ret = vector_create ( );
 
-	for ( int i = 0; weapon_handles [ i ] != -1; i++ ) {
+	for ( int i = 0; weapon_handles [ i ] != 0xFFFFFFFF; i++ ) {
 		extern struct ientlist* cs_ientlist;
 		const weapon* cur_weapon = ( weapon* ) ientlist_get_entity_from_handle ( cs_ientlist, weapon_handles [ i ] );
 

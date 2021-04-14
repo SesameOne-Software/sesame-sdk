@@ -1,6 +1,7 @@
 #include "include/ses.h"
 #include "include/utils.h"
 #include "include/hooks/hooks.h"
+#include "include/gui/config.h"
 
 #include <windows.h>
 #include <process.h>
@@ -28,6 +29,7 @@ static int __stdcall ses_init( HMODULE mod ) {
     sds errors_out = NULL;
     if ( !cs_init( &errors_out ) ) ses_fail ( mod, errors_out ? errors_out : sdsnew("Failed to find offsets.\n") );
     if ( !netvars_init( ) ) ses_fail ( mod, sdsnew("Failed to dump netvars.\n") );
+    if ( !ses_cfg_new ( &ses_cfg ) ) ses_fail ( mod, sdsnew ( "Failed to create default config.\n" ) );
     if ( !hooks_init( ) ) ses_fail ( mod, sdsnew ( "Failed to install hooks.\n") );
 
     iengine_execute_cmd ( cs_iengine, "clear" );
@@ -45,8 +47,9 @@ static int __stdcall ses_init( HMODULE mod ) {
     /* wait for hooks to finish before we free anything they might use */
     utils_sleep( 100 );
 
-    if ( !netvars_free( ) ) ses_fail ( mod, sdsnew ( "Failed to free netvars.\n") );
+    if ( !netvars_free( ) ) ses_fail ( mod, sdsnew ( "Failed to free netvar map memory allocations.\n") );
     if ( !cs_free( ) ) ses_fail ( mod, sdsnew ( "Failed to free SDK memory allocations.\n" ));
+    if ( !ses_cfg_free ( &ses_cfg ) ) ses_fail ( mod, sdsnew ( "Failed to free config memory allocations.\n" ) );
 
     iengine_execute_cmd ( cs_iengine, "clear" );
     utils_print_console ( &( uint8_t [ ] ) { 0, 255, 0, 255 }, sdsnew( "Done.\n" ));
