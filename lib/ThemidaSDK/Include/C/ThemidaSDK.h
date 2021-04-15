@@ -76,7 +76,7 @@
 #ifdef PLATFORM_X64
  #pragma comment(lib, "SecureEngineSDK64.lib")
 #else
- #pragma comment(lib, "SecureEngineSDK32.lib")
+ //#pragma comment(lib, "SecureEngineSDK32.lib")
 #endif
 
 

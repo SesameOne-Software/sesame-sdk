@@ -22,7 +22,12 @@ static int __stdcall ses_init( HMODULE mod ) {
     while ( !GetModuleHandleA( "serverbrowser.dll" ) )
         utils_sleep( 100 );
 
-    utils_print_console ( &( uint8_t [ ] ) { 255, 100, 255, 255 }, sdsnew ( "Initializing software.\n" ) );
+    utils_print_console( &(uint8_t [ ]) { 255, 100, 255, 255 }, sdsnew( "Initializing software.\n" ) );
+
+    /* remove breakpoints that are places in the game so we can debug properly */
+#ifdef _DEBUG
+    hooks_patch_bp( );
+#endif
 
     sds errors_out = NULL;
     if ( !cs_init( &errors_out ) ) ses_fail ( mod, errors_out ? errors_out : sdsnew("Failed to find offsets.\n") );

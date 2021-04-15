@@ -22,22 +22,20 @@ void features_movement_run ( usercmd* cmd ) {
 			qd_back
 		};
 
-		switch ( *ses_cfg_get_item ( &ses_cfg, misc, movement, autostrafer, int ) ) {
+		switch ( *ses_cfg_get_item( &ses_cfg, misc, movement, autostrafer, int ) ) {
+		case 0:
 		default: /* no autostrafer */ {
 		} break;
-		case 0: /* legit autostrafer */ {
+		case 1: /* legit autostrafer */ {
 			
 		} break;
 		case 2: /* directional autostrafer */ {
 		} break;
 		case 3: /*  */ {
 		} break;
-		default: {
-
-		} break;
 		}
 
-		if ( *ses_cfg_get_item ( &ses_cfg, misc, movement, autostrafer, int ) > -0 ) {
+		if ( *ses_cfg_get_item ( &ses_cfg, misc, movement, autostrafer, int ) > 0 ) {
 			if ( abs ( cmd->mouse_dx ) > 2 ) {
 				cmd->side_move = cmd->mouse_dx < 0 ? -450.0f : 450.0f;
 				return;

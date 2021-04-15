@@ -88,30 +88,32 @@ hooks_subhooks[id] = subhook_new( (void*)(target), hook_func, 0 );\
 if ( !hooks_subhooks[id] || !subhook_get_trampoline(hooks_subhooks[id]) || subhook_install( hooks_subhooks[id] ) < 0 )\
     return false;\
 
+static inline bool hooks_patch_bp( ) {
+    const void* client_bp = ( void* )pattern_search( "client.dll", "CC F3 0F 10 4D 18" );
+
+    DWORD old_prot = 0;
+    VirtualProtect( client_bp, 1, PAGE_EXECUTE_READWRITE, &old_prot );
+    memset( client_bp, 0x90, 1 );
+    VirtualProtect( client_bp, 1, old_prot, &old_prot );
+
+    const void* server_bp = ( void* )pattern_search( "server.dll", "CC F3 0F 10 4D 18" );
+
+    old_prot = 0;
+    VirtualProtect( server_bp, 1, PAGE_EXECUTE_READWRITE, &old_prot );
+    memset( server_bp, 0x90, 1 );
+    VirtualProtect( server_bp, 1, old_prot, &old_prot );
+
+    const void* engine_bp = ( void* )pattern_search( "engine.dll", "CC FF 15 ? ? ? ? 8B D0 BB" );
+
+    old_prot = 0;
+    VirtualProtect( engine_bp, 1, PAGE_EXECUTE_READWRITE, &old_prot );
+    memset( engine_bp, 0x90, 1 );
+    VirtualProtect( engine_bp, 1, old_prot, &old_prot );
+
+    return true;
+}
+
 static inline bool hooks_init( ) {
-    /* remove breakpoints */ {
-        const void* client_bp = ( void* ) pattern_search ( "client.dll", "CC F3 0F 10 4D 18" );
-
-        DWORD old_prot = 0;
-        VirtualProtect ( client_bp, 1, PAGE_EXECUTE_READWRITE, &old_prot );
-        memset ( client_bp, 0x90, 1 );
-        VirtualProtect ( client_bp, 1, old_prot, &old_prot );
-
-        const void* server_bp = ( void* ) pattern_search ( "server.dll", "CC F3 0F 10 4D 18" );
-
-        old_prot = 0;
-        VirtualProtect ( server_bp, 1, PAGE_EXECUTE_READWRITE, &old_prot );
-        memset ( server_bp, 0x90, 1 );
-        VirtualProtect ( server_bp, 1, old_prot, &old_prot );
-
-        const void* engine_bp = ( void* ) pattern_search ( "engine.dll", "CC FF 15 ? ? ? ? 8B D0 BB" );
-
-        old_prot = 0;
-        VirtualProtect ( engine_bp, 1, PAGE_EXECUTE_READWRITE, &old_prot );
-        memset ( engine_bp, 0x90, 1 );
-        VirtualProtect ( engine_bp, 1, old_prot, &old_prot );
-    }
-
     hooks_backup_window_proc = ( WNDPROC ) SetWindowLongA ( cs_window, GWLP_WNDPROC, ( LONG ) window_proc );
 
     /* start menu opened */
