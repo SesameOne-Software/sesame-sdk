@@ -6,15 +6,11 @@
 #include <windows.h>
 #include <process.h>
 
+ses_ctx_s ses_ctx;
+
 static __forceinline int ses_fail ( HMODULE mod, sds error_msg ) {
     utils_print_console ( &( uint8_t [ ] ) { 255, 0, 0, 255 }, error_msg );
     FreeLibraryAndExitThread ( mod, EXIT_FAILURE );
-}
-
-static bool ses_should_shutdown = false;
-
-void ses_shutdown( ) {
-    ses_should_shutdown = true;
 }
 
 static int __stdcall ses_init( HMODULE mod ) {
@@ -26,33 +22,41 @@ static int __stdcall ses_init( HMODULE mod ) {
     while ( !GetModuleHandleA( "serverbrowser.dll" ) )
         utils_sleep( 100 );
 
+    utils_print_console ( &( uint8_t [ ] ) { 255, 100, 255, 255 }, sdsnew ( "Initializing software.\n" ) );
+
     sds errors_out = NULL;
     if ( !cs_init( &errors_out ) ) ses_fail ( mod, errors_out ? errors_out : sdsnew("Failed to find offsets.\n") );
+    else iengine_execute_cmd ( cs_iengine, "clear" ), utils_print_console ( &( uint8_t [ ] ) { 0, 255, 0, 255 }, sdsnew ( "Found interfaces.\n" ) );
     if ( !netvars_init( ) ) ses_fail ( mod, sdsnew("Failed to dump netvars.\n") );
-    if ( !ses_cfg_new ( &ses_cfg ) ) ses_fail ( mod, sdsnew ( "Failed to create default config.\n" ) );
+    else utils_print_console ( &( uint8_t [ ] ) { 0, 255, 0, 255 }, sdsnew ( "Dumped netvars.\n" ) );
+    if ( !ses_cfg_new ( &ses_cfg ) ) ses_fail ( mod, sdsnew ( "Failed to setup config system.\n" ) );
+    else utils_print_console ( &( uint8_t [ ] ) { 0, 255, 0, 255 }, sdsnew ( "Setup config system.\n" ) );
     if ( !hooks_init( ) ) ses_fail ( mod, sdsnew ( "Failed to install hooks.\n") );
+    else utils_print_console ( &( uint8_t [ ] ) { 0, 255, 0, 255 }, sdsnew ( "Installed hooks.\n" ) );
 
-    iengine_execute_cmd ( cs_iengine, "clear" );
-    utils_print_console ( &( uint8_t [ ] ) { 0, 255, 0, 255 }, sdsnew("Setup successful!\n") );
+    utils_print_console ( &( uint8_t [ ] ) { 255, 100, 255, 255 }, sdsnew ( "Startup was successful!\n" ) );
 
     /* wait for self-destruct key */
-    while ( !ses_should_shutdown && !GetAsyncKeyState( VK_END ) )
+    while ( !ses_ctx.shutdown )
         utils_sleep( 100 );
 
     iengine_execute_cmd ( cs_iengine, "clear" );
     utils_print_console ( &( uint8_t [ ] ) { 255, 255, 0, 255 }, sdsnew( "Unloading...\n") );
 
     if ( !hooks_free( ) ) ses_fail ( mod, sdsnew ( "Failed to uninstall hooks.\n") );
+    else utils_print_console ( &( uint8_t [ ] ) { 0, 255, 0, 255 }, sdsnew ( "Uninstalled hooks.\n" ) );
 
     /* wait for hooks to finish before we free anything they might use */
     utils_sleep( 100 );
 
     if ( !netvars_free( ) ) ses_fail ( mod, sdsnew ( "Failed to free netvar map memory allocations.\n") );
+    else utils_print_console ( &( uint8_t [ ] ) { 0, 255, 0, 255 }, sdsnew ( "Freed netvar map allocations.\n" ) );
     if ( !cs_free( ) ) ses_fail ( mod, sdsnew ( "Failed to free SDK memory allocations.\n" ));
+    else utils_print_console ( &( uint8_t [ ] ) { 0, 255, 0, 255 }, sdsnew ( "Freed SDK allocations.\n" ) );
     if ( !ses_cfg_free ( &ses_cfg ) ) ses_fail ( mod, sdsnew ( "Failed to free config memory allocations.\n" ) );
+    else utils_print_console ( &( uint8_t [ ] ) { 0, 255, 0, 255 }, sdsnew ( "Freed config allocations.\n" ) );
 
-    iengine_execute_cmd ( cs_iengine, "clear" );
-    utils_print_console ( &( uint8_t [ ] ) { 0, 255, 0, 255 }, sdsnew( "Done.\n" ));
+    utils_print_console ( &( uint8_t [ ] ) { 255, 100, 255, 255 }, sdsnew ( "Unload was successful!\n" ) );
 
     STR_ENCRYPT_END;
     VM_SHARK_BLACK_END;

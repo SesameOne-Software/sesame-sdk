@@ -147,6 +147,12 @@
     <ClInclude Include="include\gui\menu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\gui\config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\features\movement.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\hooks\create_move.c">
@@ -224,9 +230,6 @@
     <ClCompile Include="src\hooks\event_listener.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\hooks\cvar_get_bool.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\hooks\frame_stage_notify.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -294,6 +297,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\resources\noto.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gui\config.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hooks\cvar_get_int.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\features\movement.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -89,6 +89,10 @@ static inline int* iclientstate_get_out_seq_num ( iclientstate* this ) {
 	return ( int* ) ( ( uintptr_t ) this + cs_offsets.iclientstate_out_seq_num );
 }
 
+static inline void* iclientstate_get_events ( iclientstate* this ) {
+	return *( void** ) ( ( uintptr_t ) this + cs_offsets.iclientstate_events );
+}
+
 typedef struct iengine iengine;
 
 VIRTUAL ( iengine, void, get_screen_size, cs_idx_iengine_get_screen_size, (  w, h ), int* w, int* h );

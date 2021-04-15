@@ -156,6 +156,7 @@ typedef struct {
 	ptrdiff_t iclientstate_delta_tick;
 	ptrdiff_t iclientstate_next_cmd_time;
 	ptrdiff_t iclientstate_out_seq_num;
+	ptrdiff_t iclientstate_events;
 
 	ptrdiff_t entity_idx;
 	ptrdiff_t entity_dormant;
@@ -171,12 +172,14 @@ typedef struct {
 	ptrdiff_t player_animlayers;
 	ptrdiff_t player_num_animlayers;
 	ptrdiff_t player_poses;
+	ptrdiff_t player_jiggle_bones;
 	ptrdiff_t player_group_hdr;
 
 	ptrdiff_t animstate_reset_fn;
 	ptrdiff_t animstate_get_weapon_move_animation_fn;
 	ptrdiff_t player_get_sequence_linear_motion_fn;
 	ptrdiff_t player_lookup_sequence_fn;
+	ptrdiff_t player_lookup_bone_fn;
 	ptrdiff_t player_sequence_duration_fn;
 	ptrdiff_t player_physics_run_think_fn;
 	ptrdiff_t player_handle_fn;
@@ -218,6 +221,12 @@ typedef struct {
 	ptrdiff_t weapon_sys;
 
 	ptrdiff_t accumulate_pose_fn;
+
+	ptrdiff_t cam_think_ret;
+	ptrdiff_t maintain_sequence_transitions_ret;
+	ptrdiff_t loadout_allowed_ret;
+	ptrdiff_t accumulate_layers_ret;
+	ptrdiff_t list_leaves_in_box_ret;
 } cs_offsets_s;
 
 extern cs_offsets_s cs_offsets;

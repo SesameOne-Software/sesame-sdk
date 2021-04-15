@@ -3,7 +3,7 @@
 #include "include/gui/menu.h"
 #include "lib/nuklear/nuklear.h"
 
-WNDPROC backup_window_proc = NULL;
+WNDPROC hooks_backup_window_proc = NULL;
 
 extern int nk_d3d9_handle_event ( HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam );
 
@@ -67,6 +67,6 @@ LRESULT __stdcall window_proc ( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		return true;
 
 	MUTATE_START;
-	return CallWindowProcA ( backup_window_proc, hWnd, uMsg, wParam, lParam );
+	return CallWindowProcA ( hooks_backup_window_proc, hWnd, uMsg, wParam, lParam );
 	MUTATE_END;
 }

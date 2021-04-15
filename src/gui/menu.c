@@ -68,6 +68,10 @@ void menu_reset ( ) {
 }
 
 void menu_init ( ) {
+    CLEAR_START;
+    VM_SHARK_BLACK_START;
+    STR_ENCRYPT_START;
+
     if ( !nk_ctx ) {
         int w = 0, h = 0;
         iengine_get_screen_size ( cs_iengine, &w, &h );
@@ -105,6 +109,10 @@ void menu_init ( ) {
 
         menu_set_theme( );
     }
+
+    STR_ENCRYPT_END;
+    VM_SHARK_BLACK_END;
+    CLEAR_END;
 }
 
 void menu_free ( ) {
@@ -112,6 +120,10 @@ void menu_free ( ) {
 }
 
 void menu_draw ( ) {
+    CLEAR_START;
+    VM_TIGER_WHITE_START;
+    STR_ENCRYPT_START;
+
     menu_init ( );
 
     menu_set_opened ( utils_keybind_active ( VK_INSERT, keybind_mode_toggle ) );
@@ -122,43 +134,28 @@ void menu_draw ( ) {
             NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE |
             NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE ) )
         {
-            enum { EASY, HARD };
-            static int op = EASY;
-            static int property = 20;
+            const auto line_height = 30.0f;
 
-            nk_layout_row_dynamic ( nk_ctx, 30, 1 );
+            nk_layout_row_dynamic ( nk_ctx, line_height, 1 );
 
             if ( nk_button_label ( nk_ctx, "Reload Theme" ) )
                 menu_set_theme ( );
 
-            nk_layout_row_dynamic ( nk_ctx, 30, 2 );
-            if ( nk_option_label ( nk_ctx, "easy", op == EASY ) ) op = EASY;
-            if ( nk_option_label ( nk_ctx, "hard", op == HARD ) ) op = HARD;
-            nk_layout_row_dynamic ( nk_ctx, 22, 1 );
-            nk_property_int ( nk_ctx, "Compression:", 0, &property, 100, 10, 1 );
+            if ( nk_button_label ( nk_ctx, "Save Config" ) )
+                ses_cfg_save ( &ses_cfg, sdsnew ("D:\\Documents\\test.json") );
 
-            nk_layout_row_dynamic ( nk_ctx, 20, 1 );
-            nk_label ( nk_ctx, "Background (Label):", NK_TEXT_LEFT );
-            nk_layout_row_dynamic ( nk_ctx, 25, 1 );
+            if ( nk_button_label ( nk_ctx, "Load Config" ) )
+                ses_cfg_load ( &ses_cfg, sdsnew("D:\\Documents\\test.json") );
 
-            if ( nk_combo_begin_color ( nk_ctx, nk_rgb_cf ( bg ), nk_vec2 ( nk_widget_width ( nk_ctx ), 400 ) ) ) {
-                nk_layout_row_dynamic ( nk_ctx, 120, 1 );
-                bg = nk_color_picker ( nk_ctx, bg, NK_RGBA );
-                nk_layout_row_dynamic ( nk_ctx, 25, 1 );
-                nk_combo_end ( nk_ctx );
-            }
+            nk_checkbox_label ( nk_ctx, "Autojump", ses_cfg_get_item ( &ses_cfg, misc, movement, autojump, bool ) );
+            nk_label ( nk_ctx, "Autostrafer mode", NK_TEXT_LEFT );
+            nk_combobox ( nk_ctx, (char*[] ) { "None", "Legit", "Directional", "Rage" }, 4, ses_cfg_get_item ( &ses_cfg, misc, movement, autostrafer, int ), line_height, nk_vec2(-1.0f, 0.0f) );
 
-            static float sliderf_test = 0.0f;
-            static int slideri_test = 0;
-            static bool checkbox_test = false;
+            nk_checkbox_label ( nk_ctx, "Checkbox", ses_cfg_get_item ( &ses_cfg, gui, state, test_bool, bool ) );
             nk_label ( nk_ctx, "Slider Float", NK_TEXT_LEFT );
-            nk_slider_float ( nk_ctx, -180.0f, &sliderf_test, 180.0f, 2.0f );
+            nk_slider_float ( nk_ctx, -180.0f, ses_cfg_get_item ( &ses_cfg, gui, state, test_float, float ), 180.0f, 2.0f );
             nk_label ( nk_ctx, "Slider Int", NK_TEXT_LEFT );
-            nk_slider_int ( nk_ctx, 0, &slideri_test, 100, 1 );
-            
-            ses_cfg_get_item ( &ses_cfg, gui, state, test_int,  );
-
-            nk_checkbox_label ( nk_ctx, "Checkbox", &checkbox_test );
+            nk_slider_int ( nk_ctx, 0, ses_cfg_get_item ( &ses_cfg, gui, state, test_int, int ), 100, 1 );
         }
 
         nk_end ( nk_ctx );
@@ -167,4 +164,8 @@ void menu_draw ( ) {
     nk_input_begin ( nk_ctx );
 
     nk_d3d9_render ( NK_ANTI_ALIASING_ON );
+
+    STR_ENCRYPT_END;
+    VM_TIGER_WHITE_END;
+    CLEAR_END;
 }

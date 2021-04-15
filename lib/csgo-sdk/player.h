@@ -214,6 +214,7 @@ OFFSET( player, mat3x4a*, bones, cs_offsets.player_bones );
 OFFSET( player, animlayer*, animlayers, cs_offsets.player_animlayers );
 OFFSET( player, uint32_t, num_animlayers, cs_offsets.player_num_animlayers );
 OFFSET( player, float, poses, cs_offsets.player_poses );
+OFFSET ( player, int, jiggle_bones, cs_offsets.player_jiggle_bones );
 
 static inline void* player_seq_desc( player* this, int seq ) {
 	void* group_hdr = *( void** )( ( uintptr_t )this + cs_offsets.player_group_hdr );
@@ -374,6 +375,10 @@ static inline float player_get_sequence_move_distance ( player* this, void* stud
 
 static inline int player_lookup_sequence ( player* this, const char* seq ) {
 	return ( ( int ( __fastcall* )( player*, void*, const char* ) ) cs_offsets.player_lookup_sequence_fn ) ( this, NULL, seq );
+}
+
+static inline int player_lookup_bone ( player* this, const char* bone ) {
+	return ( ( int ( __fastcall* )( player*, void*, const char* ) ) cs_offsets.player_lookup_bone_fn ) ( this, NULL, bone );
 }
 
 static inline float player_sequence_duration ( player* this, int sequence ) {

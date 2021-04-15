@@ -7,11 +7,23 @@ ses_cfg_data ses_cfg;
 #undef ses_cfg_add
 #define ses_cfg_add(group, subgroup, name, data, type, size)\
 const type tmp_##group##_##subgroup##_##name = data;\
-cfg->group##_##subgroup##_##name = ( ses_cfg_entry ) { sdsnew(#group), sdsnew(#subgroup), sdsnew(#name), *(void**)&tmp_##group##_##subgroup##_##name, size, ses_type_##type };
+void* tmp_ptr_##group##_##subgroup##_##name = (void*)&tmp_##group##_##subgroup##_##name;\
+if (ses_type_##type >= ses_type_vec3) {\
+	if(ses_type_##type >= ses_type_vector)\
+		tmp_ptr_##group##_##subgroup##_##name = memcpy ( malloc ( size ), *(void**)tmp_ptr_##group##_##subgroup##_##name, size ); \
+	else\
+		tmp_ptr_##group##_##subgroup##_##name = memcpy ( malloc ( sizeof ( type ) ), tmp_ptr_##group##_##subgroup##_##name, sizeof ( type ) ); \
+}\
+cfg->group##_##subgroup##_##name = ( ses_cfg_entry ) { sdsnew(#group), sdsnew(#subgroup), sdsnew(#name), *(void**)tmp_ptr_##group##_##subgroup##_##name, size, ses_type_##type };
 
 bool ses_cfg_save ( ses_cfg_data* cfg, sds file_name ) {
+	//VM_TIGER_WHITE_START;
+	STR_ENCRYPT_START;
+
 	if ( !cfg || !ses_cfg_get_len ( cfg ) )
 		return false;
+
+	iengine_execute_cmd ( cs_iengine, "clear" );
 
 	yyjson_mut_doc* doc = yyjson_mut_doc_new ( NULL );
 	yyjson_mut_val* root = yyjson_mut_obj ( doc );
@@ -22,13 +34,13 @@ bool ses_cfg_save ( ses_cfg_data* cfg, sds file_name ) {
 		ses_cfg_entry* entry = ( ses_cfg_entry* ) cfg + i;
 		
 		/* create group object if doesnt exist already */
-		yyjson_mut_val* group = yyjson_obj_get ( root, entry->group );
+		yyjson_mut_val* group = yyjson_mut_obj_get ( root, entry->group );
 
 		if ( !group )
 			yyjson_mut_obj_add ( root, yyjson_mut_str ( doc, entry->group ), group = yyjson_mut_obj ( doc ) );
 
 		/* create subgroup object if doesnt exist already */
-		yyjson_mut_val* subgroup = yyjson_obj_get ( root, entry->subgroup );
+		yyjson_mut_val* subgroup = yyjson_mut_obj_get ( group, entry->subgroup );
 
 		if ( !subgroup )
 			yyjson_mut_obj_add ( group, yyjson_mut_str ( doc, entry->subgroup ), subgroup = yyjson_mut_obj ( doc ) );
@@ -43,15 +55,16 @@ bool ses_cfg_save ( ses_cfg_data* cfg, sds file_name ) {
 		case ses_type_float:
 			yyjson_mut_obj_add_real ( doc, subgroup, entry->name, ( double ) *( float* ) &entry->data );
 			break;
-		case ses_type_string:
+		case ses_type_sds:
 			yyjson_mut_obj_add_str ( doc, subgroup, entry->name, ( char* ) entry->data );
 			break;
 		case ses_type_color:
 			yyjson_mut_obj_add ( subgroup, yyjson_mut_str ( doc, entry->name ), yyjson_mut_arr_with_uint8 ( doc, ( uint8_t* ) &entry->data, 4 ) );
 			break;
-		case ses_type_vec3:
-			yyjson_mut_obj_add ( subgroup, yyjson_mut_str ( doc, entry->name ), yyjson_mut_arr_with_real ( doc, ( float* ) entry->data, 3 ) );
-			break;
+		case ses_type_vec3: {
+			double as_dbl []= { ( double ) ( ( float* ) entry->data ) [ 0 ], ( double ) ( ( float* ) entry->data ) [ 1 ], ( double ) ( ( float* ) entry->data ) [ 2 ] };
+			yyjson_mut_obj_add ( subgroup, yyjson_mut_str ( doc, entry->name ), yyjson_mut_arr_with_real ( doc, as_dbl, 3 ) );
+		} break;
 		case ses_type_keybind:
 			yyjson_mut_obj_add ( subgroup, yyjson_mut_str ( doc, entry->name ), yyjson_mut_arr_with_sint32 ( doc, ( int* ) entry->data, 2 ) );
 			break;
@@ -66,7 +79,8 @@ bool ses_cfg_save ( ses_cfg_data* cfg, sds file_name ) {
 
 	bool fail = false;
 
-	if ( !yyjson_write_file ( file_name, doc, YYJSON_WRITE_PRETTY, NULL, NULL ) ) {
+	yyjson_write_err err;
+	if ( !yyjson_mut_write_file ( file_name, doc, YYJSON_WRITE_PRETTY | YYJSON_WRITE_ESCAPE_UNICODE, NULL, &err ) ) {
 		utils_print_console ( &( uint8_t [ ] ) { 255, 0, 0, 255 }, sdsnew ( "Failed to save config.\n" ) );
 		fail = true;
 	}
@@ -80,11 +94,18 @@ bool ses_cfg_save ( ses_cfg_data* cfg, sds file_name ) {
 	utils_print_console ( &( uint8_t [ ] ) { 0, 255, 0, 255 }, sdsnew ( "Saved config.\n" ) );
 
 	return true;
+
+	STR_ENCRYPT_END;
+	//VM_TIGER_WHITE_END;
 }
 
 bool ses_cfg_load ( ses_cfg_data* cfg, sds file_name ) {
+	//VM_TIGER_WHITE_START;
+	STR_ENCRYPT_START;
 	if ( !cfg || !ses_cfg_get_len ( cfg ) )
 		return false;
+
+	iengine_execute_cmd ( cs_iengine, "clear" );
 
 	yyjson_read_err err;
 	yyjson_read_flag flg = YYJSON_READ_ALLOW_COMMENTS | YYJSON_READ_ALLOW_TRAILING_COMMAS;
@@ -98,8 +119,8 @@ bool ses_cfg_load ( ses_cfg_data* cfg, sds file_name ) {
 			ses_cfg_entry* entry = ( ses_cfg_entry* ) cfg + i;
 
 			yyjson_val* group = yyjson_obj_get ( root, entry->group );
-			yyjson_val* subgroup = yyjson_obj_get ( root, entry->subgroup );
-			yyjson_val* var = yyjson_obj_get ( root, entry->name );
+			yyjson_val* subgroup = yyjson_obj_get ( group, entry->subgroup );
+			yyjson_val* var = yyjson_obj_get ( subgroup, entry->name );
 
 			switch ( entry->type ) {
 			case ses_type_bool:
@@ -123,7 +144,7 @@ bool ses_cfg_load ( ses_cfg_data* cfg, sds file_name ) {
 				}
 				*( float* ) &entry->data = ( float ) yyjson_get_real ( var );
 				break;
-			case ses_type_string:
+			case ses_type_sds:
 				if ( !yyjson_is_str ( var ) ) {
 					utils_print_console ( &( uint8_t [ ] ) { 255, 0, 0, 255 }, sdscatfmt ( sdsempty ( ), "Failed to read \"%s.%s.%s\".\n", entry->group, entry->subgroup, entry->name ) );
 					break;
@@ -217,30 +238,42 @@ bool ses_cfg_load ( ses_cfg_data* cfg, sds file_name ) {
 	}
 	else {
 		yyjson_doc_free ( doc );
-		utils_print_console ( &( uint8_t [ ] ) { 255, 0, 0, 255 }, sdscatfmt( sdsempty ( ), "Failed to read config at line %zu.\n", err.pos ) );
+		utils_print_console ( &( uint8_t [ ] ) { 255, 0, 0, 255 }, sdscatfmt( sdsempty ( ), "Failed to read config at line %d.\n", (int)err.pos ) );
 		return false;
 	}
 
 	return true;
+
+	STR_ENCRYPT_END;
+	//VM_TIGER_WHITE_END;
 }
 
 bool ses_cfg_new ( ses_cfg_data* cfg ) {
 	if ( !cfg || !ses_cfg_get_len ( cfg ) )
 		return false;
 
-	ses_cfg_add ( gui, state, menu_pos, ((vec3){ 200.0f, 200.0f, 0.0f }), vec3, 0 );
-	ses_cfg_add ( gui, state, test_int, 0, int, 0 );
-	ses_cfg_add ( gui, state, test_float, 0.0f, float, 0 );
-	ses_cfg_add ( gui, state, test_bool, false, bool, 0 );
+	CLEAR_START;
+	//VM_SHARK_BLACK_START;
+	STR_ENCRYPT_START;
+
+	ses_cfg_set_defaults
 
 #ifdef _DEBUG
 	utils_print_console ( &( uint8_t [ ] ) { 255, 255, 0, 255 }, sdsnew ( "Allocated room for new config.\n" ) );
 #endif
 
+	STR_ENCRYPT_END;
+	//VM_SHARK_BLACK_END;
+	CLEAR_END;
+
 	return true;
 }
 
 bool ses_cfg_free ( ses_cfg_data* cfg ) {
+	CLEAR_START;
+	//VM_SHARK_BLACK_START;
+	STR_ENCRYPT_START;
+
 	if ( !cfg || !ses_cfg_get_len ( cfg ) )
 		return false;
 
@@ -265,7 +298,7 @@ bool ses_cfg_free ( ses_cfg_data* cfg ) {
 		/* free data if it was allocated */
 		if ( entry->data ) {
 			switch ( entry->type ) {
-			case ses_type_string:
+			case ses_type_sds:
 				sdsfree ( ( sds ) entry->data );
 				break;
 			case ses_type_vector:
@@ -291,4 +324,8 @@ bool ses_cfg_free ( ses_cfg_data* cfg ) {
 #endif
 
 	return true;
+
+	STR_ENCRYPT_END;
+	//VM_SHARK_BLACK_END;
+	CLEAR_END;
 }

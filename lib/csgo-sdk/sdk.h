@@ -173,6 +173,7 @@ bool __forceinline cs_offsets_dump ( sds errors ) {
 	cs_dump_offset ( cs_offsets.iclientstate_delta_tick, 0x174 );
 	cs_dump_offset ( cs_offsets.iclientstate_next_cmd_time, 0x114 );
 	cs_dump_offset ( cs_offsets.iclientstate_out_seq_num, 0x4D24 );
+	cs_dump_offset ( cs_offsets.iclientstate_events, *( uint32_t* ) ( pattern_search ( "engine.dll", "8B BB ? ? ? ? 85 FF 0F 84" ) + 2 ) );
 
 	cs_dump_offset ( cs_offsets.entity_idx, 0x64 );
 	cs_dump_offset ( cs_offsets.entity_dormant, 0xED );
@@ -187,6 +188,7 @@ bool __forceinline cs_offsets_dump ( sds errors ) {
 	cs_dump_offset ( cs_offsets.player_bones, 0x26A8 );
 	cs_dump_offset ( cs_offsets.player_animlayers, 0x2980 );
 	cs_dump_offset ( cs_offsets.player_num_animlayers, 0x298C );
+	cs_dump_offset ( cs_offsets.player_jiggle_bones, 0x292C );
 	cs_dump_offset ( cs_offsets.player_poses, 0x2774 );
 	cs_dump_offset ( cs_offsets.player_group_hdr, 0xA53 );
 
@@ -194,6 +196,7 @@ bool __forceinline cs_offsets_dump ( sds errors ) {
 	cs_dump_offset ( cs_offsets.animstate_get_weapon_move_animation_fn, pattern_search ( "client.dll", "53 56 57 8B F9 33 F6 8B 4F 60 8B 01 FF 90" ) );
 	cs_dump_offset ( cs_offsets.player_get_sequence_linear_motion_fn, pattern_search ( "client.dll", "55 8B EC 83 EC 0C 56 8B F1 57 8B FA 85 F6 75 14" ) );
 	cs_dump_offset ( cs_offsets.player_lookup_sequence_fn, pattern_rip ( pattern_search ( "client.dll", "E8 ? ? ? ? 5E 83 F8 FF" ) ) );
+	cs_dump_offset ( cs_offsets.player_lookup_bone_fn, pattern_search ( "client.dll", "55 8B EC 53 56 8B F1 57 83 BE ? ? ? ? ? 75" ) );
 	cs_dump_offset ( cs_offsets.player_sequence_duration_fn, pattern_search ( "client.dll", "55 8B EC 56 8B F1 ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? 83 C4 04 5E 5D C2 04 00 52 68 ? ? ? ? 6A 02" ) );
 	cs_dump_offset ( cs_offsets.player_physics_run_think_fn, pattern_search ( "client.dll", "55 8B EC 83 EC 10 53 56 57 8B F9 8B 87 ? ? ? ? C1 E8 16" ) );
 	cs_dump_offset ( cs_offsets.player_handle_fn, pattern_search ( "client.dll", "8B 51 3C 83 FA FF" ) );
@@ -235,6 +238,12 @@ bool __forceinline cs_offsets_dump ( sds errors ) {
 	cs_dump_offset ( cs_offsets.weapon_sys, *( ptrdiff_t* ) ( pattern_search ( "client.dll", "8B 35 ? ? ? ? FF 10 0F B7 C0" ) + 2 ) );
 
 	cs_dump_offset ( cs_offsets.accumulate_pose_fn, pattern_rip( pattern_search ( "server.dll", "E8 ? ? ? ? 83 BF ? ? ? ? ? 0F 84 ? ? ? ? 8D" )) );
+
+	cs_dump_offset ( cs_offsets.cam_think_ret, pattern_search ( "client.dll", "85 C0 75 30 38 86" ) );
+	cs_dump_offset ( cs_offsets.maintain_sequence_transitions_ret, pattern_search ( "client.dll", "84 C0 74 17 8B 87" ) );
+	cs_dump_offset ( cs_offsets.loadout_allowed_ret, pattern_search ( "client.dll", "75 04 B0 01 5F" ) - 2 );
+	cs_dump_offset ( cs_offsets.accumulate_layers_ret, pattern_search ( "client.dll", "84 C0 75 0D F6 87" ) );
+	cs_dump_offset ( cs_offsets.list_leaves_in_box_ret, pattern_search ( "client.dll", "56 52 FF 50 18" ) + 5 );
 }
 
 static __forceinline bool cs_init ( sds* errors ) {

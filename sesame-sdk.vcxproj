@@ -167,6 +167,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="include\features\movement.h" />
+    <ClInclude Include="include\gui\config.h" />
     <ClInclude Include="include\gui\menu.h" />
     <ClInclude Include="include\hooks\hooks.h" />
     <ClInclude Include="include\resources\resources.h" />
@@ -224,13 +226,15 @@
     <ClCompile Include="lib\subhook\subhook_x86.c" />
     <ClCompile Include="lib\vector\vector.c" />
     <ClCompile Include="lib\yyjson\yyjson.c" />
+    <ClCompile Include="src\features\movement.c" />
+    <ClCompile Include="src\gui\config.c" />
     <ClCompile Include="src\gui\menu.c" />
     <ClCompile Include="src\hooks\accumulate_layers.c" />
     <ClCompile Include="src\hooks\build_transformations.c" />
     <ClCompile Include="src\hooks\cl_fire_events.c" />
     <ClCompile Include="src\hooks\create_move.c" />
     <ClCompile Include="src\hooks\cs_blood_spray_callback.c" />
-    <ClCompile Include="src\hooks\cvar_get_bool.c" />
+    <ClCompile Include="src\hooks\cvar_get_int.c" />
     <ClCompile Include="src\hooks\d3d9_end_scene.c" />
     <ClCompile Include="src\hooks\d3d9_reset.c" />
     <ClCompile Include="src\hooks\do_extra_bone_processing.c" />
