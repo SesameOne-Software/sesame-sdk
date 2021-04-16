@@ -4608,7 +4608,8 @@ NK_API void nk_fill_polygon(struct nk_command_buffer*, float*, int point_count, 
 
 /* misc */
 NK_API void nk_draw_image(struct nk_command_buffer*, struct nk_rect, const struct nk_image*, struct nk_color);
-NK_API void nk_draw_text(struct nk_command_buffer*, struct nk_rect, const char *text, int len, const struct nk_user_font*, struct nk_color, struct nk_color);
+NK_API void nk_draw_text ( struct nk_command_buffer*, struct nk_rect, const char* text, int len, const struct nk_user_font*, struct nk_color );
+NK_API void nk_draw_text_ (struct nk_command_buffer*, struct nk_rect, const char *text, int len, const struct nk_user_font*, struct nk_color, struct nk_color);
 NK_API void nk_push_scissor(struct nk_command_buffer*, struct nk_rect);
 NK_API void nk_push_custom(struct nk_command_buffer*, struct nk_rect, nk_command_custom_callback, nk_handle usr);
 
@@ -4833,6 +4834,13 @@ union nk_style_item_data {
     struct nk_color color;
 };
 
+struct nk_anim_data {
+    void* var_ptr;
+    float hover_fraction_inner;
+    float hover_fraction_outer;
+    float main_fraction;
+};
+
 struct nk_style_item {
     enum nk_style_item_type type;
     union nk_style_item_data data;
@@ -4893,6 +4901,7 @@ struct nk_style_toggle {
     struct nk_vec2 touch_padding;
     float spacing;
     float border;
+    float rounding;
 
     /* optional user callbacks */
     nk_handle userdata;
@@ -5631,10 +5640,13 @@ struct nk_context {
 /* ==============================================================
  *                          MATH
  * =============================================================== */
+#define NK_ANIM_SPEED 0.200f
+
 #define NK_PI 3.141592654f
 #define NK_UTF_INVALID 0xFFFD
 #define NK_MAX_FLOAT_PRECISION 2
 
+#define NK_LERP(a, b, t) ((a) + ((b) - (a)) * (t))
 #define NK_UNUSED(x) ((void)(x))
 #define NK_SATURATE(x) (NK_MAX(0, NK_MIN(1.0f, x)))
 #define NK_LEN(a) (sizeof(a)/sizeof(a)[0])
@@ -5656,6 +5668,52 @@ struct nk_context {
 #define nk_ptr_add(t, p, i) ((t*)((void*)((nk_byte*)(p) + (i))))
 #define nk_ptr_add_const(t, p, i) ((const t*)((const void*)((const nk_byte*)(p) + (i))))
 #define nk_zero_struct(s) nk_zero(&s, sizeof(s))
+
+static inline struct nk_color nk_lerp_color ( struct nk_color* a, struct nk_color* b, float t ) {
+    return ( struct nk_color ) { NK_LERP ( a->r, b->r, t ), NK_LERP ( a->g, b->g, t ), NK_LERP ( a->b, b->b, t ), NK_LERP ( a->a, b->a, t ) };
+}
+
+static inline nk_uint nk_hash_str ( const char* str ) {
+    nk_uint hash = 5381;
+    char c = 0;
+
+    while ( c = *str++ )
+        hash = ( ( hash << 5 ) + hash ) + c;
+
+    return hash;
+}
+
+static int nk_anim_data_compare ( const void* a, const void* b, void* udata ) {
+    return !( ( ( struct nk_anim_data* ) a )->var_ptr == ( ( struct nk_anim_data* ) b )->var_ptr );
+}
+
+static uint64_t nk_anim_data_hash ( const void* item, uint64_t seed0, uint64_t seed1 ) {
+    return (uint64_t) ( ( struct nk_anim_data* ) item )->var_ptr;
+}
+
+static hashmap* nk_anims = NULL;
+
+//hashmap_set(map, &(struct user){ .name="Dale", .age=44 });
+static inline struct nk_anim_data* nk_get_anim ( void* id ) {
+    struct nk_anim_data* ret = hashmap_get ( nk_anims, &( struct nk_anim_data ){ id } );
+
+    if (!ret)
+        hashmap_set ( nk_anims, &( struct nk_anim_data ){ id, 0.0f, 0.0f, 0.0f } );
+
+    return ret ? ret : hashmap_get ( nk_anims, &( struct nk_anim_data ){ id } );
+}
+
+static inline float nk_do_anim ( struct nk_context* ctx, float* t, float change_dir, float a, float b ) {
+    const float res = *t + ctx->delta_time_seconds * ( change_dir * ( 1.0f / NK_ANIM_SPEED ) );
+    *t = NK_CLAMP ( 0.0f, res, 1.0f );
+    return NK_LERP ( a, b, *t );
+}
+
+static inline struct nk_color nk_do_anim_color ( struct nk_context* ctx, float* t, float change_dir, struct nk_color* a, struct nk_color* b ) {
+    const float res = *t + ctx->delta_time_seconds * ( change_dir * ( 1.0f / NK_ANIM_SPEED ) );
+    *t = NK_CLAMP ( 0.0f, res, 1.0f );
+    return nk_lerp_color ( a, b, *t );
+}
 
 /* ==============================================================
  *                          ALIGNMENT
@@ -5704,6 +5762,8 @@ template<typename T> struct nk_alignof{struct Big {T x; char c;}; enum {
 #endif /* NK_NUKLEAR_H_ */
 
 #ifdef NK_IMPLEMENTATION
+
+#include "lib/hashmap/hashmap.h"
 
 #ifndef NK_INTERNAL_H
 #define NK_INTERNAL_H
@@ -5944,7 +6004,7 @@ NK_LIB nk_bool nk_button_behavior(nk_flags *state, struct nk_rect r, const struc
 NK_LIB const struct nk_style_item* nk_draw_button(struct nk_command_buffer *out, const struct nk_rect *bounds, nk_flags state, const struct nk_style_button *style);
 NK_LIB nk_bool nk_do_button(nk_flags *state, struct nk_command_buffer *out, struct nk_rect r, const struct nk_style_button *style, const struct nk_input *in, enum nk_button_behavior behavior, struct nk_rect *content);
 NK_LIB void nk_draw_button_text(struct nk_command_buffer *out, const struct nk_rect *bounds, const struct nk_rect *content, nk_flags state, const struct nk_style_button *style, const char *txt, int len, nk_flags text_alignment, const struct nk_user_font *font);
-NK_LIB nk_bool nk_do_button_text(nk_flags *state, struct nk_command_buffer *out, struct nk_rect bounds, const char *string, int len, nk_flags align, enum nk_button_behavior behavior, const struct nk_style_button *style, const struct nk_input *in, const struct nk_user_font *font);
+NK_LIB nk_bool nk_do_button_text( struct nk_context* ctx, nk_flags *state, struct nk_command_buffer *out, struct nk_rect bounds, const char *string, int len, nk_flags align, enum nk_button_behavior behavior, struct nk_style_button *style, const struct nk_input *in, const struct nk_user_font *font);
 NK_LIB void nk_draw_button_symbol(struct nk_command_buffer *out, const struct nk_rect *bounds, const struct nk_rect *content, nk_flags state, const struct nk_style_button *style, enum nk_symbol_type type, const struct nk_user_font *font);
 NK_LIB nk_bool nk_do_button_symbol(nk_flags *state, struct nk_command_buffer *out, struct nk_rect bounds, enum nk_symbol_type symbol, enum nk_button_behavior behavior, const struct nk_style_button *style, const struct nk_input *in, const struct nk_user_font *font);
 NK_LIB void nk_draw_button_image(struct nk_command_buffer *out, const struct nk_rect *bounds, const struct nk_rect *content, nk_flags state, const struct nk_style_button *style, const struct nk_image *img);
@@ -9218,8 +9278,57 @@ nk_push_custom(struct nk_command_buffer *b, struct nk_rect r,
     cmd->callback_data = usr;
     cmd->callback = cb;
 }
+
 NK_API void
-nk_draw_text(struct nk_command_buffer *b, struct nk_rect r,
+nk_draw_text ( struct nk_command_buffer* b, struct nk_rect r, const char* string, int length, const struct nk_font* font, struct nk_color fg ) {
+    float text_width = 0;
+    struct nk_command_text* cmd;
+
+    NK_ASSERT ( b );
+    NK_ASSERT ( font );
+
+    if ( !b || !string || !length || fg.a == 0 ) return;
+
+    r.w = font->handle.width ( font->handle.userdata, font->handle.height, string, length );
+    r.h = font->handle.height;
+
+    if ( b->use_clipping ) {
+        const struct nk_rect* c = &b->clip;
+        if ( c->w == 0 || c->h == 0 || !NK_INTERSECT ( r.x, r.y, r.w, r.h, c->x, c->y, c->w, c->h ) )
+            return;
+    }
+
+    /* make sure text fits inside bounds */
+    text_width = font->handle.width ( font->handle.userdata, font->handle.height, string, length );
+
+    if ( text_width > r.w ) {
+        int glyphs = 0;
+        float txt_width = ( float ) text_width;
+        length = nk_text_clamp ( &font->handle, string, length, r.w, &glyphs, &txt_width, 0, 0 );
+    }
+
+    if ( !length ) return;
+
+    cmd = ( struct nk_command_text* )
+        nk_command_buffer_push ( b, NK_COMMAND_TEXT, sizeof ( *cmd ) + ( nk_size ) ( length + 1 ) );
+
+    if ( !cmd ) return;
+
+    cmd->x = ( short ) r.x;
+    cmd->y = ( short ) r.y;
+    cmd->w = ( unsigned short ) r.w;
+    cmd->h = ( unsigned short ) r.h;
+    cmd->background = ( struct nk_color ) { 0,0,0,0 };
+    cmd->foreground = fg;
+    cmd->font = &font->handle;
+    cmd->length = length;
+    cmd->height = font->handle.height;
+    NK_MEMCPY ( cmd->string, string, ( nk_size ) length );
+    cmd->string [ length ] = '\0';
+}
+
+NK_API void
+nk_draw_text_ (struct nk_command_buffer *b, struct nk_rect r,
     const char *string, int length, const struct nk_user_font *font,
     struct nk_color bg, struct nk_color fg)
 {
@@ -17610,6 +17719,9 @@ nk_font_atlas_clear(struct nk_font_atlas *atlas)
     if (atlas->glyphs)
         atlas->permanent.free(atlas->permanent.userdata, atlas->glyphs);
     nk_zero_struct(*atlas);
+
+    /* had to put  this some*/
+    hashmap_free ( nk_anims );
 }
 #endif
 
@@ -17996,7 +18108,7 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
     button->touch_padding   = nk_vec2(0.0f, 0.0f);
     button->userdata        = nk_handle_ptr(0);
     button->text_alignment  = NK_TEXT_CENTERED;
-    button->border          = 1.0f;
+    button->border          = 3.0f;
     button->rounding        = 4.0f;
     button->draw_begin      = 0;
     button->draw_end        = 0;
@@ -18016,8 +18128,8 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
     button->touch_padding   = nk_vec2(0.0f,0.0f);
     button->userdata        = nk_handle_ptr(0);
     button->text_alignment  = NK_TEXT_CENTERED;
-    button->border          = 0.0f;
-    button->rounding        = 0.0f;
+    button->border          = 3.0f;
+    button->rounding        = 4.0f;
     button->draw_begin      = 0;
     button->draw_end        = 0;
 
@@ -18036,8 +18148,8 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
     button->touch_padding   = nk_vec2(0.0f,0.0f);
     button->userdata        = nk_handle_ptr(0);
     button->text_alignment  = NK_TEXT_CENTERED;
-    button->border          = 0.0f;
-    button->rounding        = 1.0f;
+    button->border          = 3.0f;
+    button->rounding        = 4.0f;
     button->draw_begin      = 0;
     button->draw_end        = 0;
 
@@ -18059,6 +18171,7 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
     toggle->border_color    = nk_rgba(0,0,0,0);
     toggle->border          = 0.0f;
     toggle->spacing         = 4;
+    toggle->rounding = 2.0f;
 
     /* option toggle */
     toggle = &style->option;
@@ -18078,6 +18191,7 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
     toggle->border_color    = nk_rgba(0,0,0,0);
     toggle->border          = 0.0f;
     toggle->spacing         = 4;
+    toggle->rounding = 2.0f;
 
     /* selectable */
     select = &style->selectable;
@@ -18098,7 +18212,7 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
     select->image_padding   = nk_vec2(2.0f,2.0f);
     select->touch_padding   = nk_vec2(0,0);
     select->userdata        = nk_handle_ptr(0);
-    select->rounding        = 0.0f;
+    select->rounding        = 4.0f;
     select->draw_begin      = 0;
     select->draw_end        = 0;
 
@@ -18123,7 +18237,7 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
     slider->userdata        = nk_handle_ptr(0);
     slider->show_buttons    = nk_false;
     slider->bar_height      = 8;
-    slider->rounding        = 0;
+    slider->rounding        = 0.0f;
     slider->draw_begin      = 0;
     slider->draw_end        = 0;
 
@@ -18160,7 +18274,7 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
     prog->cursor_border_color = nk_rgba(0,0,0,0);
     prog->userdata          = nk_handle_ptr(0);
     prog->padding           = nk_vec2(4,4);
-    prog->rounding          = 0;
+    prog->rounding          = 4.0f;
     prog->border            = 0;
     prog->cursor_rounding   = 0;
     prog->cursor_border     = 0;
@@ -18184,7 +18298,7 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
     scroll->padding         = nk_vec2(0,0);
     scroll->show_buttons    = nk_false;
     scroll->border          = 0;
-    scroll->rounding        = 0;
+    scroll->rounding        = 4.0f;
     scroll->border_cursor   = 0;
     scroll->rounding_cursor = 0;
     scroll->draw_begin      = 0;
@@ -18206,7 +18320,7 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
     button->userdata        = nk_handle_ptr(0);
     button->text_alignment  = NK_TEXT_CENTERED;
     button->border          = 1.0f;
-    button->rounding        = 0.0f;
+    button->rounding        = 4.0f;
     button->draw_begin      = 0;
     button->draw_end        = 0;
     style->scrollh.dec_button = style->scrollh.inc_button;
@@ -18237,7 +18351,7 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
     edit->row_padding       = 2;
     edit->cursor_size       = 4;
     edit->border            = 1;
-    edit->rounding          = 0;
+    edit->rounding          = 4.0f;
 
     /* property */
     property = &style->property;
@@ -18274,7 +18388,7 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
     button->userdata        = nk_handle_ptr(0);
     button->text_alignment  = NK_TEXT_CENTERED;
     button->border          = 0.0f;
-    button->rounding        = 0.0f;
+    button->rounding        = 4.0f;
     button->draw_begin      = 0;
     button->draw_end        = 0;
     style->property.inc_button = style->property.dec_button;
@@ -18300,7 +18414,7 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
     edit->padding           = nk_vec2(0,0);
     edit->cursor_size       = 8;
     edit->border            = 0;
-    edit->rounding          = 0;
+    edit->rounding          = 4.0f;
 
     /* chart */
     chart = &style->chart;
@@ -18311,7 +18425,7 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
     chart->color            = table[NK_COLOR_CHART_COLOR];
     chart->padding          = nk_vec2(4,4);
     chart->border           = 0;
-    chart->rounding         = 0;
+    chart->rounding         = 4.0f;
 
     /* combo */
     combo = &style->combo;
@@ -18329,7 +18443,7 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
     combo->button_padding   = nk_vec2(0,4);
     combo->spacing          = nk_vec2(4,0);
     combo->border           = 1;
-    combo->rounding         = 0;
+    combo->rounding         = 4.0f;
 
     /* combo button */
     button = &style->combo.button;
@@ -18347,7 +18461,7 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
     button->userdata        = nk_handle_ptr(0);
     button->text_alignment  = NK_TEXT_CENTERED;
     button->border          = 0.0f;
-    button->rounding        = 0.0f;
+    button->rounding        = 4.0f;
     button->draw_begin      = 0;
     button->draw_end        = 0;
 
@@ -18362,7 +18476,7 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
     tab->spacing            = nk_vec2(4,4);
     tab->indent             = 10.0f;
     tab->border             = 1;
-    tab->rounding           = 0;
+    tab->rounding           = 4.0f;
 
     /* tab button */
     button = &style->tab.tab_minimize_button;
@@ -18401,7 +18515,7 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
     button->userdata        = nk_handle_ptr(0);
     button->text_alignment  = NK_TEXT_CENTERED;
     button->border          = 0.0f;
-    button->rounding        = 0.0f;
+    button->rounding        = 4.0f;
     button->draw_begin      = 0;
     button->draw_end        = 0;
     style->tab.node_maximize_button =*button;
@@ -18437,8 +18551,8 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
     button->touch_padding   = nk_vec2(0.0f,0.0f);
     button->userdata        = nk_handle_ptr(0);
     button->text_alignment  = NK_TEXT_CENTERED;
-    button->border          = 0.0f;
-    button->rounding        = 0.0f;
+    button->border          = 3.0f;
+    button->rounding        = 4.0f;
     button->draw_begin      = 0;
     button->draw_end        = 0;
 
@@ -18457,8 +18571,8 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
     button->touch_padding   = nk_vec2(0.0f,0.0f);
     button->userdata        = nk_handle_ptr(0);
     button->text_alignment  = NK_TEXT_CENTERED;
-    button->border          = 0.0f;
-    button->rounding        = 0.0f;
+    button->border          = 3.0f;
+    button->rounding        = 4.0f;
     button->draw_begin      = 0;
     button->draw_end        = 0;
 
@@ -18474,7 +18588,7 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
     win->tooltip_border_color = table[NK_COLOR_BORDER];
     win->scaler = nk_style_item_color(table[NK_COLOR_TEXT]);
 
-    win->rounding = 0.0f;
+    win->rounding = 2.0f;
     win->spacing = nk_vec2(4,4);
     win->scrollbar_size = nk_vec2(10,10);
     win->min_size = nk_vec2(64,64);
@@ -18658,6 +18772,8 @@ nk_setup(struct nk_context *ctx, const struct nk_user_font *font)
 #ifdef NK_INCLUDE_VERTEX_BUFFER_OUTPUT
     nk_draw_list_init(&ctx->draw_list);
 #endif
+
+    nk_anims = hashmap_new ( sizeof ( struct nk_anim_data ), 0, 0, 0, nk_anim_data_hash, nk_anim_data_compare, NULL );
 }
 #ifdef NK_INCLUDE_DEFAULT_ALLOCATOR
 NK_API nk_bool
@@ -20830,7 +20946,7 @@ nk_contextual_item_text(struct nk_context *ctx, const char *text, int len,
     if (!state) return nk_false;
 
     in = (state == NK_WIDGET_ROM || win->layout->flags & NK_WINDOW_ROM) ? 0 : &ctx->input;
-    if (nk_do_button_text(&ctx->last_widget_state, &win->buffer, bounds,
+    if (nk_do_button_text(ctx, &ctx->last_widget_state, &win->buffer, bounds,
         text, len, alignment, NK_BUTTON_DEFAULT, &style->contextual_button, in, style->font)) {
         nk_contextual_close(ctx);
         return nk_true;
@@ -21093,7 +21209,7 @@ nk_menu_begin_text(struct nk_context *ctx, const char *title, int len,
     state = nk_widget(&header, ctx);
     if (!state) return 0;
     in = (state == NK_WIDGET_ROM || win->flags & NK_WINDOW_ROM) ? 0 : &ctx->input;
-    if (nk_do_button_text(&ctx->last_widget_state, &win->buffer, header,
+    if (nk_do_button_text(ctx, &ctx->last_widget_state, &win->buffer, header,
         title, len, align, NK_BUTTON_DEFAULT, &ctx->style.menu_button, in, ctx->style.font))
         is_clicked = nk_true;
     return nk_menu_begin(ctx, win, title, is_clicked, header, size);
@@ -22961,7 +23077,7 @@ nk_widget_text(struct nk_command_buffer *o, struct nk_rect b,
         label.y = b.y + b.h - f->height;
         label.h = f->height;
     }
-    nk_draw_text(o, label, (const char*)string, len, f, t->background, t->text);
+    nk_draw_text_(o, label, (const char*)string, len, f, t->background, t->text);
 }
 NK_LIB void
 nk_widget_text_wrap(struct nk_command_buffer *o, struct nk_rect b,
@@ -23501,10 +23617,10 @@ nk_draw_button_text(struct nk_command_buffer *out,
     nk_widget_text(out, *content, txt, len, &text, text_alignment, font);
 }
 NK_LIB nk_bool
-nk_do_button_text(nk_flags *state,
+nk_do_button_text( struct nk_context* ctx, nk_flags *state,
     struct nk_command_buffer *out, struct nk_rect bounds,
     const char *string, int len, nk_flags align, enum nk_button_behavior behavior,
-    const struct nk_style_button *style, const struct nk_input *in,
+    struct nk_style_button *style, const struct nk_input *in,
     const struct nk_user_font *font)
 {
     struct nk_rect content;
@@ -23519,9 +23635,27 @@ nk_do_button_text(nk_flags *state,
         return nk_false;
 
     ret = nk_do_button(state, out, bounds, style, in, behavior, &content);
+
+    struct nk_anim_data* anim_data = nk_get_anim ( string );
+
+    const struct nk_color dynamic_color = nk_do_anim_color ( ctx, &anim_data->hover_fraction_inner, (*state & NK_WIDGET_STATE_ACTIVED) ? 1.0f : -1.0f, &style->normal.data.color, &style->active.data.color );
+    float dynamic_border = nk_do_anim ( ctx, &anim_data->hover_fraction_outer, (*state & NK_WIDGET_STATE_ACTIVED )? 1.0f : -1.0f, 0.0f, style->border );
+    nk_style_push_color ( ctx, &style->normal.data.color, dynamic_color );
+    nk_style_push_color ( ctx, &style->hover.data.color, dynamic_color );
+    nk_style_push_color ( ctx, &style->active.data.color, dynamic_color );
+    const float backup_border = style->border;
+    style->border = dynamic_border;
+
     if (style->draw_begin) style->draw_begin(out, style->userdata);
     nk_draw_button_text(out, &bounds, &content, *state, style, string, len, align, font);
     if (style->draw_end) style->draw_end(out, style->userdata);
+
+    style->border = backup_border;
+
+    nk_style_pop_color ( ctx );
+    nk_style_pop_color ( ctx );
+    nk_style_pop_color ( ctx );
+
     return ret;
 }
 NK_LIB void
@@ -23797,7 +23931,7 @@ nk_button_text_styled(struct nk_context *ctx,
 
     if (!state) return 0;
     in = (state == NK_WIDGET_ROM || layout->flags & NK_WINDOW_ROM) ? 0 : &ctx->input;
-    return nk_do_button_text(&ctx->last_widget_state, &win->buffer, bounds,
+    return nk_do_button_text(ctx, &ctx->last_widget_state, &win->buffer, bounds,
                     title, len, style->text_alignment, ctx->button_behavior,
                     style, in, ctx->style.font);
 }
@@ -24062,13 +24196,13 @@ nk_draw_checkbox(struct nk_command_buffer *out,
 
     /* draw background and cursor */
     if (background->type == NK_STYLE_ITEM_COLOR) {
-        nk_fill_rect(out, *selector, 0, style->border_color);
-        nk_fill_rect(out, nk_shrink_rect(*selector, style->border), 0, background->data.color);
+        nk_fill_rect(out, *selector, style->rounding, style->border_color);
+        nk_fill_rect(out, nk_shrink_rect(*selector, style->border), style->rounding, background->data.color);
     } else nk_draw_image(out, *selector, &background->data.image, nk_white);
     if (active) {
         if (cursor->type == NK_STYLE_ITEM_IMAGE)
             nk_draw_image(out, *cursors, &cursor->data.image, nk_white);
-        else nk_fill_rect(out, *cursors, 0, cursor->data.color);
+        else nk_fill_rect(out, *cursors, style->rounding, cursor->data.color);
     }
 
     text.padding.x = 0;

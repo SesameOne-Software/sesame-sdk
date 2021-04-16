@@ -141,9 +141,6 @@
     <ClInclude Include="lib\nuklear\nuklear_d3d9.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="lib\nuklear\nuklear_style.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\gui\menu.h">
       <Filter>Header Files</Filter>
     </ClInclude>

@@ -80,25 +80,30 @@ static inline float cs_ticks2time( int t ) {
 }
 
 #define cs_for_each_player() \
-for ( int idx = 1; idx <= cs_iglobals->max_clients; idx++ )
+for ( struct { int idx; player* ent } iter = {0}; iter.idx <= cs_iglobals->max_clients; iter.player = (player*) ientlist_get_entity(cs_ientlist, ++iter.idx) )
 
 static inline void cs_rotate_movement( usercmd* cmd, float backup_side_move, float backup_forward_move, const vec3* old_angles ) {
 	float dv = 0.0f;
 	float f1 = 0.0f;
 	float f2 = 0.0f;
+
 	if ( old_angles->y < 0.0f )
 		f1 = 360.0f + old_angles->y;
 	else
 		f1 = old_angles->y;
+
 	if ( cmd->angles.y < 0.0f )
 		f2 = 360.0f + cmd->angles.y;
 	else
 		f2 = cmd->angles.y;
+
 	if ( f2 < f1 )
 		dv = abs( f2 - f1 );
 	else
 		dv = 360.0f - abs( f1 - f2 );
+
 	dv = 360.0f - dv;
+
 	cmd->forward_move = cosf( cs_deg2rad( dv ) ) * backup_forward_move + cosf( cs_deg2rad( dv + 90.0f ) ) * backup_side_move;
 	cmd->side_move = sinf( cs_deg2rad( dv ) ) * backup_forward_move + sinf( cs_deg2rad( dv + 90.0f ) ) * backup_side_move;
 }

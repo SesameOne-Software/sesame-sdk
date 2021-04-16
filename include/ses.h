@@ -12,7 +12,7 @@ typedef enum {
 typedef struct {
 	/* set to true to unload the cheat */
 	bool shutdown;
-	/* determines whether or not the current will be choked at the end of create_moved */
+	/* determines whether or not the current will be choked at the end of create_move */
 	bool choke;
 	/* whether or not create_move is currently being called */
 	bool in_move;
@@ -22,6 +22,19 @@ typedef struct {
 	uint32_t num_choked;
 	/* indicates the type of state the game round is in */
 	ses_round round;
+	/* prediction variables */
+	vec3 unpredicted_vel;
+	/* for fixing movement in create_move */
+	vec3 input_angles;
+	float input_forward_move, input_side_move;
+	/* nuklear context */
+	struct nk_context* nk_ctx;
+	struct {
+		struct nk_font* default_font;
+		struct nk_font* menu_font;
+		struct nk_font* esp_font;
+		struct nk_font* indicators_font;
+	} fonts;
 } ses_ctx_s;
 
 extern ses_ctx_s ses_ctx;

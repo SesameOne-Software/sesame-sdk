@@ -206,7 +206,6 @@
     <ClInclude Include="lib\hashmap\hashmap.h" />
     <ClInclude Include="lib\nuklear\nuklear.h" />
     <ClInclude Include="lib\nuklear\nuklear_d3d9.h" />
-    <ClInclude Include="lib\nuklear\nuklear_style.h" />
     <ClInclude Include="lib\sds\sds.h" />
     <ClInclude Include="lib\sds\sdsalloc.h" />
     <ClInclude Include="lib\subhook\subhook.h" />

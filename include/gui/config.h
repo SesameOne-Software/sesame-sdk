@@ -50,8 +50,9 @@ typedef struct {
 /* basically most of this is just a complicated, but efficient workaround in c for stuff that is pretty trivial to do in c++ :( */
 #define ses_cfg_set_defaults \
 /*ses_cfg_add ( gui, state, menu_pos, ( ( vec3 ){ 200.0f, 200.0f, 0.0f } ), vec3, 0 );*/\
-ses_cfg_add ( misc, movement, autojump, false, bool, 0 );\
-ses_cfg_add ( misc, movement, autostrafer, 0, int, 0 );\
+ses_cfg_add ( misc, movement, fast_stop, false, bool, 0 );\
+ses_cfg_add ( misc, movement, auto_jump, false, bool, 0 );\
+ses_cfg_add ( misc, movement, auto_strafer, 0, int, 0 );\
 ses_cfg_add ( gui, state, test_int, 0, int, 0 );\
 ses_cfg_add ( gui, state, test_float, 0.0f, float, 0 );\
 ses_cfg_add ( gui, state, test_bool, false, bool, 0 );\

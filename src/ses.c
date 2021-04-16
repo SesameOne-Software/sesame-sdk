@@ -6,7 +6,7 @@
 #include <windows.h>
 #include <process.h>
 
-ses_ctx_s ses_ctx;
+ses_ctx_s ses_ctx = { 0 };
 
 static __forceinline int ses_fail ( HMODULE mod, sds error_msg ) {
     utils_print_console ( &( uint8_t [ ] ) { 255, 0, 0, 255 }, error_msg );
@@ -36,6 +36,10 @@ static int __stdcall ses_init( HMODULE mod ) {
     else utils_print_console ( &( uint8_t [ ] ) { 0, 255, 0, 255 }, sdsnew ( "Dumped netvars.\n" ) );
     if ( !ses_cfg_new ( &ses_cfg ) ) ses_fail ( mod, sdsnew ( "Failed to setup config system.\n" ) );
     else utils_print_console ( &( uint8_t [ ] ) { 0, 255, 0, 255 }, sdsnew ( "Setup config system.\n" ) );
+
+    menu_init ( );
+    utils_print_console ( &( uint8_t [ ] ) { 0, 255, 0, 255 }, sdsnew ( "Initialized GUI.\n" ) );
+
     if ( !hooks_init( ) ) ses_fail ( mod, sdsnew ( "Failed to install hooks.\n") );
     else utils_print_console ( &( uint8_t [ ] ) { 0, 255, 0, 255 }, sdsnew ( "Installed hooks.\n" ) );
 
