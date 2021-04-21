@@ -92,7 +92,7 @@
     <ClCompile>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_USE_MATH_DEFINES;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_USE_MATH_DEFINES;NK_INCLUDE_FIXED_TYPES;NK_INCLUDE_STANDARD_BOOL;NK_INCLUDE_DEFAULT_ALLOCATOR;NK_INCLUDE_STANDARD_IO;NK_INCLUDE_STANDARD_VARARGS;NK_INCLUDE_VERTEX_BUFFER_OUTPUT;NK_INCLUDE_FONT_BAKING;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <CompileAs>CompileAsC</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -117,7 +117,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_USE_MATH_DEFINES;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_USE_MATH_DEFINES;NK_INCLUDE_FIXED_TYPES;NK_INCLUDE_STANDARD_BOOL;NK_INCLUDE_DEFAULT_ALLOCATOR;NK_INCLUDE_STANDARD_IO;NK_INCLUDE_STANDARD_VARARGS;NK_INCLUDE_VERTEX_BUFFER_OUTPUT;NK_INCLUDE_FONT_BAKING;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <CompileAs>CompileAsC</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -204,6 +204,7 @@
     <ClInclude Include="lib\csgo-sdk\vec3.h" />
     <ClInclude Include="lib\csgo-sdk\weapon.h" />
     <ClInclude Include="lib\hashmap\hashmap.h" />
+    <ClInclude Include="include\gui\custom.h" />
     <ClInclude Include="lib\nuklear\nuklear.h" />
     <ClInclude Include="lib\nuklear\nuklear_d3d9.h" />
     <ClInclude Include="lib\sds\sds.h" />
