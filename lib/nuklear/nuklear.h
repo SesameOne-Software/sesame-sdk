@@ -18618,7 +18618,7 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
     win->border = 0.0f;
     win->min_row_height_padding = 8;
 
-    win->padding = nk_vec2(8,8);
+    win->padding = nk_vec2(2,2);
     win->group_padding = nk_vec2(8,8);
     win->popup_padding = nk_vec2(8,8);
     win->combo_padding = nk_vec2(8,8);

@@ -3,6 +3,12 @@
 
 #define GUI_LINE_HEIGHT 26.0f
 #define GUI_MAX_COMBO_HEIGHT 200.0f
+#define GUI_TABS_HEIGHT 55.0f
+
+static struct nk_style_window gui_backup_window_style;
+static struct nk_rect gui_rect;
+static int gui_tab_count = 0;
+static int gui_cur_tab_idx = 0;
 
 static inline void gui_layout ( int cols ) {
 	nk_row_layout ( ses_ctx.nk_ctx, NK_DYNAMIC, GUI_LINE_HEIGHT, cols, 0 );
@@ -72,19 +78,69 @@ static inline void gui_combobox ( const char* name, const char** items, int* sel
 	free ( items_new );
 }
 
-static inline bool gui_begin ( const char* title, struct nk_rect bounds, nk_flags flags ) {
+static bool gui_tabs_begin ( int count ) {
+	assert ( !gui_tab_count && "Did you forget to call gui_tabs_end?" );
+	assert ( !gui_cur_tab_idx && "Did you forget to call gui_tabs_end?" );
+
+	gui_tab_count = count;
+
+	return true;
+}
+
+static void gui_tab ( const char* name, int* selected ) {
+	assert ( gui_tab_count && "Did you forget to call gui_tabs_end?" );
+
+	const float tab_w = gui_rect.w / ( float ) gui_tab_count;
+
+	nk_flags fl;
+	if ( nk_button_behavior ( &fl, nk_rect ( gui_rect.x + tab_w * (float) gui_cur_tab_idx, gui_rect.y + gui_rect.h - GUI_TABS_HEIGHT, tab_w, GUI_TABS_HEIGHT ), &ses_ctx.nk_ctx->input, NK_BUTTON_DEFAULT ) ) {
+		*selected = gui_cur_tab_idx;
+	}
+
+	gui_cur_tab_idx++;
+	//ses_ctx.nk_ctx->style.window.rounding
+}
+
+static void gui_tabs_end ( ) {
+	gui_tab_count = 0;
+	gui_cur_tab_idx = 0;
+}
+
+static inline bool gui_begin ( const char* title, struct nk_rect* bounds, nk_flags flags ) {
 	nk_style_push_font ( ses_ctx.nk_ctx, &ses_ctx.fonts.menu_font->handle );
 
-	if ( !nk_begin ( ses_ctx.nk_ctx, title, bounds,
+	gui_backup_window_style = ses_ctx.nk_ctx->style.window;
+
+	nk_style_push_color ( ses_ctx.nk_ctx, &ses_ctx.nk_ctx->style.window.background, nk_rgba ( 255, 0, 0, 255 ) );
+	nk_style_push_style_item ( ses_ctx.nk_ctx, &ses_ctx.nk_ctx->style.window.fixed_background, nk_style_item_color ( nk_rgba ( 255, 0, 0, 255 ) ) );
+
+	ses_ctx.nk_ctx->style.window.padding = nk_vec2 ( 0.0f, 0.0f );
+	ses_ctx.nk_ctx->style.window.group_padding = nk_vec2 ( 0.0f, 0.0f );
+	ses_ctx.nk_ctx->style.window.popup_padding = nk_vec2 ( 0.0f, 0.0f );
+	ses_ctx.nk_ctx->style.window.combo_padding = nk_vec2 ( 0.0f, 0.0f );
+	ses_ctx.nk_ctx->style.window.contextual_padding = nk_vec2 ( 0.0f, 0.0f );
+	ses_ctx.nk_ctx->style.window.rounding = 0.0f;
+
+	if ( !nk_begin ( ses_ctx.nk_ctx, title, *bounds,
 		flags ) )
 		return false;
 
+	gui_rect = *bounds = nk_window_get_bounds ( ses_ctx.nk_ctx );
 
+	nk_fill_rect ( &ses_ctx.nk_ctx->current->buffer, nk_rect ( bounds->x, bounds->y + bounds->h - GUI_TABS_HEIGHT, bounds->w, GUI_TABS_HEIGHT ), ses_ctx.nk_ctx->style.window.rounding, ( struct nk_color ) { 255, 255, 255, 255 } );
+
+	/* set new window content area */
+	ses_ctx.nk_ctx->current->layout->clip = nk_rect ( bounds->x, bounds->y, bounds->w, bounds->h - GUI_TABS_HEIGHT );
 
 	return true;
 }
 
 static inline void gui_end ( ) {
+	ses_ctx.nk_ctx->style.window = gui_backup_window_style;
+
+	nk_style_pop_style_item ( ses_ctx.nk_ctx );
+	nk_style_pop_color ( ses_ctx.nk_ctx );
+
 	nk_end ( ses_ctx.nk_ctx );
 	nk_style_pop_font ( ses_ctx.nk_ctx );
 }
