@@ -121,8 +121,7 @@ static inline bool gui_begin ( const char* title, struct nk_rect* bounds, nk_fla
 	ses_ctx.nk_ctx->style.window.contextual_padding = nk_vec2 ( 0.0f, 0.0f );
 	ses_ctx.nk_ctx->style.window.rounding = 0.0f;
 
-	if ( !nk_begin ( ses_ctx.nk_ctx, title, *bounds,
-		flags ) )
+	if ( !nk_begin ( ses_ctx.nk_ctx, title, *bounds, flags ) )
 		return false;
 
 	gui_rect = *bounds = nk_window_get_bounds ( ses_ctx.nk_ctx );
