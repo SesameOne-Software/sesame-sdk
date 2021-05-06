@@ -29,7 +29,7 @@ HRESULT __stdcall hooks_d3d9_end_scene ( IDirect3DDevice9* device ) {
 		iengine_get_screen_size ( cs_iengine, &w, &h );
 		nk_begin ( ses_ctx.nk_ctx, "Overlay", nk_rect ( 0.0f, 0.0f, w, h ), NK_WINDOW_BACKGROUND | NK_WINDOW_NO_INPUT );
 	
-		nk_fill_rect ( &ses_ctx.nk_ctx->current->buffer, nk_rect ( 200,200,500,500), 10.0f, ( struct nk_color ) { 255, 255, 255, 255 } );
+		//nk_fill_rect ( &ses_ctx.nk_ctx->current->buffer, nk_rect ( 200,200,500,500), 10.0f, ( struct nk_color ) { 255, 255, 255, 255 } );
 
 		///* remove later */
 		//sds watermark_str = sdsnew ("@ses#1997" );

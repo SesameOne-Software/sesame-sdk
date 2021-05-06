@@ -14,7 +14,7 @@
 
 static int cur_tab = 0;
 static bool menu_open = false;
-static struct nk_rect menu_pos = { 300.0f, 300.0f, 600.0f, 500.0f };
+static struct nk_rect menu_pos = { 300.0f, 300.0f, 680.0f, 500.0f };
 
 static inline void menu_set_theme ( ) {
     struct nk_color table [ NK_COLOR_COUNT ];
@@ -136,15 +136,15 @@ void menu_draw ( ) {
     menu_set_opened ( utils_keybind_active ( VK_INSERT, keybind_mode_toggle ) );
 
     if ( menu_is_open ( ) ) {
-        if ( gui_begin ( "Sesame", &menu_pos, NK_WINDOW_MOVABLE ) ) {
-            if ( gui_tabs_begin ( 5 ) ) {
-                gui_tab ( "A", &cur_tab );
-                gui_tab ( "B", &cur_tab );
-                gui_tab ( "C", &cur_tab );
-                gui_tab ( "D", &cur_tab );
-                gui_tab ( "E", &cur_tab );
-            }
-            gui_tabs_end ( );
+        if ( gui_begin ( "Sesame", &menu_pos, 0 ) ) {
+            //if ( gui_tabs_begin ( 5 ) ) {
+            //    gui_tab ( "A", &cur_tab );
+            //    gui_tab ( "B", &cur_tab );
+            //    gui_tab ( "C", &cur_tab );
+            //    gui_tab ( "D", &cur_tab );
+            //    gui_tab ( "E", &cur_tab );
+            //}
+            //gui_tabs_end ( );
 
             if ( gui_button ( "Reload Theme" ) )
                 menu_set_theme ( );

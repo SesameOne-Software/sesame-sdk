@@ -3,9 +3,8 @@
 
 #define GUI_LINE_HEIGHT 26.0f
 #define GUI_MAX_COMBO_HEIGHT 200.0f
-#define GUI_TABS_HEIGHT 55.0f
+#define GUI_TABS_WIDTH 100.0f
 
-static struct nk_style_window gui_backup_window_style;
 static struct nk_rect gui_rect;
 static int gui_tab_count = 0;
 static int gui_cur_tab_idx = 0;
@@ -93,7 +92,7 @@ static void gui_tab ( const char* name, int* selected ) {
 	const float tab_w = gui_rect.w / ( float ) gui_tab_count;
 
 	nk_flags fl;
-	if ( nk_button_behavior ( &fl, nk_rect ( gui_rect.x + tab_w * (float) gui_cur_tab_idx, gui_rect.y + gui_rect.h - GUI_TABS_HEIGHT, tab_w, GUI_TABS_HEIGHT ), &ses_ctx.nk_ctx->input, NK_BUTTON_DEFAULT ) ) {
+	if ( nk_button_behavior ( &fl, nk_rect ( gui_rect.x + tab_w * (float) gui_cur_tab_idx, gui_rect.y + gui_rect.h - GUI_TABS_WIDTH, tab_w, GUI_TABS_WIDTH), &ses_ctx.nk_ctx->input, NK_BUTTON_DEFAULT ) ) {
 		*selected = gui_cur_tab_idx;
 	}
 
@@ -109,37 +108,30 @@ static void gui_tabs_end ( ) {
 static inline bool gui_begin ( const char* title, struct nk_rect* bounds, nk_flags flags ) {
 	nk_style_push_font ( ses_ctx.nk_ctx, &ses_ctx.fonts.menu_font->handle );
 
-	gui_backup_window_style = ses_ctx.nk_ctx->style.window;
+	nk_style_push_color(ses_ctx.nk_ctx, &ses_ctx.nk_ctx->style.window.background, nk_rgba(0, 0, 0, 0));
+	nk_style_push_style_item(ses_ctx.nk_ctx, &ses_ctx.nk_ctx->style.window.fixed_background, nk_style_item_color(nk_rgba(0, 0, 0, 0)));
 
-	nk_style_push_color ( ses_ctx.nk_ctx, &ses_ctx.nk_ctx->style.window.background, nk_rgba ( 255, 0, 0, 255 ) );
-	nk_style_push_style_item ( ses_ctx.nk_ctx, &ses_ctx.nk_ctx->style.window.fixed_background, nk_style_item_color ( nk_rgba ( 255, 0, 0, 255 ) ) );
+	nk_begin(ses_ctx.nk_ctx, "menu_sidebar", nk_rect(bounds->x, bounds->y, GUI_TABS_WIDTH, bounds->h), NK_WINDOW_BORDER | NK_WINDOW_NO_SCROLLBAR | NK_WINDOW_MOVABLE | NK_WINDOW_TITLE);
 
-	ses_ctx.nk_ctx->style.window.padding = nk_vec2 ( 0.0f, 0.0f );
-	ses_ctx.nk_ctx->style.window.group_padding = nk_vec2 ( 0.0f, 0.0f );
-	ses_ctx.nk_ctx->style.window.popup_padding = nk_vec2 ( 0.0f, 0.0f );
-	ses_ctx.nk_ctx->style.window.combo_padding = nk_vec2 ( 0.0f, 0.0f );
-	ses_ctx.nk_ctx->style.window.contextual_padding = nk_vec2 ( 0.0f, 0.0f );
-	ses_ctx.nk_ctx->style.window.rounding = 0.0f;
+	struct nk_vec2 window_pos = nk_window_get_position(ses_ctx.nk_ctx);
+	gui_rect.x = bounds->x = window_pos.x;
+	gui_rect.y = bounds->y = window_pos.y;
 
-	if ( !nk_begin ( ses_ctx.nk_ctx, title, *bounds, flags ) )
+	nk_fill_rect(&ses_ctx.nk_ctx->current->buffer, nk_rect(bounds->x, bounds->y, GUI_TABS_WIDTH, ses_ctx.nk_ctx->style.window.rounding * 2.0f), ses_ctx.nk_ctx->style.window.rounding, (struct nk_color) { 255, 0, 0, 255 });
+	nk_fill_rect(&ses_ctx.nk_ctx->current->buffer, nk_rect(bounds->x, bounds->y + bounds->h - ses_ctx.nk_ctx->style.window.rounding * 2.0f, GUI_TABS_WIDTH, ses_ctx.nk_ctx->style.window.rounding * 2.0f), ses_ctx.nk_ctx->style.window.rounding, (struct nk_color) { 0, 0, 255, 255 });
+
+	nk_end(ses_ctx.nk_ctx);
+
+	nk_style_pop_style_item(ses_ctx.nk_ctx);
+	nk_style_pop_color(ses_ctx.nk_ctx);
+
+	if ( !nk_begin ( ses_ctx.nk_ctx, title, nk_rect(bounds->x + GUI_TABS_WIDTH + GUI_LINE_HEIGHT, bounds->y, bounds->w - GUI_TABS_WIDTH - GUI_LINE_HEIGHT, bounds->h), flags ) )
 		return false;
-
-	gui_rect = *bounds = nk_window_get_bounds ( ses_ctx.nk_ctx );
-
-	nk_fill_rect ( &ses_ctx.nk_ctx->current->buffer, nk_rect ( bounds->x, bounds->y + bounds->h - GUI_TABS_HEIGHT, bounds->w, GUI_TABS_HEIGHT ), ses_ctx.nk_ctx->style.window.rounding, ( struct nk_color ) { 255, 255, 255, 255 } );
-
-	/* set new window content area */
-	ses_ctx.nk_ctx->current->layout->clip = nk_rect ( bounds->x, bounds->y, bounds->w, bounds->h - GUI_TABS_HEIGHT );
 
 	return true;
 }
 
 static inline void gui_end ( ) {
-	ses_ctx.nk_ctx->style.window = gui_backup_window_style;
-
-	nk_style_pop_style_item ( ses_ctx.nk_ctx );
-	nk_style_pop_color ( ses_ctx.nk_ctx );
-
 	nk_end ( ses_ctx.nk_ctx );
 	nk_style_pop_font ( ses_ctx.nk_ctx );
 }
