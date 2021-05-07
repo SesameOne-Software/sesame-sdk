@@ -111,14 +111,17 @@ static inline bool gui_begin ( const char* title, struct nk_rect* bounds, nk_fla
 	nk_style_push_color(ses_ctx.nk_ctx, &ses_ctx.nk_ctx->style.window.background, nk_rgba(0, 0, 0, 0));
 	nk_style_push_style_item(ses_ctx.nk_ctx, &ses_ctx.nk_ctx->style.window.fixed_background, nk_style_item_color(nk_rgba(0, 0, 0, 0)));
 
-	nk_begin(ses_ctx.nk_ctx, "menu_sidebar", nk_rect(bounds->x, bounds->y, GUI_TABS_WIDTH, bounds->h), NK_WINDOW_BORDER | NK_WINDOW_NO_SCROLLBAR | NK_WINDOW_MOVABLE | NK_WINDOW_TITLE);
+	nk_begin(ses_ctx.nk_ctx, "menu_sidebar", nk_rect(bounds->x, bounds->y, GUI_TABS_WIDTH, bounds->h), NK_WINDOW_BORDER | NK_WINDOW_NO_SCROLLBAR | NK_WINDOW_MOVABLE );
 
 	struct nk_vec2 window_pos = nk_window_get_position(ses_ctx.nk_ctx);
 	gui_rect.x = bounds->x = window_pos.x;
 	gui_rect.y = bounds->y = window_pos.y;
 
-	nk_fill_rect(&ses_ctx.nk_ctx->current->buffer, nk_rect(bounds->x, bounds->y, GUI_TABS_WIDTH, ses_ctx.nk_ctx->style.window.rounding * 2.0f), ses_ctx.nk_ctx->style.window.rounding, (struct nk_color) { 255, 0, 0, 255 });
-	nk_fill_rect(&ses_ctx.nk_ctx->current->buffer, nk_rect(bounds->x, bounds->y + bounds->h - ses_ctx.nk_ctx->style.window.rounding * 2.0f, GUI_TABS_WIDTH, ses_ctx.nk_ctx->style.window.rounding * 2.0f), ses_ctx.nk_ctx->style.window.rounding, (struct nk_color) { 0, 0, 255, 255 });
+	struct nk_color top_color = (struct nk_color){ 213, 145, 224, 255 };
+	struct nk_color bottom_color = (struct nk_color){ 102, 151, 204, 255 };
+	nk_fill_rect(&ses_ctx.nk_ctx->current->buffer, nk_rect(bounds->x, bounds->y, GUI_TABS_WIDTH, ses_ctx.nk_ctx->style.window.rounding * 2.0f), ses_ctx.nk_ctx->style.window.rounding, top_color);
+	nk_fill_rect(&ses_ctx.nk_ctx->current->buffer, nk_rect(bounds->x, bounds->y + bounds->h - ses_ctx.nk_ctx->style.window.rounding * 2.0f, GUI_TABS_WIDTH, ses_ctx.nk_ctx->style.window.rounding * 2.0f), ses_ctx.nk_ctx->style.window.rounding, bottom_color);
+	nk_fill_rect_multi_color(&ses_ctx.nk_ctx->current->buffer, nk_rect(bounds->x, bounds->y + ses_ctx.nk_ctx->style.window.rounding * 1.0f, GUI_TABS_WIDTH, bounds->h - ses_ctx.nk_ctx->style.window.rounding * 2.0f), top_color, top_color, bottom_color, bottom_color );
 
 	nk_end(ses_ctx.nk_ctx);
 

@@ -209,6 +209,7 @@
     <ClInclude Include="lib\nuklear\nuklear_d3d9.h" />
     <ClInclude Include="lib\sds\sds.h" />
     <ClInclude Include="lib\sds\sdsalloc.h" />
+    <ClInclude Include="lib\stb\stb_image.h" />
     <ClInclude Include="lib\subhook\subhook.h" />
     <ClInclude Include="lib\subhook\subhook_private.h" />
     <ClInclude Include="lib\vector\vector.h" />
@@ -263,6 +264,7 @@
     <ClCompile Include="src\hooks\setup_bones.c" />
     <ClCompile Include="src\hooks\should_skip_anim_frame.c" />
     <ClCompile Include="src\hooks\window_proc.c" />
+    <ClCompile Include="src\resources\logo.c" />
     <ClCompile Include="src\resources\noto.c" />
     <ClCompile Include="src\ses.c" />
     <ClCompile Include="src\utils.c" />

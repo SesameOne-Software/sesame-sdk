@@ -8,6 +8,9 @@
 #define NK_D3D9_IMPLEMENTATION
 #include "lib/nuklear/nuklear_d3d9.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "lib/stb/stb_image.h"
+
 #include "include/gui/custom.h"
 
 #include "include/resources/resources.h"
@@ -15,6 +18,16 @@
 static int cur_tab = 0;
 static bool menu_open = false;
 static struct nk_rect menu_pos = { 300.0f, 300.0f, 680.0f, 500.0f };
+static stbi_uc* menu_logo = NULL;
+
+static inline bool image_load(struct nk_image* out) {
+    if (!out)
+        return false;
+
+    int x = 0, y = 0, n = 0;
+    stbi_load_from_memory(resources_logo_data, resources_logo_size, &x, &y, &n, 3);
+
+}
 
 static inline void menu_set_theme ( ) {
     struct nk_color table [ NK_COLOR_COUNT ];
@@ -116,7 +129,7 @@ void menu_init ( ) {
         
         nk_d3d9_font_stash_end ( );
         nk_style_set_font ( ses_ctx.nk_ctx, &ses_ctx.fonts.default_font->handle );
-        
+
         menu_set_theme( );
     }
 
