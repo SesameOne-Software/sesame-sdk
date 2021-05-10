@@ -406,11 +406,11 @@ static inline float player_get_max_desync( player* this ) {
 	if ( !state )
 		return 0.0f;
 
-	const float running_speed = clamp( state->run_speed, 0.0f, 1.0f );
+	const float running_speed = clampf( state->run_speed, 0.0f, 1.0f );
 	float yaw_modifier = ( ( ( state->ground_fraction * -0.3f ) - 0.2f ) * running_speed ) + 1.0f;
 
 	if ( state->duck_amount > 0.0f ) {
-		const float speed_factor = clamp( state->unk_feet_speed_ratio, 0.0f, 1.0f );
+		const float speed_factor = clampf( state->unk_feet_speed_ratio, 0.0f, 1.0f );
 		yaw_modifier += ( ( state->duck_amount * speed_factor ) * ( 0.5f - yaw_modifier ) );
 	}
 

@@ -18,15 +18,16 @@
 static int cur_tab = 0;
 static bool menu_open = false;
 static struct nk_rect menu_pos = { 300.0f, 300.0f, 680.0f, 500.0f };
-static stbi_uc* menu_logo = NULL;
 
-static inline bool image_load(struct nk_image* out) {
-    if (!out)
-        return false;
-
+static inline struct nk_image image_load(uint8_t* data, size_t size) {
     int x = 0, y = 0, n = 0;
-    stbi_load_from_memory(resources_logo_data, resources_logo_size, &x, &y, &n, 3);
+    const uint8_t* data = stbi_load_from_memory(data, size, &x, &y, &n, 3);
 
+    const IDirect3DTexture9* tex = NULL;
+    IDirect3DDevice9_CreateTexture(c_id3, w, h, );
+
+    stbi_image_free(data);
+    return nk_image_id((int)tex);
 }
 
 static inline void menu_set_theme ( ) {
@@ -161,19 +162,26 @@ void menu_draw ( ) {
 
             if ( gui_button ( "Reload Theme" ) )
                 menu_set_theme ( );
+
+            //const player* local = cs_get_local();
+            //if (local) {
+            //    const sds desync_str = sdscatprintf(sdsempty(), "Desync: %.2f", player_get_max_desync(local));
+            //    nk_label(ses_ctx.nk_ctx, desync_str, NK_LEFT);
+            //    sdsfree(desync_str);
+            //}
             
-            //if ( gui_button ( "Save Config" ) )
-            //    ses_cfg_save ( &ses_cfg, sdsnew ("D:\\Documents\\test.json") );
-            //
-            //if ( gui_button ( "Load Config" ) )
-            //    ses_cfg_load ( &ses_cfg, sdsnew("D:\\Documents\\test.json") );
-            //
-            //gui_checkbox ( "Fast stop", ses_cfg_get_item ( &ses_cfg, misc, movement, fast_stop, bool ) );
-            //gui_checkbox ( "Auto jump", ses_cfg_get_item ( &ses_cfg, misc, movement, auto_jump, bool ) );
-            //gui_combobox ("Auto strafe", (const char*[] ) { "None", "Legit", "Directional", "Rage", NULL }, ses_cfg_get_item ( &ses_cfg, misc, movement, auto_strafer, int ) );
-            //gui_checkbox ( "Checkbox", ses_cfg_get_item ( &ses_cfg, gui, state, test_bool, bool ) );
-            //gui_sliderf ("Slider float", -180.0f, ses_cfg_get_item ( &ses_cfg, gui, state, test_float, float ), 180.0f, 1.0f, NULL );
-            //gui_slider ( "Slider int", 0, ses_cfg_get_item ( &ses_cfg, gui, state, test_int, int ), 100, 5, NULL );
+            if ( gui_button ( "Save Config" ) )
+                ses_cfg_save ( &ses_cfg, sdsnew ("D:\\Documents\\test.json") );
+            
+            if ( gui_button ( "Load Config" ) )
+                ses_cfg_load ( &ses_cfg, sdsnew("D:\\Documents\\test.json") );
+            
+            gui_checkbox ( "Fast stop", ses_cfg_get_item ( &ses_cfg, misc, movement, fast_stop, bool ) );
+            gui_checkbox ( "Auto jump", ses_cfg_get_item ( &ses_cfg, misc, movement, auto_jump, bool ) );
+            gui_combobox ("Auto strafe", (const char*[] ) { "None", "Legit", "Directional", "Rage", NULL }, ses_cfg_get_item ( &ses_cfg, misc, movement, auto_strafer, int ) );
+            gui_checkbox ( "Checkbox", ses_cfg_get_item ( &ses_cfg, gui, state, test_bool, bool ) );
+            gui_sliderf ("Slider float", -180.0f, ses_cfg_get_item ( &ses_cfg, gui, state, test_float, float ), 180.0f, 1.0f, NULL );
+            gui_slider ( "Slider int", 0, ses_cfg_get_item ( &ses_cfg, gui, state, test_int, int ), 100, 5, NULL );
         }
 
         gui_end ( );
