@@ -111,6 +111,7 @@ static inline bool gui_begin ( const char* title, struct nk_rect* bounds, nk_fla
 	nk_style_push_color(ses_ctx.nk_ctx, &ses_ctx.nk_ctx->style.window.background, nk_rgba(0, 0, 0, 0));
 	nk_style_push_style_item(ses_ctx.nk_ctx, &ses_ctx.nk_ctx->style.window.fixed_background, nk_style_item_color(nk_rgba(0, 0, 0, 0)));
 
+	ses_ctx.nk_ctx->style.window.padding = nk_vec2(0, 0);
 	nk_begin(ses_ctx.nk_ctx, "menu_sidebar", nk_rect(bounds->x, bounds->y, GUI_TABS_WIDTH, bounds->h), NK_WINDOW_BORDER | NK_WINDOW_NO_SCROLLBAR | NK_WINDOW_MOVABLE );
 
 	struct nk_vec2 window_pos = nk_window_get_position(ses_ctx.nk_ctx);
@@ -128,6 +129,7 @@ static inline bool gui_begin ( const char* title, struct nk_rect* bounds, nk_fla
 	nk_style_pop_style_item(ses_ctx.nk_ctx);
 	nk_style_pop_color(ses_ctx.nk_ctx);
 
+	ses_ctx.nk_ctx->style.window.padding = nk_vec2(26, 26);
 	if ( !nk_begin ( ses_ctx.nk_ctx, title, nk_rect(bounds->x + GUI_TABS_WIDTH + GUI_LINE_HEIGHT, bounds->y, bounds->w - GUI_TABS_WIDTH - GUI_LINE_HEIGHT, bounds->h), flags ) )
 		return false;
 

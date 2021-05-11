@@ -17,16 +17,23 @@
 
 static int cur_tab = 0;
 static bool menu_open = false;
-static struct nk_rect menu_pos = { 300.0f, 300.0f, 680.0f, 500.0f };
+static struct nk_rect menu_pos = { 50.0f, 50.0f, 680.0f, 500.0f };
+static struct nk_image menu_logo;
 
 static inline struct nk_image image_load(uint8_t* data, size_t size) {
     int x = 0, y = 0, n = 0;
-    const uint8_t* data = stbi_load_from_memory(data, size, &x, &y, &n, 3);
+    const uint8_t* image_raw = stbi_load_from_memory(data, size, &x, &y, &n, 4);
 
-    const IDirect3DTexture9* tex = NULL;
-    IDirect3DDevice9_CreateTexture(c_id3, w, h, );
+    IDirect3DTexture9* tex = NULL;
+    D3DLOCKED_RECT rect;
 
-    stbi_image_free(data);
+    IDirect3DDevice9_CreateTexture(cs_id3ddev, x, y, 0, D3DUSAGE_DYNAMIC, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &tex, NULL);
+    IDirect3DTexture9_LockRect(tex, 0, &rect, NULL, D3DLOCK_DISCARD);
+    memcpy(rect.pBits, image_raw, x * y * 4);
+    IDirect3DTexture9_UnlockRect(tex, 0);
+
+    stbi_image_free(image_raw);
+
     return nk_image_id((int)tex);
 }
 
@@ -131,6 +138,8 @@ void menu_init ( ) {
         nk_d3d9_font_stash_end ( );
         nk_style_set_font ( ses_ctx.nk_ctx, &ses_ctx.fonts.default_font->handle );
 
+        menu_logo = image_load(resources_logo_data, resources_logo_size);
+
         menu_set_theme( );
     }
 
@@ -162,6 +171,11 @@ void menu_draw ( ) {
 
             if ( gui_button ( "Reload Theme" ) )
                 menu_set_theme ( );
+
+            const float backup_row_height = ses_ctx.nk_ctx->current->layout->row.height;
+            ses_ctx.nk_ctx->current->layout->row.height = 100.0f;
+            nk_image(ses_ctx.nk_ctx, menu_logo);
+            ses_ctx.nk_ctx->current->layout->row.height = backup_row_height;
 
             //const player* local = cs_get_local();
             //if (local) {
