@@ -209,7 +209,7 @@ bool __forceinline cs_offsets_dump ( sds errors ) {
 	cs_dump_offset ( cs_offsets.player_set_abs_angles_fn, pattern_search ( "client.dll", "55 8B EC 83 E4 F8 83 EC 64 53 56 57 8B F1 E8" ) );
 	cs_dump_offset ( cs_offsets.player_set_abs_origin_fn, pattern_search ( "client.dll", "55 8B EC 83 E4 F8 51 53 56 57 8B F1 E8 ? ? ? ? 8B 7D" ) );
 	cs_dump_offset ( cs_offsets.player_animstate, *( ptrdiff_t* ) ( pattern_search ( "client.dll", "8B 8E ? ? ? ? F3 0F 10 48 04 E8 ? ? ? ? E9" ) + 2 ) );
-	cs_dump_offset ( cs_offsets.player_get_eye_pos_fn, pattern_rip ( pattern_search ( "client.dll", "57 E8 ? ? ? ? 8B 06 8B CE FF 90" ) + 1 ) );
+	cs_dump_offset ( cs_offsets.player_weapon_shootposition, pattern_rip ( pattern_search ( "client.dll", "57 E8 ? ? ? ? 8B 06 8B CE FF 90" ) + 1 ) );
 	cs_dump_offset ( cs_offsets.player_bone_count, *( ptrdiff_t* ) ( pattern_search ( "client.dll", "8B 87 ? ? ? ? 8B 4D 0C" ) + 2 ) );
 	cs_dump_offset ( cs_offsets.player_bone_cache, *( ptrdiff_t* ) ( pattern_search ( "client.dll", "FF B7 ? ? ? ? 52" ) + 2 ) );
 	cs_dump_offset ( cs_offsets.player_is_local, 0x3AC8 )

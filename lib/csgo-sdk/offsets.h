@@ -187,7 +187,7 @@ typedef struct {
 	ptrdiff_t player_set_abs_angles_fn;
 	ptrdiff_t player_set_abs_origin_fn;
 	ptrdiff_t player_animstate;
-	ptrdiff_t player_get_eye_pos_fn;
+	ptrdiff_t player_weapon_shootposition;
 	ptrdiff_t player_bone_count;
 	ptrdiff_t player_bone_cache;
 	ptrdiff_t player_is_local;
