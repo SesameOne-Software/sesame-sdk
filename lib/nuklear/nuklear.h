@@ -18615,7 +18615,7 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
     win->group_border = 1.0f;
     win->tooltip_border = 1.0f;
     win->popup_border = 1.0f;
-    win->border = 0.0f;
+    win->border = 2.0f;
     win->min_row_height_padding = 8;
 
     win->padding = nk_vec2(2,2);
@@ -19827,7 +19827,7 @@ nk_panel_end(struct nk_context *ctx)
                 : (window->bounds.y + window->bounds.h));
         struct nk_rect b = window->bounds;
         b.h = padding_y - window->bounds.y;
-        nk_stroke_rect(out, b, 0, layout->border, border_color);
+        nk_stroke_rect(out, b, style->window.rounding, layout->border, border_color);
     }
 
     /* scaler */

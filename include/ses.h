@@ -39,6 +39,8 @@ typedef struct {
 
 extern ses_ctx_s ses_ctx;
 
-void ses_shutdown( );
+static inline void ses_shutdown ( ) {
+	ses_ctx.shutdown = true;
+}
 
 #endif // !SES_H

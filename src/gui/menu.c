@@ -35,7 +35,7 @@ static inline void menu_set_theme ( ) {
     table [ NK_COLOR_TEXT ] = nk_rgba ( 255, 255, 255, 255 );
     table [ NK_COLOR_WINDOW ] = nk_rgba ( 32, 38, 45, 255 );
     table [ NK_COLOR_HEADER ] = nk_rgba ( 33, 42, 54, 255 );
-    table [ NK_COLOR_BORDER ] = nk_rgba ( 0, 123, 255, 200 );
+    table [ NK_COLOR_BORDER ] = nk_rgba ( 255, 255, 255, 33 );
     table [ NK_COLOR_BUTTON ] = table [ NK_COLOR_TOGGLE_CURSOR ] = table [ NK_COLOR_SELECT_ACTIVE ]
         = table [ NK_COLOR_SLIDER_CURSOR ] = table [ NK_COLOR_CHART_COLOR ] = table [ NK_COLOR_SCROLLBAR_CURSOR ]
         = table [ NK_COLOR_TAB_HEADER ] = nk_rgba ( 204, 82, 224, 255 );
@@ -111,7 +111,7 @@ void menu_init ( ) {
         config.pixel_snap = true;
         config.range = custom_font_range;
         ses_ctx.fonts.menu_font = nk_font_atlas_add_compressed ( atlas, resources_noto_compressed_data, resources_noto_compressed_size, 18.0f, &config );
-       
+        
         config = nk_font_config ( 16.0f );
         config.pixel_snap = true;
         config.range = nk_font_default_glyph_ranges ( );
@@ -149,15 +149,15 @@ void menu_draw ( ) {
     menu_set_opened ( utils_keybind_active ( VK_INSERT, keybind_mode_toggle ) );
 
     if ( menu_is_open ( ) ) {
-        if ( gui_begin ( "Sesame", &menu_pos, 0 ) ) {
-            //if ( gui_tabs_begin ( 5 ) ) {
-            //    gui_tab ( "A", &cur_tab );
-            //    gui_tab ( "B", &cur_tab );
-            //    gui_tab ( "C", &cur_tab );
-            //    gui_tab ( "D", &cur_tab );
-            //    gui_tab ( "E", &cur_tab );
-            //}
-            //gui_tabs_end ( );
+        if ( gui_begin ( "Sesame", &menu_pos, NK_WINDOW_BORDER ) ) {
+            if ( gui_tabs_begin ( 5 ) ) {
+                gui_tab ( "A", &cur_tab );
+                gui_tab ( "B", &cur_tab );
+                gui_tab ( "C", &cur_tab );
+                gui_tab ( "D", &cur_tab );
+                gui_tab ( "E", &cur_tab );
+            }
+            gui_tabs_end ( );
 
             if ( gui_button ( "Reload Theme" ) )
                 menu_set_theme ( );
