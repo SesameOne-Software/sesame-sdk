@@ -19,11 +19,95 @@ static inline void cs_sincos( float rad, float* sin_out, float* cos_out ) {
 static inline float cs_norm_rotation( float ang ) {
 	if ( isnan ( ang ) || isinf ( ang ) )
 		ang = 0.0f;
-	while ( ang < -180.0f )
-		ang += 360.0f;
-	while ( ang > 180.0f )
+
+	ang = fmodf ( ang, 360.0f );
+
+	if ( ang > 180.0f )
 		ang -= 360.0f;
+	
+	if ( ang < -180.0f )
+		ang += 360.0f;
+
 	return ang;
+}
+
+static inline float cs_approachf ( float target, float value, float speed ) {
+	float delta = target - value;
+
+	if ( delta > speed )
+		value += speed;
+	else if ( delta < -speed )
+		value -= speed;
+	else
+		value = target;
+
+	return value;
+}
+
+static inline float cs_remap_val_clamped ( float val, float a, float b, float c, float d ) {
+	if ( a == b )
+		return val >= b ? d : c;
+	
+	return d + ( d - c ) * clampf ( ( val - a ) / ( b - a ), 0.0f, 1.0f );
+}
+
+static inline float cs_anglemod ( float a ) {
+	return ( 360.0f / 65536 ) * ( ( int ) ( a * ( 65536.0f / 360.0f ) ) & 65535 );
+}
+
+static inline float cs_approach_rotation ( float target, float value, float speed ) {
+	target = cs_anglemod ( target );
+	value = cs_anglemod ( value );
+
+	float delta = target - value;
+
+	if ( speed < 0.0f )
+		speed = -speed;
+
+	if ( delta < -180.0f )
+		delta += 360.0f;
+	else if ( delta > 180.0f )
+		delta -= 360.0f;
+
+	if ( delta > speed )
+		value += speed;
+	else if ( delta < -speed )
+		value -= speed;
+	else
+		value = target;
+
+	return value;
+}
+
+static inline float cs_angle_diff ( float dst, float src ) {
+	float delta = fmodf ( dst - src, 360.0f );
+
+	if ( dst > src ) {
+		if ( delta >= 180.0f )
+			delta -= 360.0f;
+	}
+	else {
+		if ( delta <= -180.0f )
+			delta += 360.0f;
+	}
+
+	return delta;
+}
+
+static inline float cs_bias ( float x, float amount ) {
+	static float last_exponent = 0.0f;
+
+	if ( amount != -1.0f )
+		last_exponent = logf ( amount ) * -1.4427f;
+
+	return powf ( x, last_exponent );
+}
+
+static inline float cs_gain ( float x, float amount ) {
+	if ( x < 0.5f )
+		return 0.5f * cs_bias ( 2.0f * x, 1.0f - amount );
+	
+	return 1.0f - 0.5f * cs_bias ( 2.0f - 2.0f * x, 1.0f - amount );
 }
 
 typedef struct {
@@ -226,6 +310,54 @@ static inline vec3* vec3##_to_vec( vec3* this ) {\
 	return this;\
 }
 
+#define VEC3_TO_VECS(vec3)\
+static inline void vec3##_to_vecs ( const vec3* this, vec3* forward, vec3* right, vec3* up ) {\
+	float sr, sp, sy, cr, cp, cy;\
+\
+	cs_sincos ( cs_deg2rad ( this->y ), &sy, &cy );\
+	cs_sincos ( cs_deg2rad ( this->x ), &sp, &cp );\
+	cs_sincos ( cs_deg2rad ( this->z ), &sr, &cr );\
+\
+	if ( forward ) {\
+		forward->x = cp * cy;\
+		forward->y = cp * sy;\
+		forward->z = -sp;\
+	}\
+\
+	if ( right ) {\
+		right->x = -1.0f * sr * sp * cy + -1.0f * cr * -sy;\
+		right->y = -1.0f * sr * sp * sy + -1.0f * cr * cy;\
+		right->z = -1.0f * sr * cp;\
+	}\
+\
+	if ( up ) {\
+		up->x = cr * sp * cy + -sr * -sy;\
+		up->y = cr * sp * sy + -sr * cy;\
+		up->z = cr * cp;\
+	}\
+}
+
+#define VEC3_APPROACH_VEC(vec3)\
+void vec3##_approach_vec ( const vec3* a, const vec3* b, float rate, vec3* out ) {\
+	vec3 delta = *a;\
+	vec3##_sub ( &delta, b );\
+\
+	const float delta_len = vec3##_len(&delta );\
+	const float rad = 1.0f / ( delta_len + FLT_EPSILON );\
+\
+	*out = *b;\
+\
+	if ( delta_len <= rate ) {\
+		if ( -rate <= delta_len )\
+			*out = *a;\
+		else\
+			vec3##_sub ( out, vec3##_mulf ( &delta, rad * rate ) );\
+	}\
+	else {\
+		vec3##_add ( out, vec3##_mulf ( &delta, rad * rate ) );\
+	}\
+}
+
 #define VEC3_ANGLE_TO(vec3)\
 static inline vec3* vec3##_angle_to( vec3* this, vec3* towards ) {\
 	vec3 delta = *towards;\
@@ -266,7 +398,9 @@ VEC3_DOT ( vec3 )
 VEC3_CROSS ( vec3 )
 VEC3_CLAMP_ANGLE ( vec3 )
 VEC3_TO_ANGLE(vec3)
-VEC3_TO_VEC(vec3)
+VEC3_TO_VEC ( vec3 )
+VEC3_TO_VECS ( vec3 )
+VEC3_APPROACH_VEC ( vec3 )
 VEC3_ANGLE_TO(vec3)
 VEC3_FOV_TO(vec3)
 
@@ -294,7 +428,9 @@ VEC3_DOT ( vec3a )
 VEC3_CROSS ( vec3a )
 VEC3_CLAMP_ANGLE ( vec3a )
 VEC3_TO_ANGLE(vec3a)
-VEC3_TO_VEC(vec3a)
+VEC3_TO_VEC ( vec3a )
+VEC3_TO_VECS ( vec3a )
+VEC3_APPROACH_VEC ( vec3a )
 VEC3_ANGLE_TO(vec3a)
 VEC3_FOV_TO(vec3a)
 

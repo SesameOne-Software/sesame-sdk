@@ -34,7 +34,7 @@ static inline void cs_screen_transform( vec3* origin, vec3* screen ) {
 	screen->y = *mat3x4_at( viewmat_ptr, 1, 0 ) * origin->x + *mat3x4_at( viewmat_ptr, 1, 1 ) * origin->y + *mat3x4_at( viewmat_ptr, 1, 2 ) * origin->z + *mat3x4_at( viewmat_ptr, 1, 3 );
 	screen->z = 0.0f;
 
-	const float w = abs( *mat3x4_at( viewmat_ptr, 3, 0 ) * origin->x + *mat3x4_at( viewmat_ptr, 3, 1 ) * origin->y + *mat3x4_at( viewmat_ptr, 3, 2 ) * origin->z + *mat3x4_at( viewmat_ptr, 3, 3 ) );
+	const float w = fabsf( *mat3x4_at( viewmat_ptr, 3, 0 ) * origin->x + *mat3x4_at( viewmat_ptr, 3, 1 ) * origin->y + *mat3x4_at( viewmat_ptr, 3, 2 ) * origin->z + *mat3x4_at( viewmat_ptr, 3, 3 ) );
 
 	screen->x *= 1.0f / w;
 	screen->y *= 1.0f / w;

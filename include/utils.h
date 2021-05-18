@@ -33,8 +33,22 @@
 //	default: clampf \
 //)(x, a, b)
 
+static inline vec3* lerpvec3 ( float t, vec3* a, vec3* b, vec3* out ) {
+	*out = *b;
+	return vec3_add ( vec3_mulf ( vec3_sub ( out, a ), t ), a );
+}
+
+static inline vec3a* lerpvec3a ( float t, vec3a* a, vec3a* b, vec3a* out ) {
+	*out = *b;
+	return vec3a_add ( vec3a_mulf ( vec3a_sub ( out, a ), t ), a );
+}
+
+static inline float lerpf ( float t, float a, float b ) {
+	return a + ( b - a ) * t;
+}
+
 static inline float clampf( float x, float a, float b ) {
-        return max( a, min( x, b ) );\
+        return max( a, min( x, b ) );
 }
 
 /* from google's chromium project */

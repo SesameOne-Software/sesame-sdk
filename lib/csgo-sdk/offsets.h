@@ -174,10 +174,14 @@ typedef struct {
 	ptrdiff_t player_poses;
 	ptrdiff_t player_jiggle_bones;
 	ptrdiff_t player_group_hdr;
+	ptrdiff_t player_thirdperson_recoil;
+	ptrdiff_t player_computed_lod_frame;
 
+	ptrdiff_t animstate_cache_sequences_fn;
 	ptrdiff_t animstate_reset_fn;
 	ptrdiff_t animstate_get_weapon_move_animation_fn;
 	ptrdiff_t player_get_sequence_linear_motion_fn;
+	ptrdiff_t player_invalidate_physics_recursive_fn;
 	ptrdiff_t player_lookup_sequence_fn;
 	ptrdiff_t player_lookup_bone_fn;
 	ptrdiff_t player_sequence_duration_fn;
@@ -187,7 +191,7 @@ typedef struct {
 	ptrdiff_t player_set_abs_angles_fn;
 	ptrdiff_t player_set_abs_origin_fn;
 	ptrdiff_t player_animstate;
-	ptrdiff_t player_get_eye_pos_fn;
+	ptrdiff_t player_weapon_shootposition;
 	ptrdiff_t player_bone_count;
 	ptrdiff_t player_bone_cache;
 	ptrdiff_t player_is_local;

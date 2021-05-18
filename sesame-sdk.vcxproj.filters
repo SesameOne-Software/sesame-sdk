@@ -156,6 +156,12 @@
     <ClInclude Include="lib\stb\stb_image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="lib\csgo-sdk\animstate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lib\csgo-sdk\utlvec.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\hooks\create_move.c">
@@ -312,6 +318,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\resources\logo.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lib\csgo-sdk\animstate.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
