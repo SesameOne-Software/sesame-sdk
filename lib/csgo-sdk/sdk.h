@@ -4,6 +4,7 @@
 #include <windows.h>
 #include <d3d9.h>
 #include <d3dx9.h>
+#include <assert.h>
 
 #include "include/utils.h"
 
@@ -202,6 +203,7 @@ bool __forceinline cs_offsets_dump ( sds errors ) {
 	cs_dump_offset ( cs_offsets.animstate_cache_sequences_fn, pattern_search ( "client.dll", "55 8B EC 83 E4 F8 83 EC 34 53 56 8B F1 57 8B" ) );
 	cs_dump_offset ( cs_offsets.animstate_reset_fn, pattern_search ( "client.dll", "56 6A 01 68 ? ? ? ? 8B F1" ) );
 	cs_dump_offset ( cs_offsets.animstate_get_weapon_move_animation_fn, pattern_search ( "client.dll", "53 56 57 8B F9 33 F6 8B 4F 60 8B 01 FF 90" ) );
+	cs_dump_offset(cs_offsets.animstate_update_layer_order_preset_fn, pattern_search("client.dll", "55 8B EC 51 53 56 57 8B F9 83 7F 60"));
 	cs_dump_offset ( cs_offsets.player_get_sequence_linear_motion_fn, pattern_search ( "client.dll", "55 8B EC 83 EC 0C 56 8B F1 57 8B FA 85 F6 75 14" ) );
 	cs_dump_offset ( cs_offsets.player_invalidate_physics_recursive_fn, pattern_search ( "client.dll", "55 8B EC 83 E4 F8 83 EC 0C 53 8B 5D 08 8B C3 56" ) );
 	cs_dump_offset ( cs_offsets.player_lookup_sequence_fn, pattern_rip ( pattern_search ( "client.dll", "E8 ? ? ? ? 5E 83 F8 FF" ) ) );

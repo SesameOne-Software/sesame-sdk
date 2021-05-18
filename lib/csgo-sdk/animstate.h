@@ -10,6 +10,8 @@
 #define ACT_INVALID -1
 #define ANIMATION_LAYER_COUNT 13
 
+#define ANIM_LAYER_ACTIVE 1
+
 #define CSGO_ANIM_LOWER_CATCHUP_IDLE 100.0f
 #define CSGO_ANIM_AIM_NARROW_WALK 0.8f
 #define CSGO_ANIM_AIM_NARROW_RUN 0.5f
@@ -18,6 +20,13 @@
 #define CSGO_ANIM_LOWER_REALIGN_DELAY 1.1f
 #define CSGO_ANIM_READJUST_THRESHOLD 120.0f
 #define EIGHT_WAY_WIDTH 22.5f
+
+typedef enum {
+	invalidate_phys_bits_position_changed = (1 << 0),
+	invalidate_phys_bits_angles_changed = (1 << 1),
+	invalidate_phys_bits_velocity_changed = (1 << 2),
+	invalidate_phys_bits_animation_changed = (1 << 3),
+} invalidate_phys_bits;
 
 typedef enum {
 	animlayer_aimmatrix = 0,
@@ -93,7 +102,7 @@ typedef struct {
 	int dispatched_src;
 	int dispatched_dst;
 	int	order;
-	int	sequence;
+	int	seq;
 	float previous_cycle;
 	float weight;
 	float weight_delta_rate;
@@ -247,7 +256,7 @@ static inline float server_animstate_get_max_desync(server_animstate* this) {
 	return aim_matrix_width * this->base.aim_yaw_max;
 }
 
-
+void server_animstate_update_layer(server_animstate* this, int idx, int seq, float playback_rate, float weight, float cycle);
 
 void server_animstate_update ( server_animstate* this, vec3* ang );
 

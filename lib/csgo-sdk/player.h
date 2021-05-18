@@ -251,11 +251,11 @@ static inline vec_wearables player_wearables ( player* this ) {
 	return ret;
 }
 
-static inline void player_get_sequence_linear_motion ( player* this, void* studio_hdr, int sequence, float* poses, vec3* vec ) {
+static inline void player_get_sequence_linear_motion ( player* this, void* studio_hdr, int seq, float* poses, vec3* vec ) {
 	const ptrdiff_t fn = cs_offsets.player_get_sequence_linear_motion_fn;
 
 	__asm {
-		mov edx, sequence
+		mov edx, seq
 		mov ecx, studio_hdr
 		push vec
 		push poses
@@ -264,9 +264,9 @@ static inline void player_get_sequence_linear_motion ( player* this, void* studi
 	}
 }
 
-static inline float player_get_sequence_move_distance ( player* this, void* studio_hdr, int sequence ) {
+static inline float player_get_sequence_move_distance ( player* this, void* studio_hdr, int seq) {
 	vec3 ret;
-	player_get_sequence_linear_motion ( this, studio_hdr, sequence, player_poses ( this ), &ret );
+	player_get_sequence_linear_motion ( this, studio_hdr, seq, player_poses ( this ), &ret );
 	return vec3_len ( &ret );
 }
 
@@ -278,20 +278,24 @@ static inline int player_lookup_bone ( player* this, const char* bone ) {
 	return ( ( int ( __fastcall* )( player*, void*, const char* ) ) cs_offsets.player_lookup_bone_fn ) ( this, NULL, bone );
 }
 
-static inline float player_sequence_duration ( player* this, int sequence ) {
+static inline float player_sequence_duration ( player* this, int seq) {
 	float retval;
-	( ( float ( __fastcall* )( player*, void*, int ) )cs_offsets.player_sequence_duration_fn ) ( this, NULL, sequence );
+	( ( float ( __fastcall* )( player*, void*, int ) )cs_offsets.player_sequence_duration_fn ) ( this, NULL, seq);
 	__asm movss retval, xmm0;
 	return retval;
 }
 
-static inline float player_get_sequence_cycle_rate ( player* this, int sequence ) {
-	float t = player_sequence_duration ( this, sequence );
+static inline float player_get_sequence_cycle_rate ( player* this, int seq) {
+	float t = player_sequence_duration ( this, seq);
 
 	if ( t > 0.0f )
 		return 1.0f / t;
 
 	return 1.0f / 0.1f;
+}
+
+static inline void player_invalidate_physics_recursive(player* this, int flags) {
+	((void(__fastcall*)(player*, int))cs_offsets.player_invalidate_physics_recursive_fn) (this, NULL, flags);
 }
 
 vec_weapons player_weapons( player* this );

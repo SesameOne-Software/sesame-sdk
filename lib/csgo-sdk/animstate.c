@@ -1,6 +1,38 @@
 #include "animstate.h"
 #include "sdk.h"
 
+void server_animstate_update_layer(server_animstate* this, int idx, int seq, float playback_rate, float weight, float cycle) {
+	assert(weight >= 0.0f && weight <= 1.0f);
+	assert(cycle >= 0.0f && cycle <= 1.0f);
+	assert(seq > 1);
+
+	if (seq > 1) {
+		MDLCACHE_CRITICAL_SECTION_START;
+
+		animlayer* layer = &((*player_animlayers(this->base.player))[idx]);
+
+		if (layer->owner && layer->seq != seq)
+			player_invalidate_physics_recursive(this->base.player, 16);
+
+		layer->seq = seq;
+		set_rate(anim_state, idx, playback_rate);
+		set_cycle(anim_state, idx, std::clamp(cycle, 0.0f, 1.0f));
+		set_weight(anim_state, idx, std::clamp(weight, 0.0f, 1.0f));
+
+		void* update_layer_order_preset_fn = (void*)cs_offsets.animstate_update_layer_order_preset_fn;
+
+		__asm {
+			mov ecx, anim_state
+			movss xmm0, weight
+			push seq
+			push idx
+			call update_layer_order_preset_fn
+		}
+
+		MDLCACHE_CRITICAL_SECTION_END;
+	}
+}
+
 void server_animstate_update ( server_animstate* this, vec3* ang ) {
 	if ( !this->base.player || !player_is_alive ( this->base.player ) || !server_animstate_cache_sequences( this ) )
 		return;

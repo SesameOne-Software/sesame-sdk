@@ -180,6 +180,7 @@ typedef struct {
 	ptrdiff_t animstate_cache_sequences_fn;
 	ptrdiff_t animstate_reset_fn;
 	ptrdiff_t animstate_get_weapon_move_animation_fn;
+	ptrdiff_t animstate_update_layer_order_preset_fn;
 	ptrdiff_t player_get_sequence_linear_motion_fn;
 	ptrdiff_t player_invalidate_physics_recursive_fn;
 	ptrdiff_t player_lookup_sequence_fn;
