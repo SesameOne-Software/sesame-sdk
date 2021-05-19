@@ -206,6 +206,12 @@ bool __forceinline cs_offsets_dump ( sds errors ) {
 	cs_dump_offset ( cs_offsets.player_thirdperson_recoil,*( ptrdiff_t*)( pattern_search ( "client.dll", "F3 0F 10 86 ? ? ? ? F3 0F 58 44 24 0C" ) + 4) );
 	cs_dump_offset ( cs_offsets.player_computed_lod_frame, 0xA30 );
 
+	cs_dump_offset(cs_offsets.player_get_model_ptr_fn, pattern_rip(pattern_search("client.dll", "E8 ? ? ? ? 83 C4 04 8B C8 E8 ? ? ? ? 83 B8 C4 00 00 00 00")));
+	cs_dump_offset(cs_offsets.animstate_setup_aim_matrix_fn, pattern_search("client.dll", "55 8B EC 81 EC ? ? ? ? 53 56 57 8B 3D"));
+	cs_dump_offset(cs_offsets.animstate_pose_param_cache_set_value_fn, pattern_rip(pattern_search("client.dll", "E8 ? ? ? ? D9 45 08 5F")));
+	cs_dump_offset(cs_offsets.animstate_get_layer_activity_fn, pattern_search("client.dll", "55 8B EC 83 EC 08 53 56 8B 35 ? ? ? ? 57 8B F9 8B CE 8B 06 FF 90 84 00 00 00 8B 7F 60 83 BF ? ? ? ? 00"));
+	cs_dump_offset(cs_offsets.animstate_get_first_sequence_anim_tag_fn, pattern_rip( pattern_search("client.dll", "E8 ? ? ? ? F3 0F 11 86 98 00 00 00 0F 57 DB F3 0F 10 86 24 01 00 00")));
+	cs_dump_offset(cs_offsets.animstate_get_layer_ideal_weight_from_seq_cycle_fn, pattern_search("client.dll", "55 8B EC 83 EC 08 53 56 8B 35 ? ? ? ? 57 8B F9 8B CE 8B 06 FF 90 84 00 00 00 8B 7F 60 0F 57 DB"));
 	cs_dump_offset ( cs_offsets.animstate_cache_sequences_fn, pattern_search ( "client.dll", "55 8B EC 83 E4 F8 83 EC 34 53 56 8B F1 57 8B" ) );
 	cs_dump_offset ( cs_offsets.animstate_reset_fn, pattern_search ( "client.dll", "56 6A 01 68 ? ? ? ? 8B F1" ) );
 	cs_dump_offset ( cs_offsets.animstate_get_weapon_move_animation_fn, pattern_search ( "client.dll", "53 56 57 8B F9 33 F6 8B 4F 60 8B 01 FF 90" ) );

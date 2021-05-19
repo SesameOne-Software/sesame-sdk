@@ -13,6 +13,8 @@
 #define ANIMATION_LAYER_COUNT 13
 
 #define ANIM_LAYER_ACTIVE 1
+#define ANIM_TRANSITION_WALK_TO_RUN 0.0f
+#define ANIM_TRANSITION_RUN_TO_WALK 1.0f
 
 #define CS_PLAYER_SPEED_STOPPED 1.0f
 #define CS_PLAYER_SPEED_RUN 260.0f
@@ -32,6 +34,13 @@
 #define CSGO_ANIM_LOWER_REALIGN_DELAY 1.1f
 #define CSGO_ANIM_READJUST_THRESHOLD 120.0f
 #define EIGHT_WAY_WIDTH 22.5f
+
+#define CSGO_ANIM_DEPLOY_RATELIMIT 0.15f
+
+#define CSGO_ANIM_DUCK_APPROACH_SPEED_DOWN 3.1f
+#define CSGO_ANIM_DUCK_APPROACH_SPEED_UP 6.0f
+
+#define MAX_ANIMSTATE_ANIMNAME_CHARS 64
 
 typedef enum {
 	act_invalid = -1,			// so we have something more succint to check for than '-1'
@@ -1296,10 +1305,21 @@ typedef enum {
 
 // Generated using ReClass 2016
 typedef struct {
-	int init;
-	uint32_t idx;
+	bool init;
+	int idx;
 	const char* name;
 } animstate_pose_param_cache;
+
+inline void animstate_pose_param_cache_set_value(animstate_pose_param_cache* this, player* player, float value) {
+	const void* animstate_pose_param_cache_set_value_fn = (void*)cs_offsets.animstate_pose_param_cache_set_value_fn;
+	
+	__asm {
+		push this
+		movss xmm2, value
+		mov ecx, player
+		call animstate_pose_param_cache_set_value_fn
+	}
+}
 
 typedef struct {
 	float duration_state_valid;
@@ -1354,10 +1374,10 @@ static inline void animlayer_set_cycle ( animlayer* this, float cycle ) {
 }
 
 static inline void animlayer_set_weight ( animlayer* this, float weight ) {
-	if ( weight >= 0.0 )
-		weight = fminf ( weight, 1.0 );
+	if ( weight >= 0.0f )
+		weight = min ( weight, 1.0f );
 	else
-		weight = 0.0;
+		weight = 0.0f;
 
 	if ( this->owner && ( this->weight != weight && ( !this->weight || !weight ) ) )
 		player_invalidate_physics_recursive ( this->owner, invalidate_phys_bits_bounds_changed );
@@ -1535,8 +1555,58 @@ static inline bool server_animstate_is_sequence_completed ( server_animstate* th
 	return layer->cycle + this->base.last_update_delta_time * layer->playback_rate >= 1.0f;
 }
 
+/*
+static inline void server_animstate_set_layer_sequence_from_activity(server_animstate* this, animlayer_idx idx, anim_activity act) {
+	server_animstate_set_layer_sequence(this, idx, );
+}
+*/
+
+static inline void server_animstate_increment_layer_cycle(server_animstate* this, animlayer_idx idx, bool allow_loop) {
+	animlayer* layer = &((*player_animlayers(this->base.player))[idx]);
+
+	if (fabsf(layer->playback_rate) <= 0.0f)
+		return;
+
+	float cur_cycle = layer->cycle;
+	cur_cycle += this->base.last_update_delta_time * layer->playback_rate;
+
+	if (!allow_loop && cur_cycle >= 1.0f)
+		cur_cycle = 0.999f;
+
+	animlayer_set_cycle(layer, cur_cycle);
+}
+
+float server_animstate_get_layer_ideal_weight_from_seq_cycle(server_animstate* this, animlayer_idx idx);
+
+static inline void server_animstate_increment_layer_cycle_weight_rate_generic(server_animstate* this, animlayer_idx idx) {
+	const animlayer* layer = &((*player_animlayers(this->base.player))[idx]);
+	const float last_weight = layer->weight;
+	server_animstate_increment_layer_cycle(this, idx, false);
+	animlayer_set_weight(layer, server_animstate_get_layer_ideal_weight_from_seq_cycle(this, idx));
+	animlayer_set_playback_rate(layer, last_weight);
+}
+
+static inline void server_animstate_set_layer_weight_rate(server_animstate* this, animlayer_idx idx, float previous) {
+	if ( !this->base.last_update_delta_time)
+		return;
+
+	animlayer* layer = &((*player_animlayers(this->base.player))[idx]);
+	
+	layer->weight_delta_rate = (layer->weight - previous) / this->base.last_update_delta_time;
+}
+
+static inline anim_activity server_animstate_get_layer_activity(server_animstate* this, animlayer_idx idx) {
+	anim_activity(__fastcall* animstate_get_layer_activity_fn)(animstate*, void*, animlayer_idx) = (void*)cs_offsets.animstate_get_layer_activity_fn;
+	return animstate_get_layer_activity_fn(&this->base, NULL, idx );
+}
+
+//int server_animstate_get_weighted_sequence_from_activity(server_animstate* this, anim_activity act);
 void server_animstate_set_layer_sequence ( server_animstate* this, animlayer_idx idx, int seq );
 void server_animstate_update_animlayer (server_animstate* this, animlayer_idx idx, int seq, float playback_rate, float weight, float cycle);
+
+void server_animstate_set_up_velocity(server_animstate* this);
+void server_animstate_set_up_aim_matrix(server_animstate* this);
+void server_animstate_set_up_weapon_action(server_animstate* this);
 
 void server_animstate_update ( server_animstate* this, vec3* ang, bool force );
 

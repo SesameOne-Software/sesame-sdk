@@ -1,6 +1,30 @@
 #include "animstate.h"
 #include "sdk.h"
 
+/*
+int server_animstate_get_weighted_sequence_from_activity(server_animstate* this, anim_activity act) {
+	MDLCACHE_CRITICAL_SECTION_START;
+	const int new_seq = pBaseEntity->SelectWeightedSequenceFromModifiers(activity, m_ActivityModifiers.Base(), m_ActivityModifiers.Count());
+	MDLCACHE_CRITICAL_SECTION_END;
+	return new_seq;
+}
+*/
+
+float server_animstate_get_layer_ideal_weight_from_seq_cycle(server_animstate* this, animlayer_idx idx) {
+	animstate* client_animstate = &this->base;
+	const void* get_layer_ideal_weight_from_seq_cycle_fn = (void*)cs_offsets.animstate_get_layer_ideal_weight_from_seq_cycle_fn;
+	float ret = 1.0f;
+
+	__asm {
+		push layer
+		mov ecx, client_animstate
+		call get_layer_ideal_weight_from_seq_cycle_fn
+		movss ret, xmm0
+	}
+
+	return ret;
+}
+
 void server_animstate_set_layer_sequence ( server_animstate* this, animlayer_idx idx, int seq ) {
 	assert ( seq > 1 );
 
@@ -65,7 +89,7 @@ void server_animstate_set_up_velocity ( server_animstate* this ) {
 	//compute speed in various normalized forms
 	const float max_weapon_speed = weapon_max_speed ( this->base.weapon );
 	const float max_speed_run = this->base.weapon ? max ( max_weapon_speed, 0.001f ) : CS_PLAYER_SPEED_RUN;
-	assert ( max_speed_run > 0 );
+	assert ( max_speed_run > 0.0f );
 
 	this->base.speed_to_run_fraction = clampf ( this->base.vel_len2d / max_speed_run, 0.0f, 1.0f );
 	this->base.speed_to_walk_fraction = this->base.vel_len2d / ( max_speed_run * CS_PLAYER_SPEED_WALK_MODIFIER );
@@ -91,27 +115,27 @@ void server_animstate_set_up_velocity ( server_animstate* this ) {
 	}
 
 	if ( !this->base.in_adjust && stopped_moving && this->base.on_ground && !this->base.on_ladder && !this->base.landing && this->base.stutter_step < 50.0f ) {
-		SetLayerSequence ( animlayer_adjust, SelectSequenceFromActMods ( act_csgo_idle_adjust_stoppedmoving ) );
+		server_animstate_set_layer_sequence( this, animlayer_adjust, 5 );
 		this->base.in_adjust = true;
 	}
 
-	if ( GetLayerActivity ( animlayer_adjust ) == act_csgo_idle_adjust_stoppedmoving
-		|| GetLayerActivity ( animlayer_adjust ) == act_csgo_idle_turn_balanceadjust ) {
+	if (server_animstate_get_layer_activity( this, animlayer_adjust ) == act_csgo_idle_adjust_stoppedmoving
+		|| server_animstate_get_layer_activity(this, animlayer_adjust ) == act_csgo_idle_turn_balanceadjust ) {
 		if ( this->base.in_adjust && this->base.speed_to_crouch_fraction <= 0.25f ) {
-			IncrementLayerCycleWeightRateGeneric ( 3 );
-			this->base.in_adjust = !( IsLayerSequenceCompleted ( cs_approachf ) );
+			server_animstate_increment_layer_cycle_weight_rate_generic( this, animlayer_adjust);
+			this->base.in_adjust = !server_animstate_is_sequence_completed(this, animlayer_adjust);
 		}
 		else {
 			this->base.in_adjust = false;
-			const float weight = GetLayerWeight ( animlayer_adjust );
-			SetLayerWeight ( animlayer_adjust, cs_approachf ( 0, weight, this->base.last_update_delta_time * 5.0f ) );
-			SetLayerWeightRate ( animlayer_adjust, weight );
+			const float weight = (*player_animlayers(this->base.player))[animlayer_adjust].weight;
+			animlayer_set_weight ( animlayer_adjust, cs_approachf ( 0.0f, weight, this->base.last_update_delta_time * 5.0f ) );
+			server_animstate_set_layer_weight_rate( this, animlayer_adjust, weight );
 		}
 	}
 
 	// if the player is looking far enough to either side, turn the feet to keep them within the extent of the aim matrix
 	this->base.last_foot_yaw = this->base.foot_yaw;
-	this->base.foot_yaw = clampf ( this->base.foot_yaw, -360, 360 );
+	this->base.foot_yaw = clampf ( this->base.foot_yaw, -360.0f, 360.0f );
 	const float eye_foot_delta = cs_angle_diff ( this->base.eye_yaw, this->base.foot_yaw );
 
 	// narrow the available aim matrix width as speed increases
@@ -133,24 +157,23 @@ void server_animstate_set_up_velocity ( server_animstate* this ) {
 	// pull the lower body direction towards the eye direction, but only when the player is moving
 	if ( this->base.on_ground ) {
 		if ( this->base.vel_len2d > 0.1f ) {
-			this->base.foot_yaw = ApproachAngle ( this->base.eye_yaw, this->base.foot_yaw, this->base.last_update_delta_time * ( 30.0f + 20.0f * this->base.walk_to_run_fraction ) );
+			this->base.foot_yaw = cs_approachf( this->base.eye_yaw, this->base.foot_yaw, this->base.last_update_delta_time * ( 30.0f + 20.0f * this->base.walk_to_run_fraction ) );
 			
-			this->base.time_to_align_lby = cs_iglobals->curtime + ( CSGO_ANIM_LOWER_REALIGN_DELAY * 0.2f );
+			this->lby_realign_timer = cs_iglobals->curtime + CSGO_ANIM_LOWER_REALIGN_DELAY * 0.2f;
 			*player_lby ( this->base.player ) = this->base.eye_yaw;
 		}
-		else
-		{
+		else {
 			this->base.foot_yaw = cs_approachf ( *player_lby ( this->base.player ), this->base.foot_yaw, this->base.last_update_delta_time * CSGO_ANIM_LOWER_CATCHUP_IDLE );
 
-			if ( cs_iglobals->curtime > this->base.time_to_align_lby && abs ( cs_angle_diff ( this->base.foot_yaw, this->base.eye_yaw ) ) > 35.0f ) {
-				this->base.time_to_align_lby = cs_iglobals->curtime + CSGO_ANIM_LOWER_REALIGN_DELAY;
+			if ( cs_iglobals->curtime > this->lby_realign_timer && abs ( cs_angle_diff ( this->base.foot_yaw, this->base.eye_yaw ) ) > 35.0f ) {
+				this->lby_realign_timer = cs_iglobals->curtime + CSGO_ANIM_LOWER_REALIGN_DELAY;
 				*player_lby ( this->base.player ) = this->base.eye_yaw;
 			}
 		}
 	}
 
-	if ( this->base.vel_len2d <= CS_PLAYER_SPEED_STOPPED && this->base.on_ground && !this->base.on_ladder && !this->base.landing && this->base.last_update_delta_time > 0.0f && abs ( AngleDiff ( this->base.last_foot_yaw, m_flFootYaw ) / m_flLastUpdateIncrement > CSGO_ANIM_READJUST_THRESHOLD ) ) {
-		SetLayerSequence ( animation_layer_adjust, SelectSequenceFromActMods ( act_csgo_idle_turn_balanceadjust ) );
+	if ( this->base.vel_len2d <= CS_PLAYER_SPEED_STOPPED && this->base.on_ground && !this->base.on_ladder && !this->base.landing && this->base.last_update_delta_time > 0.0f && abs ( AngleDiff ( this->base.last_foot_yaw, this->base.foot_yaw ) / this->base.last_update_delta_time > CSGO_ANIM_READJUST_THRESHOLD ) ) {
+		server_animstate_set_layer_sequence (this, animlayer_adjust, 4 );
 		this->base.in_adjust = true;
 	}
 
@@ -174,33 +197,33 @@ void server_animstate_set_up_velocity ( server_animstate* this ) {
 		this->base.move_yaw = this->base.ideal_move_yaw;
 
 		// select a special starting cycle that's set by the animator in content
-		int nMoveSeq = GetLayerSequence ( animation_layer_movement_move );
+		const int move_seq = (*player_animlayers(this->base.player))[animlayer_movement_move].seq;
 
-		if ( nMoveSeq != -1 ) {
-			mstudioseqdesc_t& seqdesc = m_pPlayer->GetModelPtr ( )->pSeqdesc ( nMoveSeq );
+		if (move_seq != -1 ) {
+			const void* seq_desc = player_seq_desc(this->base.player, move_seq);
 
-			if ( seqdesc.numanimtags > 0 ) {
+			if (*(int*)((uintptr_t)seq_desc + 0xC4) > 0 ) {
 				if ( fabsf ( cs_angle_diff ( this->base.move_yaw, 180.0f ) ) <= EIGHT_WAY_WIDTH )
-					this->base.primary_cycle = m_pPlayer->GetFirstSequenceAnimTag ( nMoveSeq, ANIMTAG_STARTCYCLE_N, 0, 1 );
+					this->base.primary_cycle = player_get_first_sequence_anim_tag(this->base.player, move_seq, 1, 0.0f, 1.0f );
 				else if ( fabsf ( cs_angle_diff ( this->base.move_yaw, 135.0f ) ) <= EIGHT_WAY_WIDTH )
-					this->base.primary_cycle = m_pPlayer->GetFirstSequenceAnimTag ( nMoveSeq, ANIMTAG_STARTCYCLE_NE, 0, 1 );
+					this->base.primary_cycle = player_get_first_sequence_anim_tag(this->base.player, move_seq, 2, 0.0f, 1.0f);
 				else if ( fabsf ( cs_angle_diff ( this->base.move_yaw, 90.0f ) ) <= EIGHT_WAY_WIDTH )
-					this->base.primary_cycle = m_pPlayer->GetFirstSequenceAnimTag ( nMoveSeq, ANIMTAG_STARTCYCLE_E, 0, 1 );
-				else if ( fabsf ( cs_angle_diff ( this->base.move_yaw, 45.0f ) ) <= EIGHT_WAY_WIDTH ) //SE
-					this->base.primary_cycle = m_pPlayer->GetFirstSequenceAnimTag ( nMoveSeq, ANIMTAG_STARTCYCLE_SE, 0, 1 );
-				else if ( fabsf ( cs_angle_diff ( this->base.move_yaw, 0.0f ) ) <= EIGHT_WAY_WIDTH ) //S
-					this->base.primary_cycle = m_pPlayer->GetFirstSequenceAnimTag ( nMoveSeq, ANIMTAG_STARTCYCLE_S, 0, 1 );
-				else if ( fabsf ( cs_angle_diff ( this->base.move_yaw, -45.0f ) ) <= EIGHT_WAY_WIDTH ) //SW
-					this->base.primary_cycle = m_pPlayer->GetFirstSequenceAnimTag ( nMoveSeq, ANIMTAG_STARTCYCLE_SW, 0, 1 );
-				else if ( fabsf ( cs_angle_diff ( this->base.move_yaw, -90.0f ) ) <= EIGHT_WAY_WIDTH ) //W
-					this->base.primary_cycle = m_pPlayer->GetFirstSequenceAnimTag ( nMoveSeq, ANIMTAG_STARTCYCLE_W, 0, 1 );
-				else if ( fabsf ( cs_angle_diff ( this->base.move_yaw, -135.0f ) ) <= EIGHT_WAY_WIDTH ) //NW
-					this->base.primary_cycle = m_pPlayer->GetFirstSequenceAnimTag ( nMoveSeq, ANIMTAG_STARTCYCLE_NW, 0, 1 );
+					this->base.primary_cycle = player_get_first_sequence_anim_tag(this->base.player, move_seq, 3, 0.0f, 1.0f);
+				else if ( fabsf ( cs_angle_diff ( this->base.move_yaw, 45.0f ) ) <= EIGHT_WAY_WIDTH )
+					this->base.primary_cycle = player_get_first_sequence_anim_tag(this->base.player, move_seq, 4, 0.0f, 1.0f);
+				else if ( fabsf ( cs_angle_diff ( this->base.move_yaw, 0.0f ) ) <= EIGHT_WAY_WIDTH )
+					this->base.primary_cycle = player_get_first_sequence_anim_tag(this->base.player, move_seq, 5, 0.0f, 1.0f);
+				else if ( fabsf ( cs_angle_diff ( this->base.move_yaw, -45.0f ) ) <= EIGHT_WAY_WIDTH )
+					this->base.primary_cycle = player_get_first_sequence_anim_tag(this->base.player, move_seq, 6, 0.0f, 1.0f);
+				else if ( fabsf ( cs_angle_diff ( this->base.move_yaw, -90.0f ) ) <= EIGHT_WAY_WIDTH )
+					this->base.primary_cycle = player_get_first_sequence_anim_tag(this->base.player, move_seq, 7, 0.0f, 1.0f);
+				else if ( fabsf ( cs_angle_diff ( this->base.move_yaw, -135.0f ) ) <= EIGHT_WAY_WIDTH )
+					this->base.primary_cycle = player_get_first_sequence_anim_tag(this->base.player, move_seq, 8, 0.0f, 1.0f);
 			}
 		}
 	}
 	else {
-		if ( GetLayerWeight ( animation_layer_movement_strafechange ) >= 1 ) {
+		if ((*player_animlayers(this->base.player))[animlayer_movement_strafechange].weight >= 1.0f ) {
 			this->base.move_yaw = this->base.ideal_move_yaw;;
 		}
 		else {
@@ -211,16 +234,16 @@ void server_animstate_set_up_velocity ( server_animstate* this ) {
 		}
 	}
 
-	m_tPoseParamMappings [ PLAYER_POSE_PARAM_MOVE_YAW ].SetValue ( m_pPlayer, this->base.move_yaw );
+	animstate_pose_param_cache_set_value ( &this->base.pose_param_map[pose_param_move_yaw], this->base.player, this->base.move_yaw );
 
-	float flAimYaw = cs_angle_diff ( this->base.eye_yaw, this->base.foot_yaw );
+	float aim_yaw = cs_angle_diff ( this->base.eye_yaw, this->base.foot_yaw );
 
-	if ( flAimYaw >= 0 && this->base.aim_yaw_max )
-		flAimYaw = ( flAimYaw / this->base.aim_yaw_max ) * 60.0f;
+	if (aim_yaw >= 0.0f && this->base.aim_yaw_max )
+		aim_yaw = (aim_yaw / this->base.aim_yaw_max ) * 60.0f;
 	else if ( this->base.aim_yaw_min )
-		flAimYaw = ( flAimYaw / this->base.aim_yaw_min ) * -60.0f;
+		aim_yaw = (aim_yaw / this->base.aim_yaw_min ) * -60.0f;
 
-	m_tPoseParamMappings [ PLAYER_POSE_PARAM_BODY_YAW ].SetValue ( m_pPlayer, flAimYaw );
+	animstate_pose_param_cache_set_value(&this->base.pose_param_map[pose_param_body_yaw], this->base.player, aim_yaw);
 
 	// we need non-symmetrical arbitrary min/max bounds for vertical aim (pitch) too
 	float pitch = cs_angle_diff ( this->base.eye_pitch, 0.0f );
@@ -230,11 +253,64 @@ void server_animstate_set_up_velocity ( server_animstate* this ) {
 	else
 		pitch = ( pitch / this->base.aim_pitch_min ) * CSGO_ANIM_AIMMATRIX_DEFAULT_PITCH_MIN;
 
-	m_tPoseParamMappings [ PLAYER_POSE_PARAM_BODY_PITCH ].SetValue ( m_pPlayer, pitch );
-	m_tPoseParamMappings [ PLAYER_POSE_PARAM_SPEED ].SetValue ( m_pPlayer, this->base.speed_to_walk_fraction );
-	m_tPoseParamMappings [ PLAYER_POSE_PARAM_STAND ].SetValue ( m_pPlayer, 1.0f - ( this->base.duck_amount * this->base.air_lerp ) );
+	animstate_pose_param_cache_set_value(&this->base.pose_param_map[pose_param_body_pitch], this->base.player, pitch );
+	animstate_pose_param_cache_set_value(&this->base.pose_param_map[pose_param_speed], this->base.player, this->base.speed_to_walk_fraction );
+	animstate_pose_param_cache_set_value(&this->base.pose_param_map[pose_param_stand], this->base.player, 1.0f - ( this->base.duck_amount * this->base.air_lerp ) );
 
 	MDLCACHE_CRITICAL_SECTION_END;
+}
+
+/* seems to be same on server and client; no problem here! */
+void server_animstate_set_up_aim_matrix(server_animstate* this) {
+	void(__fastcall * animstate_set_up_aim_matrix)(animstate*, void*) = (void*)cs_offsets.animstate_setup_aim_matrix_fn;
+	animstate_set_up_aim_matrix(&this->base, NULL);
+}
+
+void server_animstate_set_up_weapon_action(server_animstate* this) {
+	bool do_increment = true;
+
+	if (this->base.weapon && this->deploy_rate_limiting && server_animstate_get_layer_activity(this, animlayer_weapon_action) == act_csgo_deploy) {
+		m_pWeapon->ShowWeaponWorldModel(false);
+
+		if ((*player_animlayers(this->base.player))[animlayer_weapon_action].cycle >= CSGO_ANIM_DEPLOY_RATELIMIT) {
+			this->deploy_rate_limiting = false;
+			server_animstate_set_layer_sequence(this, animlayer_weapon_action, SelectSequenceFromActMods(ACT_CSGO_DEPLOY));
+			animlayer_set_weight(&((*player_animlayers(this->base.player))[animlayer_weapon_action]), 0.0f );
+			do_increment = false;
+		}
+	}
+
+	float target_recrouch_weight = 0.0f;
+
+	if ((*player_animlayers(this->base.player))[animlayer_weapon_action].weight > 0.0f ) {
+		if ((*player_animlayers(this->base.player))[animlayer_weapon_action_recrouch].seq <= 0)
+			server_animstate_set_layer_sequence(this, animlayer_weapon_action_recrouch, player_lookup_sequence(this->base.player, "recrouch_generic"));
+
+		if (LayerSequenceHasActMod(nLayer, "crouch")) {
+			if (this->base.duck_amount < 1.0f)
+				target_recrouch_weight = (*player_animlayers(this->base.player))[animlayer_weapon_action].weight * (1.0f - this->base.duck_amount);
+		}
+		else if (this->base.duck_amount > 0.0f)
+			target_recrouch_weight = (*player_animlayers(this->base.player))[animlayer_weapon_action].weight * this->base.duck_amount;
+	}
+	else {
+		if ((*player_animlayers(this->base.player))[animlayer_weapon_action_recrouch].weight > 0.0f )
+			target_recrouch_weight = cs_approachf(0.0f, (*player_animlayers(this->base.player))[animlayer_weapon_action_recrouch].weight, m_flLastUpdateIncrement * 4);
+	}
+
+	animlayer_set_weight(&((*player_animlayers(this->base.player))[animlayer_weapon_action_recrouch]), target_recrouch_weight);
+
+	if (do_increment) {
+		// increment the action
+		server_animstate_increment_layer_cycle(this, animlayer_weapon_action, false);
+
+		const float previous_weight = (*player_animlayers(this->base.player))[animlayer_weapon_action].weight;
+		const float desired_weight = server_animstate_get_layer_ideal_weight_from_seq_cycle(this, animlayer_weapon_action);
+		
+		animlayer_set_weight(&((*player_animlayers(this->base.player))[animlayer_weapon_action]), previous_weight);
+		server_animstate_set_layer_weight_rate(this, animlayer_weapon_action, previous_weight);
+	}
+
 }
 
 void server_animstate_update ( server_animstate* this, vec3* ang, bool force ) {
@@ -271,8 +347,8 @@ void server_animstate_update ( server_animstate* this, vec3* ang, bool force ) {
 				animlayer* layer = &layers [ i ];
 
 				layer->dispatched_studiohdr = NULL;
-				layer->dispatched_src = ACT_INVALID;
-				layer->dispatched_dst = ACT_INVALID;
+				layer->dispatched_src = act_invalid;
+				layer->dispatched_dst = act_invalid;
 			}
 		}
 	}
@@ -286,8 +362,8 @@ void server_animstate_update ( server_animstate* this, vec3* ang, bool force ) {
 	MDLCACHE_CRITICAL_SECTION_END;
 
 	// all the layers get set up here
-	SetUpVelocity ( );			// calculate speed and set up body yaw values
-	SetUpAimMatrix ( );			// aim matrices are full body, so they not only point the weapon down the eye dir, they can crouch the idle player
+	server_animstate_set_up_velocity(this );			// calculate speed and set up body yaw values
+	server_animstate_set_up_velocity( this );			// aim matrices are full body, so they not only point the weapon down the eye dir, they can crouch the idle player
 	SetUpWeaponAction ( );		// firing, reloading, silencer-swapping, deploying
 	SetUpMovement ( );			// jumping, climbing, ground locomotion, post-weapon crouch-stand
 	SetUpAliveloop ( );			// breathe and fidget

@@ -179,6 +179,12 @@ typedef struct {
 	ptrdiff_t player_thirdperson_recoil;
 	ptrdiff_t player_computed_lod_frame;
 
+	ptrdiff_t player_get_model_ptr_fn;
+	ptrdiff_t animstate_setup_aim_matrix_fn;
+	ptrdiff_t animstate_pose_param_cache_set_value_fn;
+	ptrdiff_t animstate_get_layer_activity_fn;
+	ptrdiff_t animstate_get_first_sequence_anim_tag_fn;
+	ptrdiff_t animstate_get_layer_ideal_weight_from_seq_cycle_fn;
 	ptrdiff_t animstate_cache_sequences_fn;
 	ptrdiff_t animstate_reset_fn;
 	ptrdiff_t animstate_get_weapon_move_animation_fn;

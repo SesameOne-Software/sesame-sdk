@@ -314,6 +314,38 @@ static inline float player_get_layer_sequence_cycle_rate ( player* this, animlay
 	return ( ( float ( __fastcall* )( player*, void*, animlayer_idx, int ) )cs_offsets.player_get_layer_sequence_cycle_rate_fn ) ( this, NULL, idx, seq );
 }
 
+static inline float player_get_first_sequence_anim_tag(player* this, int seq, int tag, float start, float end) {
+	const mdl* (__fastcall * player_get_model_ptr_fn)(player*, void*) = (void*)cs_offsets.player_get_model_ptr_fn;
+	const void* animstate_get_first_sequence_anim_tag_fn = (void*)cs_offsets.animstate_get_first_sequence_anim_tag_fn;
+
+	const mdl* mdl_ptr = player_get_model_ptr_fn(this, NULL);
+	float ret = 0.0f;
+
+	__asm {
+		push mdl_ptr
+		push tag
+		push seq
+		mov ecx, this
+		call animstate_get_first_sequence_anim_tag_fn
+		movss ret, xmm0
+	}
+
+	return ret;
+}
+
+/*
+static inline int player_select_weighted_seq_from_modifiers(player* this, anim_activity act, utlvector* activity_modifiers, int modifier_count) {
+	studiohdr* pstudiohdr = player_studio_mdl(this, entity_renderable((entity*)this));
+	if (!pstudiohdr || !pstudiohdr->m_pVModel)
+		pstudiohdr = nullptr;
+
+	if (!pstudiohdr->m_pActivityToSequence)
+		pstudiohdr->m_pActivityToSequence = FindMapping(pstudiohdr);
+
+	return pstudiohdr->m_pActivityToSequence->SelectWeightedSequenceFromModifiers(pstudiohdr, activity, pActivityModifiers, iModifierCount, this);
+}
+*/
+
 vec_weapons player_weapons( player* this );
 vec_wearables player_wearables( player* this );
 
