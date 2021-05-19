@@ -151,7 +151,7 @@ static inline bool hooks_init( ) {
         CREATE_HOOK ( pattern_search ( "engine.dll", "55 8B EC 83 E4 F0 B8 ? ? ? ? E8 ? ? ? ? 56 57 8B F9 89 7C 24 18" ), hooks_send_datagram, subhook_send_datagram );
         CREATE_HOOK ( pattern_search ( "engine.dll", "55 8B EC 83 EC 08 56 8B F1 8B 86 ? ? ? ? 85 C0" ), hooks_send_net_msg, subhook_send_net_msg );
         CREATE_HOOK ( pattern_search ( "client.dll", "55 8B EC 83 E4 F0 B8 ? ? ? ? E8 ? ? ? ? 56 57 8B F9" ), hooks_setup_bones, subhook_setup_bones );
-        CREATE_HOOK ( pattern_search ( "client.dll", "57 8B F9 8B 07 8B 80 ? ? ? ? FF D0 84 C0 75 02 5F C3" ), hooks_should_skip_anim_frame, subhook_should_skip_anim_frame );
+        CREATE_HOOK ( pattern_search ( "client.dll", "57 8B F9 8B 07 8B 80 ? ? ? ? FF D0 84 C0 75 02" ), hooks_should_skip_anim_frame, subhook_should_skip_anim_frame );
     }
 
     return true;

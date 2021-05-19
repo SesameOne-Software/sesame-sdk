@@ -165,6 +165,8 @@ typedef struct {
 	ptrdiff_t entity_abs_vel;
 	ptrdiff_t entity_studiohdr;
 
+	ptrdiff_t player_playback_rate;
+	ptrdiff_t player_cycle;
 	ptrdiff_t player_movetype;
 	ptrdiff_t player_iks;
 	ptrdiff_t player_spawn_time;
@@ -181,6 +183,8 @@ typedef struct {
 	ptrdiff_t animstate_reset_fn;
 	ptrdiff_t animstate_get_weapon_move_animation_fn;
 	ptrdiff_t animstate_update_layer_order_preset_fn;
+	ptrdiff_t player_get_layer_sequence_cycle_rate_fn;
+	ptrdiff_t player_set_sequence_fn;
 	ptrdiff_t player_get_sequence_linear_motion_fn;
 	ptrdiff_t player_invalidate_physics_recursive_fn;
 	ptrdiff_t player_lookup_sequence_fn;
@@ -232,6 +236,8 @@ typedef struct {
 	ptrdiff_t loadout_allowed_ret;
 	ptrdiff_t accumulate_layers_ret;
 	ptrdiff_t list_leaves_in_box_ret;
+
+	ptrdiff_t enable_invalidate_bone_cache;
 } cs_offsets_s;
 
 extern cs_offsets_s cs_offsets;

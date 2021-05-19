@@ -285,7 +285,7 @@ static inline float player_sequence_duration ( player* this, int seq) {
 	return retval;
 }
 
-static inline float player_get_sequence_cycle_rate ( player* this, int seq) {
+static inline float player_get_sequence_cycle_rate_server ( player* this, int seq) {
 	float t = player_sequence_duration ( this, seq);
 
 	if ( t > 0.0f )
@@ -295,7 +295,23 @@ static inline float player_get_sequence_cycle_rate ( player* this, int seq) {
 }
 
 static inline void player_invalidate_physics_recursive(player* this, int flags) {
-	((void(__fastcall*)(player*, int))cs_offsets.player_invalidate_physics_recursive_fn) (this, NULL, flags);
+	( ( void ( __fastcall* )( player*, void*, int ) )cs_offsets.player_invalidate_physics_recursive_fn ) ( this, NULL, flags );
+}
+
+static inline void player_set_sequence ( player* this, int seq ) {
+	( ( void ( __fastcall* )( player*, void*, int ) )cs_offsets.player_set_sequence_fn ) ( this, NULL, seq );
+}
+
+static inline void player_set_playback_rate ( player* this, float rate ) {
+	*( float* ) ( ( uintptr_t ) this + cs_offsets.player_playback_rate ) = rate;
+}
+
+static inline void player_set_cycle ( player* this, float cycle ) {
+	*( float* ) ( ( uintptr_t ) this + cs_offsets.player_cycle ) = cycle;
+}
+
+static inline float player_get_layer_sequence_cycle_rate ( player* this, animlayer_idx idx, int seq ) {
+	return ( ( float ( __fastcall* )( player*, void*, animlayer_idx, int ) )cs_offsets.player_get_layer_sequence_cycle_rate_fn ) ( this, NULL, idx, seq );
 }
 
 vec_weapons player_weapons( player* this );

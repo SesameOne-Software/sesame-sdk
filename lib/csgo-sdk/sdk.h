@@ -152,7 +152,11 @@ static inline void cs_vector_transform( const vec3* in, const mat3x4* mat, vec3*
 }
 
 static inline bool cs_is_valve_server ( ) {
-	return *( ptrdiff_t* ) cs_offsets.sdk_game_rules && *( bool* ) ( *( ptrdiff_t* ) cs_offsets.sdk_game_rules + cs_offsets.sdk_is_valve_ds );
+	return *( uintptr_t* ) cs_offsets.sdk_game_rules && *( bool* ) ( *( uintptr_t* ) cs_offsets.sdk_game_rules + cs_offsets.sdk_is_valve_ds );
+}
+
+static inline void cs_allow_invalidate_bone_cache ( bool enable ) {
+	*( bool* ) cs_offsets.enable_invalidate_bone_cache = enable;
 }
 
 static inline void cs_add_box_overlay ( const vec3* origin, const vec3* mins, const vec3* maxs, const vec3* angles, int r, int g, int b, int a, float duration ) {
@@ -188,6 +192,8 @@ bool __forceinline cs_offsets_dump ( sds errors ) {
 	cs_dump_offset ( cs_offsets.entity_abs_vel, 0x94 );
 	cs_dump_offset ( cs_offsets.entity_studiohdr, 0x294C );
 
+	cs_dump_offset ( cs_offsets.player_playback_rate, 0xA18 );
+	cs_dump_offset ( cs_offsets.player_cycle, 0xA14 );
 	cs_dump_offset ( cs_offsets.player_movetype, 0x25C );
 	cs_dump_offset ( cs_offsets.player_iks, 0x2670 );
 	cs_dump_offset ( cs_offsets.player_spawn_time, 0xA370 );
@@ -203,7 +209,9 @@ bool __forceinline cs_offsets_dump ( sds errors ) {
 	cs_dump_offset ( cs_offsets.animstate_cache_sequences_fn, pattern_search ( "client.dll", "55 8B EC 83 E4 F8 83 EC 34 53 56 8B F1 57 8B" ) );
 	cs_dump_offset ( cs_offsets.animstate_reset_fn, pattern_search ( "client.dll", "56 6A 01 68 ? ? ? ? 8B F1" ) );
 	cs_dump_offset ( cs_offsets.animstate_get_weapon_move_animation_fn, pattern_search ( "client.dll", "53 56 57 8B F9 33 F6 8B 4F 60 8B 01 FF 90" ) );
-	cs_dump_offset(cs_offsets.animstate_update_layer_order_preset_fn, pattern_search("client.dll", "55 8B EC 51 53 56 57 8B F9 83 7F 60"));
+	cs_dump_offset ( cs_offsets.animstate_update_layer_order_preset_fn, pattern_search ( "client.dll", "55 8B EC 51 53 56 57 8B F9 83 7F 60" ) );
+	cs_dump_offset ( cs_offsets.player_get_layer_sequence_cycle_rate_fn, pattern_search ( "client.dll", "55 8B EC 56 57 FF 75 0C 8B 7D 08 8B F1 57 E8" ) );
+	cs_dump_offset ( cs_offsets.player_set_sequence_fn, pattern_search ( "client.dll", "55 8B EC 80 B9 ? ? ? ? ? 74 16" ) );
 	cs_dump_offset ( cs_offsets.player_get_sequence_linear_motion_fn, pattern_search ( "client.dll", "55 8B EC 83 EC 0C 56 8B F1 57 8B FA 85 F6 75 14" ) );
 	cs_dump_offset ( cs_offsets.player_invalidate_physics_recursive_fn, pattern_search ( "client.dll", "55 8B EC 83 E4 F8 83 EC 0C 53 8B 5D 08 8B C3 56" ) );
 	cs_dump_offset ( cs_offsets.player_lookup_sequence_fn, pattern_rip ( pattern_search ( "client.dll", "E8 ? ? ? ? 5E 83 F8 FF" ) ) );
@@ -255,6 +263,8 @@ bool __forceinline cs_offsets_dump ( sds errors ) {
 	cs_dump_offset ( cs_offsets.loadout_allowed_ret, pattern_search ( "client.dll", "75 04 B0 01 5F" ) - 2 );
 	cs_dump_offset ( cs_offsets.accumulate_layers_ret, pattern_search ( "client.dll", "84 C0 75 0D F6 87" ) );
 	cs_dump_offset ( cs_offsets.list_leaves_in_box_ret, pattern_search ( "client.dll", "56 52 FF 50 18" ) + 5 );
+
+	cs_dump_offset ( cs_offsets.enable_invalidate_bone_cache, *( ptrdiff_t* ) (pattern_search ( "client.dll", "C6 05 ? ? ? ? 00 F3 0F 5F 05 ? ? ? ? F3 0F 11 47 74" ) + 2) );
 }
 
 static __forceinline bool cs_init ( sds* errors ) {
