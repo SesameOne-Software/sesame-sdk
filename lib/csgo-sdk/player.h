@@ -111,19 +111,9 @@ OFFSET( player, mat3x4a*, bones, cs_offsets.player_bones );
 OFFSET( player, animlayer*, animlayers, cs_offsets.player_animlayers );
 OFFSET( player, uint32_t, num_animlayers, cs_offsets.player_num_animlayers );
 OFFSET( player, float, poses, cs_offsets.player_poses );
-OFFSET ( player, int, jiggle_bones, cs_offsets.player_jiggle_bones );
+OFFSET ( player, void*, jiggle_bones, cs_offsets.player_jiggle_bones );
 OFFSET ( player, float, thirdperson_recoil, cs_offsets.player_thirdperson_recoil );
 OFFSET ( player, int, computed_lod_frame, cs_offsets.player_computed_lod_frame );
-
-static inline void* player_seq_desc( player* this, int seq ) {
-	void* group_hdr = *( void** )( ( uintptr_t )this + cs_offsets.player_group_hdr );
-	int i = seq;
-
-	if ( seq < 0 || seq >= *( int* )( ( uintptr_t )group_hdr + 0xBC ) )
-		i = 0;
-
-	return ( void* )( ( uintptr_t )group_hdr + *( uintptr_t* )( ( uintptr_t )group_hdr + 0xC0 ) + 0xD4 * i );
-}
 
 VIRTUAL( player, void, set_local_viewangles, cs_idx_player_set_local_viewangles, ( angles ), vec3* angles );
 VIRTUAL( player, void, think, cs_idx_player_think, ( ) );
@@ -148,14 +138,6 @@ static inline vec3* player_world_space( player* this, vec3* out ) {
 
 static inline float* player_old_simtime( player* this ) {
 	return ( float* )( ( uintptr_t )player_simtime( this ) + sizeof( float ) );
-}
-
-static inline void* player_mdl( player* this ) {
-	return ( ( void* ( __fastcall* )( renderable*, void* ) )utils_vfunc( entity_renderable( ( entity* )this ), cs_idx_player_mdl ) )( entity_renderable( ( entity* )this ), NULL );
-}
-
-static inline studiohdr* player_studio_mdl( player* this, void* mdl ) {
-	return ( ( studiohdr * ( __fastcall* )( player*, void*, void* ) )utils_vfunc( this, player_studio_mdl ) )( this, NULL, mdl );
 }
 
 static inline bool player_is_alive( player* this ) {
@@ -333,18 +315,14 @@ static inline float player_get_first_sequence_anim_tag(player* this, int seq, in
 	return ret;
 }
 
-/*
-static inline int player_select_weighted_seq_from_modifiers(player* this, anim_activity act, utlvector* activity_modifiers, int modifier_count) {
-	studiohdr* pstudiohdr = player_studio_mdl(this, entity_renderable((entity*)this));
-	if (!pstudiohdr || !pstudiohdr->m_pVModel)
-		pstudiohdr = nullptr;
+static inline int player_select_weighted_seq(player* this, anim_activity act) {
+	studiohdr* model_ptr = *entity_model_ptr( ( entity* ) this );
+	
+	if (!model_ptr )
+		return 0;
 
-	if (!pstudiohdr->m_pActivityToSequence)
-		pstudiohdr->m_pActivityToSequence = FindMapping(pstudiohdr);
-
-	return pstudiohdr->m_pActivityToSequence->SelectWeightedSequenceFromModifiers(pstudiohdr, activity, pActivityModifiers, iModifierCount, this);
+	return ( ( int ( __fastcall* )( studiohdr*, anim_activity ) )cs_offsets.studiohdr_select_weighted_seq )( model_ptr , act);
 }
-*/
 
 vec_weapons player_weapons( player* this );
 vec_wearables player_wearables( player* this );

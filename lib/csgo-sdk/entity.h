@@ -27,7 +27,7 @@ OFFSET ( entity, networkable, networkable, 0x8 );
 OFFSET ( entity, uint32_t, eflags, cs_offsets.entity_eflags );
 OFFSET ( entity, uint32_t, effects, cs_offsets.entity_effects );
 OFFSET ( entity, vec3, abs_vel, cs_offsets.entity_abs_vel );
-OFFSET ( entity, studiohdr*, studiohdr, cs_offsets.entity_studiohdr );
+OFFSET ( entity, studiohdr*, model_ptr, cs_offsets.entity_model_ptr );
 NETVAR ( entity, vec3, origin, "DT_BaseEntity->m_vecOrigin" );
 NETVAR ( entity, uint32_t, team, "DT_BaseEntity->m_iTeamNum" );
 

@@ -173,7 +173,7 @@ void server_animstate_set_up_velocity ( server_animstate* this ) {
 	}
 
 	if ( this->base.vel_len2d <= CS_PLAYER_SPEED_STOPPED && this->base.on_ground && !this->base.on_ladder && !this->base.landing && this->base.last_update_delta_time > 0.0f && abs ( AngleDiff ( this->base.last_foot_yaw, this->base.foot_yaw ) / this->base.last_update_delta_time > CSGO_ANIM_READJUST_THRESHOLD ) ) {
-		server_animstate_set_layer_sequence (this, animlayer_adjust, 4 );
+		server_animstate_set_layer_sequence (this, animlayer_adjust, player_select_weighted_seq ( this->base.player, act_csgo_idle_turn_balanceadjust ) );
 		this->base.in_adjust = true;
 	}
 
@@ -200,7 +200,7 @@ void server_animstate_set_up_velocity ( server_animstate* this ) {
 		const int move_seq = (*player_animlayers(this->base.player))[animlayer_movement_move].seq;
 
 		if (move_seq != -1 ) {
-			const void* seq_desc = player_seq_desc(this->base.player, move_seq);
+			const void* seq_desc = studiohdr_get_seq_desc(this->base.player, move_seq);
 
 			if (*(int*)((uintptr_t)seq_desc + 0xC4) > 0 ) {
 				if ( fabsf ( cs_angle_diff ( this->base.move_yaw, 180.0f ) ) <= EIGHT_WAY_WIDTH )
@@ -274,7 +274,7 @@ void server_animstate_set_up_weapon_action(server_animstate* this) {
 
 		if ((*player_animlayers(this->base.player))[animlayer_weapon_action].cycle >= CSGO_ANIM_DEPLOY_RATELIMIT) {
 			this->deploy_rate_limiting = false;
-			server_animstate_set_layer_sequence(this, animlayer_weapon_action, SelectSequenceFromActMods(ACT_CSGO_DEPLOY));
+			server_animstate_set_layer_sequence(this, animlayer_weapon_action, player_select_weighted_seq ( this->base.player, act_csgo_deploy));
 			animlayer_set_weight(&((*player_animlayers(this->base.player))[animlayer_weapon_action]), 0.0f );
 			do_increment = false;
 		}
@@ -286,7 +286,8 @@ void server_animstate_set_up_weapon_action(server_animstate* this) {
 		if ((*player_animlayers(this->base.player))[animlayer_weapon_action_recrouch].seq <= 0)
 			server_animstate_set_layer_sequence(this, animlayer_weapon_action_recrouch, player_lookup_sequence(this->base.player, "recrouch_generic"));
 
-		if (LayerSequenceHasActMod(nLayer, "crouch")) {
+		/* ghetto workaround so i dont have to rebuild another function */
+		//if (LayerSequenceHasActMod(nLayer, "crouch")) {
 			if (this->base.duck_amount < 1.0f)
 				target_recrouch_weight = (*player_animlayers(this->base.player))[animlayer_weapon_action].weight * (1.0f - this->base.duck_amount);
 		}
@@ -295,7 +296,7 @@ void server_animstate_set_up_weapon_action(server_animstate* this) {
 	}
 	else {
 		if ((*player_animlayers(this->base.player))[animlayer_weapon_action_recrouch].weight > 0.0f )
-			target_recrouch_weight = cs_approachf(0.0f, (*player_animlayers(this->base.player))[animlayer_weapon_action_recrouch].weight, m_flLastUpdateIncrement * 4);
+			target_recrouch_weight = cs_approachf(0.0f, (*player_animlayers(this->base.player))[animlayer_weapon_action_recrouch].weight, this->base.last_update_delta_time * 4.0f);
 	}
 
 	animlayer_set_weight(&((*player_animlayers(this->base.player))[animlayer_weapon_action_recrouch]), target_recrouch_weight);
@@ -310,7 +311,6 @@ void server_animstate_set_up_weapon_action(server_animstate* this) {
 		animlayer_set_weight(&((*player_animlayers(this->base.player))[animlayer_weapon_action]), previous_weight);
 		server_animstate_set_layer_weight_rate(this, animlayer_weapon_action, previous_weight);
 	}
-
 }
 
 void server_animstate_update ( server_animstate* this, vec3* ang, bool force ) {

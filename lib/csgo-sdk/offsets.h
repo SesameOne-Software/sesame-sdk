@@ -105,7 +105,6 @@ typedef enum {
 	cs_idx_player_abs_origin = 10,
 	cs_idx_player_abs_angles = 11,
 	cs_idx_player_mdl = 8,
-	cs_idx_player_studio_mdl = 32,
 	cs_idx_player_render_origin = 1,
 	cs_idx_player_get_shoot_pos = 168,
 	/* pred.h */
@@ -158,12 +157,16 @@ typedef struct {
 	ptrdiff_t iclientstate_out_seq_num;
 	ptrdiff_t iclientstate_events;
 
+	ptrdiff_t studiohdr_findmapping;
+	ptrdiff_t studiohdr_seq_desc;
+	ptrdiff_t studiohdr_select_weighted_seq;
+
 	ptrdiff_t entity_idx;
 	ptrdiff_t entity_dormant;
 	ptrdiff_t entity_eflags;
 	ptrdiff_t entity_effects;
 	ptrdiff_t entity_abs_vel;
-	ptrdiff_t entity_studiohdr;
+	ptrdiff_t entity_model_ptr;
 
 	ptrdiff_t player_playback_rate;
 	ptrdiff_t player_cycle;
@@ -175,11 +178,9 @@ typedef struct {
 	ptrdiff_t player_num_animlayers;
 	ptrdiff_t player_poses;
 	ptrdiff_t player_jiggle_bones;
-	ptrdiff_t player_group_hdr;
 	ptrdiff_t player_thirdperson_recoil;
 	ptrdiff_t player_computed_lod_frame;
 
-	ptrdiff_t player_get_model_ptr_fn;
 	ptrdiff_t animstate_setup_aim_matrix_fn;
 	ptrdiff_t animstate_pose_param_cache_set_value_fn;
 	ptrdiff_t animstate_get_layer_activity_fn;
