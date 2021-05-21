@@ -180,7 +180,10 @@ typedef struct {
 	ptrdiff_t player_jiggle_bones;
 	ptrdiff_t player_thirdperson_recoil;
 	ptrdiff_t player_computed_lod_frame;
+	ptrdiff_t player_move_state;
 
+	ptrdiff_t animstate_modifyeyepos;
+	ptrdiff_t animstate_get_weapon_prefix_fn;
 	ptrdiff_t animstate_setup_aim_matrix_fn;
 	ptrdiff_t animstate_pose_param_cache_set_value_fn;
 	ptrdiff_t animstate_get_layer_activity_fn;
@@ -203,10 +206,12 @@ typedef struct {
 	ptrdiff_t player_set_abs_angles_fn;
 	ptrdiff_t player_set_abs_origin_fn;
 	ptrdiff_t player_animstate;
-	ptrdiff_t player_weapon_shootposition;
 	ptrdiff_t player_bone_count;
 	ptrdiff_t player_bone_cache;
+	ptrdiff_t player_use_new_animstate;
 	ptrdiff_t player_is_local;
+	ptrdiff_t player_is_strafing;
+	ptrdiff_t player_buttons;
 
 	ptrdiff_t sdk_view_matrix;
 	ptrdiff_t sdk_game_rules;

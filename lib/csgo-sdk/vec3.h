@@ -55,6 +55,17 @@ static inline float cs_anglemod ( float a ) {
 	return ( 360.0f / 65536 ) * ( ( int ) ( a * ( 65536.0f / 360.0f ) ) & 65535 );
 }
 
+static inline float cs_clamp_cycle(float x) {
+	x -= (int)x;
+
+	if (x < 0.0f)
+		x += 1.0f;
+	else if (x > 1.0f)
+		x -= 1.0f;
+
+	return x;
+}
+
 static inline float cs_approach_rotation ( float target, float value, float speed ) {
 	target = cs_anglemod ( target );
 	value = cs_anglemod ( value );
@@ -249,7 +260,7 @@ static inline float vec3##_dist_sqr ( vec3* this, vec3* to ) {\
 }
 
 #define VEC3_DOT(vec3)\
-static inline float vec3##_dot ( vec3* this, vec3* src ) {\
+static inline float vec3##_dot ( const vec3* this, const vec3* src ) {\
 	return this->x * src->x + this->y * src->y + this->z * src->z;\
 }
 

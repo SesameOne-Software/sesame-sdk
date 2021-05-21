@@ -1,6 +1,8 @@
 #include "animstate.h"
 #include "sdk.h"
 
+#include <stdio.h>
+
 /*
 int server_animstate_get_weighted_sequence_from_activity(server_animstate* this, anim_activity act) {
 	MDLCACHE_CRITICAL_SECTION_START;
@@ -115,7 +117,7 @@ void server_animstate_set_up_velocity ( server_animstate* this ) {
 	}
 
 	if ( !this->base.in_adjust && stopped_moving && this->base.on_ground && !this->base.on_ladder && !this->base.landing && this->base.stutter_step < 50.0f ) {
-		server_animstate_set_layer_sequence( this, animlayer_adjust, 5 );
+		server_animstate_set_layer_sequence( this, animlayer_adjust, player_select_weighted_seq(this->base.player, act_csgo_idle_adjust_stoppedmoving));
 		this->base.in_adjust = true;
 	}
 
@@ -269,16 +271,17 @@ void server_animstate_set_up_aim_matrix(server_animstate* this) {
 void server_animstate_set_up_weapon_action(server_animstate* this) {
 	bool do_increment = true;
 
-	if (this->base.weapon && this->deploy_rate_limiting && server_animstate_get_layer_activity(this, animlayer_weapon_action) == act_csgo_deploy) {
-		m_pWeapon->ShowWeaponWorldModel(false);
-
-		if ((*player_animlayers(this->base.player))[animlayer_weapon_action].cycle >= CSGO_ANIM_DEPLOY_RATELIMIT) {
-			this->deploy_rate_limiting = false;
-			server_animstate_set_layer_sequence(this, animlayer_weapon_action, player_select_weighted_seq ( this->base.player, act_csgo_deploy));
-			animlayer_set_weight(&((*player_animlayers(this->base.player))[animlayer_weapon_action]), 0.0f );
-			do_increment = false;
-		}
-	}
+	/* for danger zone; let's leave this out for now */
+	//if (this->base.weapon && this->deploy_rate_limiting && server_animstate_get_layer_activity(this, animlayer_weapon_action) == act_csgo_deploy) {
+	//	//m_pWeapon->ShowWeaponWorldModel(false);
+	//
+	//	if ((*player_animlayers(this->base.player))[animlayer_weapon_action].cycle >= CSGO_ANIM_DEPLOY_RATELIMIT) {
+	//		this->deploy_rate_limiting = false;
+	//		server_animstate_set_layer_sequence(this, animlayer_weapon_action, player_select_weighted_seq ( this->base.player, act_csgo_deploy));
+	//		animlayer_set_weight(&((*player_animlayers(this->base.player))[animlayer_weapon_action]), 0.0f );
+	//		do_increment = false;
+	//	}
+	//}
 
 	float target_recrouch_weight = 0.0f;
 
@@ -287,7 +290,8 @@ void server_animstate_set_up_weapon_action(server_animstate* this) {
 			server_animstate_set_layer_sequence(this, animlayer_weapon_action_recrouch, player_lookup_sequence(this->base.player, "recrouch_generic"));
 
 		/* ghetto workaround so i dont have to rebuild another function */
-		//if (LayerSequenceHasActMod(nLayer, "crouch")) {
+		/* THIS IS WRONG!! */
+		if (/*LayerSequenceHasActMod( animlayer_weapon_action, "crouch" )*/ this->base.duck_amount > 0.55f) {
 			if (this->base.duck_amount < 1.0f)
 				target_recrouch_weight = (*player_animlayers(this->base.player))[animlayer_weapon_action].weight * (1.0f - this->base.duck_amount);
 		}
@@ -311,6 +315,283 @@ void server_animstate_set_up_weapon_action(server_animstate* this) {
 		animlayer_set_weight(&((*player_animlayers(this->base.player))[animlayer_weapon_action]), previous_weight);
 		server_animstate_set_layer_weight_rate(this, animlayer_weapon_action, previous_weight);
 	}
+}
+
+void server_animstate_set_up_movement(server_animstate* this) {
+	MDLCACHE_CRITICAL_SECTION_START;
+
+	if (this->base.walk_to_run_fraction > 0.0f && this->base.walk_to_run_fraction < 1.0f) {
+		if (this->base.walk_to_run_state == ANIM_TRANSITION_WALK_TO_RUN)
+			this->base.walk_to_run_fraction += this->base.last_update_delta_time * CSGO_ANIM_WALK_TO_RUN_TRANSITION_SPEED;
+		else
+			this->base.walk_to_run_fraction -= this->base.last_update_delta_time * CSGO_ANIM_WALK_TO_RUN_TRANSITION_SPEED;
+
+		this->base.walk_to_run_fraction = clampf(this->base.walk_to_run_fraction, 0.0f, 1.0f);
+	}
+
+	if (this->base.vel_len2d > (CS_PLAYER_SPEED_RUN * CS_PLAYER_SPEED_WALK_MODIFIER) && this->base.walk_to_run_state == ANIM_TRANSITION_RUN_TO_WALK) {
+		this->base.walk_to_run_state = ANIM_TRANSITION_WALK_TO_RUN;
+		this->base.walk_to_run_fraction = max(0.01f, this->base.walk_to_run_fraction);
+	}
+	else if (this->base.vel_len2d < (CS_PLAYER_SPEED_RUN * CS_PLAYER_SPEED_WALK_MODIFIER) && this->base.walk_to_run_state == ANIM_TRANSITION_WALK_TO_RUN) {
+		this->base.walk_to_run_state = ANIM_TRANSITION_RUN_TO_WALK;
+		this->base.walk_to_run_fraction = min(0.99f, this->base.walk_to_run_fraction);
+	}
+
+	animstate_pose_param_cache_set_value(&this->base.pose_param_map[pose_param_move_blend_walk], this->base.player, (1.0f - this->base.walk_to_run_fraction) * (1.0f - this->base.duck_amount));
+	animstate_pose_param_cache_set_value(&this->base.pose_param_map[pose_param_move_blend_run], this->base.player, this->base.walk_to_run_fraction * (1.0f - this->base.duck_amount));
+	animstate_pose_param_cache_set_value(&this->base.pose_param_map[pose_param_move_blend_crouch_walk], this->base.player, this->base.duck_amount);
+
+	char weapon_move_seq[MAX_ANIMSTATE_ANIMNAME_CHARS];
+	sprintf(weapon_move_seq, "move_%s", server_animstate_get_weapon_prefix(this));
+
+	int move_seq = player_lookup_sequence(this->base.player, weapon_move_seq);
+
+	if (move_seq == -1)
+		move_seq = player_lookup_sequence(this->base.player, "move");
+
+	assert(weapon_move_seq > 0);
+
+	if ( *player_move_state(this->base.player) != this->base.last_move_state)
+		this->base.stutter_step += 10.0f;
+
+	this->base.last_move_state = *player_move_state(this->base.player);
+	this->base.stutter_step = clampf(cs_approachf(0.0f, this->base.stutter_step, this->base.last_update_delta_time * 40.0f), 0.0f, 100.0f);
+
+	const float target_move_weight = lerpf(this->base.duck_amount, clampf(this->base.speed_to_walk_fraction, 0.0f, 1.0f), clampf(this->base.speed_to_crouch_fraction, 0.0f, 1.0f));
+
+	if (this->base.move_weight <= target_move_weight)
+		this->base.move_weight = target_move_weight;
+	else
+		this->base.move_weight = cs_approachf(target_move_weight, this->base.move_weight, this->base.last_update_delta_time * RemapValClamped(this->base.stutter_step, 0.0f, 100.0f, 2.0f, 20.0f));
+
+	vec3 move_yaw_dir = (vec3){ 0.0f, cs_norm_rotation(this->base.foot_yaw + this->base.move_yaw + 180.0f ), 0.0f};
+	vec3_to_vec(&move_yaw_dir);
+	this->base.move_weight *= cs_bias(fabsf(vec3_dot(&this->base.vel_norm_nonzero, &move_yaw_dir)), 0.2f);
+
+	float move_weight_with_air_smooth = this->base.move_weight * this->base.air_lerp;
+	move_weight_with_air_smooth *= max((1.0f - (*player_animlayers(this->base.player))[animlayer_movement_land_or_climb].weight), 0.55f);
+
+	float move_cycle_rate = 0.0f;
+	
+	if (this->base.vel_len2d > 0.0f) {
+		move_cycle_rate = player_get_sequence_cycle_rate_server(this->base.player, move_seq);
+		const float move_dist_vs_rate = player_get_sequence_move_distance(this->base.player, move_seq) / (1.0f / move_cycle_rate);
+		const float seq_ground_speed = max(move_dist_vs_rate, 0.001f);
+		move_cycle_rate *= this->base.vel_len2d / seq_ground_speed;
+		move_cycle_rate *= lerpf(this->base.walk_to_run_fraction, 1.0f, CSGO_ANIM_RUN_ANIM_PLAYBACK_MULTIPLIER);
+	}
+
+	const float cycle_increment = move_cycle_rate * this->base.last_update_delta_time;
+	this->base.primary_cycle = cs_clamp_cycle(this->base.primary_cycle + cycle_increment);
+
+	move_weight_with_air_smooth = clampf(move_weight_with_air_smooth, 0.0f, 1.0f);
+	server_animstate_update_animlayer(this, animlayer_movement_move, move_seq, cycle_increment, move_weight_with_air_smooth, this->base.primary_cycle);
+
+	if (player_is_local(this->base.player)) {
+		/* TODO: UPDATE BUTTONS IN ENGINE PREDICTION */
+		bool moving_right = *player_buttons(this->base.player) & in_moveright;
+		bool moving_left = *player_buttons(this->base.player) & in_moveleft;
+		bool moving_forward = *player_buttons(this->base.player) & in_forward;
+		bool moving_backward = *player_buttons(this->base.player) & in_back;
+
+		vec3 vec_forward;
+		vec3 vec_right;
+
+		vec3_to_vecs(&(vec3){0.0f, this->base.foot_yaw, 0.0f}, & vec_forward, & vec_right, NULL);
+
+		vec3_norm(&vec_forward);
+		vec3_norm(&vec_right);
+
+		float right_dot = vec3_dot(&this->base.vel_norm_nonzero, &vec_right);
+		float forward_dot = vec3_dot(&this->base.vel_norm_nonzero, &vec_forward);
+		
+		bool strafe_right = this->base.speed_to_walk_fraction >= 0.73f && moving_right && !moving_left && right_dot < -0.63f;
+		bool strafe_left = this->base.speed_to_walk_fraction >= 0.73f && moving_left && !moving_right && right_dot > 0.63f;
+		bool strafe_forward = this->base.speed_to_walk_fraction >= 0.65f && moving_forward && !moving_backward && forward_dot < -0.55f;
+		bool strafe_back = this->base.speed_to_walk_fraction >= 0.65f && moving_backward && !moving_forward && forward_dot > 0.55f;
+
+		*player_strafing(this->base.player) = strafe_right || strafe_left || strafe_forward || strafe_back;
+	}
+	
+	if (*player_strafing(this->base.player)) {
+		if (!this->base.strafe_changing)
+			this->base.strafe_time = 0.0f;
+
+		this->base.strafe_changing = true;
+
+		this->base.strafe_change_weight = cs_approachf(1.0f, this->base.strafe_change_weight, this->base.last_update_delta_time * 20.0f);
+		this->base.strafe_change_cycle = cs_approachf(0.0f, this->base.strafe_change_cycle, this->base.last_update_delta_time * 10.0f);
+
+		animstate_pose_param_cache_set_value(&this->base.pose_param_map[pose_param_strafe_dir], this->base.player, cs_norm_rotation(this->base.move_yaw));
+	}
+	else if (this->base.strafe_change_weight > 0.0f) {
+		this->base.strafe_time += this->base.last_update_delta_time;
+
+		if (this->base.strafe_time > 0.08f)
+			this->base.strafe_change_weight = cs_approachf(0.0f, this->base.strafe_change_weight, this->base.last_update_delta_time * 5.0f);
+
+		this->base.strafe_seq = player_lookup_sequence(this->base.player, "strafe");
+		this->base.strafe_change_cycle = clampf(this->base.strafe_change_cycle + this->base.last_update_delta_time * player_get_sequence_cycle_rate_server(this->base.player, this->base.strafe_seq), 0.0f, 1.0f);
+	}
+
+	if (this->base.strafe_change_weight <= 0.0f)
+		this->base.strafe_changing = false;
+
+	const bool was_on_ground = this->base.on_ground;
+	this->base.on_ground = *player_flags(this->base.player) & fl_on_ground;
+
+	this->base.just_landed = !this->base.first_run && was_on_ground != this->base.on_ground && this->base.on_ground;
+	this->base.just_jumped = was_on_ground != this->base.on_ground && !this->base.on_ground;
+
+	if (this->base.just_jumped)
+		this->base.left_ground_height = this->base.pos.z;
+
+	if (this->base.just_landed) {
+		const float distance_fell = fabsf(this->base.left_ground_height - this->base.pos.z);
+		const float distance_fell_norm_bias_range = cs_bias(cs_remap_val_clamped(distance_fell, 12.0f, 72.0f, 0.0f, 1.0f), 0.4f);
+
+		this->base.land_anim_factor = clamp(cs_bias(this->base.air_time, 0.3f), 0.1f, 1.0f);
+		this->base.duck_additional = max(this->base.land_anim_factor, distance_fell_norm_bias_range);
+	}
+	else {
+		this->base.duck_additional = cs_approachf(0.0f, this->base.duck_additional, this->base.last_update_delta_time * 2.0f);
+	}
+
+	this->base.air_lerp = cs_approachf(this->base.on_ground ? 1.0f : 0.0f, this->base.air_lerp, lerpf(this->base.duck_amount, CSGO_ANIM_ONGROUND_FUZZY_APPROACH, CSGO_ANIM_ONGROUND_FUZZY_APPROACH_CROUCH) * this->base.last_update_delta_time);
+	this->base.air_lerp = clampf(this->base.air_lerp, 0.0f, 1.0f);
+
+	this->base.strafe_change_weight *= 1.0f - this->base.duck_amount;
+	this->base.strafe_change_weight *= this->base.air_lerp;
+	this->base.strafe_change_weight = clampf(this->base.strafe_change_weight, 0.0f, 1.0f);
+
+	if (this->base.strafe_seq != -1)
+		server_animstate_update_animlayer(this, animlayer_movement_strafechange, this->base.strafe_seq, 0.0f, this->base.strafe_change_weight, this->base.strafe_change_cycle);
+
+	const bool was_on_ladder = this->base.on_ladder;
+	this->base.on_ladder = !this->base.on_ground && *player_movetype(this->base.player) == movetype_ladder;
+	const bool just_started_climbing = !was_on_ladder && this->base.on_ladder;
+	const bool just_stopped_climbing = was_on_ladder && !this->base.on_ladder;
+
+	if (this->base.ladder_weight > 0.0f || this->base.on_ladder) {
+		if (just_started_climbing)
+			SetLayerSequence(animlayer_movement_land_or_climb, player_select_weighted_seq(this->base.player, act_csgo_climb_ladder));
+
+		if (fabsf(this->base.vel_lenz) > 100.0f)
+			this->base.ladder_speed = cs_approachf(1.0f, this->base.ladder_speed, this->base.last_update_delta_time * 10.0f);
+		else
+			this->base.ladder_speed = cs_approachf(0.0f, this->base.ladder_speed, this->base.last_update_delta_time * 10.0f);
+
+		this->base.ladder_speed = clampf(this->base.ladder_speed, 0.0f, 1.0f);
+
+		if (this->base.on_ladder)
+			this->base.ladder_weight = cs_approachf(1.0f, this->base.ladder_weight, this->base.last_update_delta_time * 5.0f);
+		else
+			this->base.ladder_weight = cs_approachf(0.0f, this->base.ladder_weight, this->base.last_update_delta_time * 10.0f);
+
+		this->base.ladder_weight = clampf(this->base.ladder_weight, 0.0f, 1.0f);
+
+		vec3 ladder_angle = *player_ladder_norm(this->base.player);
+		vec3_to_ang(&ladder_angle);
+
+		animstate_pose_param_cache_set_value(&this->base.pose_param_map[pose_param_ladder_yaw], this->base.player, cs_angle_diff(ladder_angle.y, this->base.foot_yaw));
+
+		float climb_cycle = GetLayerCycle(animlayer_movement_land_or_climb);
+		climb_cycle += (this->base.pos.z - this->base.last_pos.z) * lerpf(this->base.ladder_speed, 0.010f, 0.004f);
+		
+		animstate_pose_param_cache_set_value(&this->base.pose_param_map[pose_param_ladder_speed], this->base.player, this->base.ladder_speed);
+
+		if (GetLayerActivity(animlayer_movement_land_or_climb) == act_csgo_climb_ladder)
+			SetLayerWeight(animlayer_movement_land_or_climb, this->base.ladder_weight);
+
+		SetLayerCycle(animlayer_movement_land_or_climb, climb_cycle);
+
+		if (this->base.on_ladder) {
+			float flIdealJumpWeight = 1.0f - this->base.ladder_weight;
+
+			if (GetLayerWeight(animlayer_movement_jump_or_fall) > flIdealJumpWeight)
+				SetLayerWeight(animlayer_movement_jump_or_fall, flIdealJumpWeight);
+		}
+	}
+	else {
+		this->base.ladder_speed = 0.0f;
+	}
+
+	if (this->base.on_ground) {
+		if (!this->base.landing && (this->base.just_landed || just_stopped_climbing)) {
+			SetLayerSequence(animlayer_movement_land_or_climb, SelectSequenceFromActMods((m_flDurationInAir > 1) ? ACT_CSGO_LAND_HEAVY : ACT_CSGO_LAND_LIGHT));
+			SetLayerCycle(animlayer_movement_land_or_climb, 0);
+			this->base.landing = true;
+		}
+		m_flDurationInAir = 0;
+
+		if (this->base.landing && GetLayerActivity(animlayer_movement_land_or_climb) != act_csgo_climb_ladder) {
+			m_bJumping = false;
+
+			IncrementLayerCycle(animlayer_movement_land_or_climb, false);
+			IncrementLayerCycle(animlayer_movement_jump_or_fall, false);
+
+			m_tPoseParamMappings[PLAYER_POSE_PARAM_JUMP_FALL].SetValue(m_pPlayer, 0);
+
+			if (IsLayerSequenceCompleted(animlayer_movement_land_or_climb)) {
+				this->base.landing = false;
+				SetLayerWeight(animlayer_movement_land_or_climb, 0.0f);
+				SetLayerWeight(animlayer_movement_jump_or_fall, 0);
+				this->base.land_anim_factor = 1.0f;
+			}
+			else
+			{
+
+				float flLandWeight = GetLayerIdealWeightFromSeqCycle(animlayer_movement_land_or_climb) * this->base.land_anim_factor;
+
+				// if we hit the ground crouched, reduce the land animation as a function of crouch, since the land animations move the head up a bit ( and this is undesirable )
+				flLandWeight *= clampf((1.0f - this->base.duck_amount), 0.2f, 1.0f);
+
+				SetLayerWeight(animlayer_movement_land_or_climb, flLandWeight);
+
+				// fade out jump because land is taking over
+				float flCurrentJumpFallWeight = GetLayerWeight(animlayer_movement_jump_or_fall);
+				if (flCurrentJumpFallWeight > 0.0f) {
+					flCurrentJumpFallWeight = Approach(0, flCurrentJumpFallWeight, this->base.last_update_delta_time * 10.0f);
+					SetLayerWeight(animlayer_movement_jump_or_fall, flCurrentJumpFallWeight);
+				}
+			}
+		}
+
+		if (!this->base.landing && !this->jumping && this->base.ladder_weight <= 0.0f)
+			SetLayerWeight(animlayer_movement_land_or_climb, 0.0f);
+	}
+	else if (!this->base.on_ladder) {
+		this->base.landing = false;
+
+		if (this->base.just_jumped || just_stopped_climbing) {
+			if (!this->jumping)
+				SetLayerSequence(animlayer_movement_jump_or_fall, SelectSequenceFromActMods(ACT_CSGO_FALL));
+			
+			m_flDurationInAir = 0;
+		}
+
+		m_flDurationInAir += this->base.last_update_delta_time;
+
+		IncrementLayerCycle(animlayer_movement_jump_or_fall, false);
+
+		float flJumpWeight = GetLayerWeight(animlayer_movement_jump_or_fall);
+		float flNextJumpWeight = GetLayerIdealWeightFromSeqCycle(animlayer_movement_jump_or_fall);
+		
+		if (flNextJumpWeight > flJumpWeight)
+			SetLayerWeight(animlayer_movement_jump_or_fall, flNextJumpWeight);
+
+		float flLingeringLandWeight = GetLayerWeight(animlayer_movement_land_or_climb);
+		
+		if (flLingeringLandWeight > 0.0f) {
+			flLingeringLandWeight *= smoothstep_bounds(0.2f, 0.0f, m_flDurationInAir);
+			SetLayerWeight(animlayer_movement_land_or_climb, flLingeringLandWeight);
+		}
+
+		m_tPoseParamMappings[PLAYER_POSE_PARAM_JUMP_FALL].SetValue(m_pPlayer, clamp(smoothstep_bounds(0.72f, 1.52f, m_flDurationInAir), 0, 1));
+	}
+
+	MDLCACHE_CRITICAL_SECTION_END;
 }
 
 void server_animstate_update ( server_animstate* this, vec3* ang, bool force ) {

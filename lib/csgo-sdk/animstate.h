@@ -40,6 +40,12 @@
 #define CSGO_ANIM_DUCK_APPROACH_SPEED_DOWN 3.1f
 #define CSGO_ANIM_DUCK_APPROACH_SPEED_UP 6.0f
 
+#define CSGO_ANIM_WALK_TO_RUN_TRANSITION_SPEED 2.0f
+#define CSGO_ANIM_ONGROUND_FUZZY_APPROACH 8.0f
+#define CSGO_ANIM_ONGROUND_FUZZY_APPROACH_CROUCH 16.0f
+#define CSGO_ANIM_LADDER_CLIMB_COVERAGE 100.0f
+#define CSGO_ANIM_RUN_ANIM_PLAYBACK_MULTIPLIER 0.85f
+
 #define MAX_ANIMSTATE_ANIMNAME_CHARS 64
 
 typedef enum {
@@ -1584,6 +1590,10 @@ static inline void server_animstate_increment_layer_cycle_weight_rate_generic(se
 	server_animstate_increment_layer_cycle(this, idx, false);
 	animlayer_set_weight(layer, server_animstate_get_layer_ideal_weight_from_seq_cycle(this, idx));
 	animlayer_set_playback_rate(layer, last_weight);
+}
+
+static inline const char* server_animstate_get_weapon_prefix(server_animstate* this) {
+	return ((const char* (__fastcall*)(animstate*, void*))cs_offsets.animstate_get_weapon_prefix_fn)(&this->base, NULL);
 }
 
 static inline void server_animstate_set_layer_weight_rate(server_animstate* this, animlayer_idx idx, float previous) {
