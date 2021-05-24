@@ -5447,6 +5447,7 @@ struct nk_window {
     struct nk_command_buffer buffer;
     struct nk_panel *layout;
     float scrollbar_hiding_timer;
+    float cursor_blinking_timer;
 
     /* persistent widget state */
     struct nk_property_state property;
@@ -6049,7 +6050,7 @@ NK_LIB nk_bool nk_do_selectable_image(nk_flags *state, struct nk_command_buffer 
 
 /* edit */
 NK_LIB void nk_edit_draw_text(struct nk_command_buffer *out, const struct nk_style_edit *style, float pos_x, float pos_y, float x_offset, const char *text, int byte_len, float row_height, const struct nk_user_font *font, struct nk_color background, struct nk_color foreground, nk_bool is_selected);
-NK_LIB nk_flags nk_do_edit(nk_flags *state, struct nk_command_buffer *out, struct nk_rect bounds, nk_flags flags, nk_plugin_filter filter, struct nk_text_edit *edit, const struct nk_style_edit *style, struct nk_input *in, const struct nk_user_font *font);
+NK_LIB nk_flags nk_do_edit(struct nk_context* ctx, nk_flags *state, struct nk_command_buffer *out, struct nk_rect bounds, nk_flags flags, nk_plugin_filter filter, struct nk_text_edit *edit, const struct nk_style_edit *style, struct nk_input *in, const struct nk_user_font *font);
 
 /* color-picker */
 NK_LIB nk_bool nk_color_picker_behavior(nk_flags *state, const struct nk_rect *bounds, const struct nk_rect *matrix, const struct nk_rect *hue_bar, const struct nk_rect *alpha_bar, struct nk_colorf *color, const struct nk_input *in);
@@ -6090,7 +6091,7 @@ NK_LIB struct nk_property_variant nk_property_variant_double(double value, doubl
 NK_LIB void nk_drag_behavior(nk_flags *state, const struct nk_input *in, struct nk_rect drag, struct nk_property_variant *variant, float inc_per_pixel);
 NK_LIB void nk_property_behavior(nk_flags *ws, const struct nk_input *in, struct nk_rect property,  struct nk_rect label, struct nk_rect edit, struct nk_rect empty, int *state, struct nk_property_variant *variant, float inc_per_pixel);
 NK_LIB void nk_draw_property(struct nk_command_buffer *out, const struct nk_style_property *style, const struct nk_rect *bounds, const struct nk_rect *label, nk_flags state, const char *name, int len, const struct nk_user_font *font);
-NK_LIB void nk_do_property(nk_flags *ws, struct nk_command_buffer *out, struct nk_rect property, const char *name, struct nk_property_variant *variant, float inc_per_pixel, char *buffer, int *len, int *state, int *cursor, int *select_begin, int *select_end, const struct nk_style_property *style, enum nk_property_filter filter, struct nk_input *in, const struct nk_user_font *font, struct nk_text_edit *text_edit, enum nk_button_behavior behavior);
+NK_LIB void nk_do_property(struct nk_context* ctx, nk_flags *ws, struct nk_command_buffer *out, struct nk_rect property, const char *name, struct nk_property_variant *variant, float inc_per_pixel, char *buffer, int *len, int *state, int *cursor, int *select_begin, int *select_end, const struct nk_style_property *style, enum nk_property_filter filter, struct nk_input *in, const struct nk_user_font *font, struct nk_text_edit *text_edit, enum nk_button_behavior behavior);
 NK_LIB void nk_property(struct nk_context *ctx, const char *name, struct nk_property_variant *variant, float inc_per_pixel, const enum nk_property_filter filter);
 
 #ifdef NK_INCLUDE_FONT_BAKING
@@ -26690,7 +26691,7 @@ nk_edit_draw_text(struct nk_command_buffer *out,
     }}
 }
 NK_LIB nk_flags
-nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
+nk_do_edit(struct nk_context* ctx, nk_flags *state, struct nk_command_buffer *out,
     struct nk_rect bounds, nk_flags flags, nk_plugin_filter filter,
     struct nk_text_edit *edit, const struct nk_style_edit *style,
     struct nk_input *in, const struct nk_user_font *font)
@@ -27078,6 +27079,11 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
             background_color = nk_rgba(0,0,0,0);
         else background_color = background->data.color;
 
+        ctx->current->cursor_blinking_timer += ctx->delta_time_seconds;
+        if (ctx->current->cursor_blinking_timer > 1.0f)
+            ctx->current->cursor_blinking_timer -= (float)(int)ctx->current->cursor_blinking_timer;
+
+        int calc_alpha = 255.0f * (NK_SIN(ctx->current->cursor_blinking_timer * 2.0f * NK_PI) * 0.5f + 0.5f);
 
         if (edit->select_start == edit->select_end) {
             /* no selection so just draw the complete text */
@@ -27087,6 +27093,8 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
                 area.y - edit->scrollbar.y, 0, begin, l, row_height, font,
                 background_color, text_color, nk_false);
         } else {
+            sel_background_color.a = calc_alpha;
+
             /* edit has selection so draw 1-3 text chunks */
             if (edit->select_start != edit->select_end && selection_begin > 0){
                 /* draw unselected text before selection */
@@ -27128,8 +27136,9 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
         }
 
         /* cursor */
-        if (edit->select_start == edit->select_end)
-        {
+        if (edit->select_start == edit->select_end){
+            cursor_color.a = calc_alpha;
+
             if (edit->cursor >= nk_str_len(&edit->string) ||
                 (cursor_ptr && *cursor_ptr == '\n')) {
                 /* draw cursor at end of line */
@@ -27156,8 +27165,10 @@ nk_do_edit(nk_flags *state, struct nk_command_buffer *out,
                 label.h = row_height;
 
                 txt.padding = nk_vec2(0,0);
-                txt.background = cursor_color;;
+                txt.background = cursor_color;
                 txt.text = cursor_text_color;
+                txt.text.a = calc_alpha;
+
                 nk_fill_rect(out, label, 0, cursor_color);
                 nk_widget_text(out, label, cursor_ptr, glyph_len, &txt, NK_TEXT_LEFT, font);
             }
@@ -27217,6 +27228,7 @@ nk_edit_unfocus(struct nk_context *ctx)
     if (!ctx || !ctx->current) return;
 
     win = ctx->current;
+    win->cursor_blinking_timer = 0.0f;
     win->edit.active = nk_false;
     win->edit.name = 0;
 }
@@ -27323,7 +27335,7 @@ nk_edit_buffer(struct nk_context *ctx, nk_flags flags,
     filter = (!filter) ? nk_filter_default: filter;
     prev_state = (unsigned char)edit->active;
     in = (flags & NK_EDIT_READ_ONLY) ? 0: in;
-    ret_flags = nk_do_edit(&ctx->last_widget_state, &win->buffer, bounds, flags,
+    ret_flags = nk_do_edit(ctx, &ctx->last_widget_state, &win->buffer, bounds, flags,
                     filter, edit, &style->edit, in, style->font);
 
     if (ctx->last_widget_state & NK_WIDGET_STATE_HOVER)
@@ -27451,7 +27463,7 @@ nk_draw_property(struct nk_command_buffer *out, const struct nk_style_property *
     nk_widget_text(out, *label, name, len, &text, NK_TEXT_CENTERED, font);
 }
 NK_LIB void
-nk_do_property(nk_flags *ws,
+nk_do_property(struct nk_context* ctx, nk_flags *ws,
     struct nk_command_buffer *out, struct nk_rect property,
     const char *name, struct nk_property_variant *variant,
     float inc_per_pixel, char *buffer, int *len,
@@ -27593,7 +27605,7 @@ nk_do_property(nk_flags *ws,
     text_edit->string.buffer.memory.ptr = dst;
     text_edit->string.buffer.size = NK_MAX_NUMBER_BUFFER;
     text_edit->mode = NK_TEXT_EDIT_MODE_INSERT;
-    nk_do_edit(ws, out, edit, NK_EDIT_FIELD|NK_EDIT_AUTO_SELECT,
+    nk_do_edit(ctx, ws, out, edit, NK_EDIT_FIELD|NK_EDIT_AUTO_SELECT,
         filters[filter], text_edit, &style->edit, (*state == NK_PROPERTY_EDIT) ? in: 0, font);
 
     *length = text_edit->string.len;
@@ -27728,7 +27740,7 @@ nk_property(struct nk_context *ctx, const char *name, struct nk_property_variant
     ctx->text_edit.clip = ctx->clip;
     in = ((s == NK_WIDGET_ROM && !win->property.active) ||
         layout->flags & NK_WINDOW_ROM) ? 0 : &ctx->input;
-    nk_do_property(&ctx->last_widget_state, &win->buffer, bounds, name,
+    nk_do_property(ctx, &ctx->last_widget_state, &win->buffer, bounds, name,
         variant, inc_per_pixel, buffer, len, state, cursor, select_begin,
         select_end, &style->property, filter, in, style->font, &ctx->text_edit,
         ctx->button_behavior);

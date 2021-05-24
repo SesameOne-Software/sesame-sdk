@@ -49,9 +49,10 @@ static inline void menu_set_theme ( ) {
         = table [ NK_COLOR_TAB_HEADER ] = nk_rgba ( 204, 82, 224, 255 );
     table [ NK_COLOR_BUTTON_HOVER ] = table [ NK_COLOR_SLIDER_CURSOR_ACTIVE ] = table [ NK_COLOR_SCROLLBAR_CURSOR_ACTIVE ] = nk_rgba ( 204, 82, 224, 255 );
     table [ NK_COLOR_BUTTON_ACTIVE ] = nk_rgba ( 0, 123, 255, 255 );
-    table [ NK_COLOR_TOGGLE ] = table [ NK_COLOR_SLIDER ] = table [ NK_COLOR_PROPERTY ]
+    table [ NK_COLOR_TOGGLE ] = table [ NK_COLOR_PROPERTY ]
         = table [ NK_COLOR_EDIT ] = table [ NK_COLOR_COMBO ] = table [ NK_COLOR_CHART ]
-        = table [ NK_COLOR_SCROLLBAR ] = nk_rgba ( 255, 255, 255, 255 );
+        = table [ NK_COLOR_SCROLLBAR ] = nk_rgba (48, 55, 81, 255 );
+    table[NK_COLOR_SLIDER] = nk_rgba(255, 255, 255, 255);
     table [ NK_COLOR_TOGGLE_HOVER ] = nk_rgba ( 0, 123, 255, 255 );
     table [ NK_COLOR_SELECT ] = nk_rgba ( 0, 123, 255, 255 );
     table [ NK_COLOR_SLIDER_CURSOR_HOVER ] = nk_rgba ( 0, 123, 255, 255 );

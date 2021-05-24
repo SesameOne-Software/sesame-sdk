@@ -196,7 +196,7 @@ static inline bool gui_begin ( const char* title, struct nk_rect* bounds, nk_fla
 	nk_style_push_color ( ses_ctx.nk_ctx, &ses_ctx.nk_ctx->style.window.background, nk_rgba ( ses_ctx.nk_ctx->style.window.background.r, ses_ctx.nk_ctx->style.window.background.g, ses_ctx.nk_ctx->style.window.background.b, dynamic_color ) );
 	nk_style_push_style_item ( ses_ctx.nk_ctx, &ses_ctx.nk_ctx->style.window.fixed_background, nk_style_item_color ( ses_ctx.nk_ctx->style.window.background ) );
 
-	if ( dynamic_color > 0.0f && nk_popup_begin ( ses_ctx.nk_ctx, NK_POPUP_STATIC, "config menu", NK_WINDOW_NO_SCROLLBAR, nk_rect ( icon_rect.x + icon_rect.w * 0.25f, icon_rect.y - icon_rect.h, GUI_TABS_HEIGHT * 2.0f, GUI_TABS_HEIGHT * 2.0f ) ) ) {
+	if ( dynamic_color > 0.0f && nk_popup_begin ( ses_ctx.nk_ctx, NK_POPUP_STATIC, "config menu", NK_WINDOW_NO_SCROLLBAR, nk_rect ( icon_rect.x + icon_rect.w * 0.25f, icon_rect.y - icon_rect.h, GUI_TABS_HEIGHT * 2.0f, GUI_TABS_HEIGHT * 3.0f ) ) ) {
 		nk_row_layout ( ses_ctx.nk_ctx, NK_DYNAMIC, GUI_TABS_HEIGHT, 1, 0 );
 		if ( nk_group_begin ( ses_ctx.nk_ctx, "List", 0 ) ) {
 			static int selected = -1;
@@ -207,7 +207,12 @@ static inline bool gui_begin ( const char* title, struct nk_rect* bounds, nk_fla
 			}
 		} nk_group_end ( ses_ctx.nk_ctx );
 		
-		gui_layout ( 1 );
+		gui_layout(1);
+
+		static struct nk_text_edit text_edit = {0};
+		if (!text_edit.initialized)
+			nk_textedit_init_default( &text_edit);
+		nk_edit_buffer(ses_ctx.nk_ctx, NK_EDIT_FIELD, &text_edit, nk_filter_default);
 
 		if ( gui_button ( "Save Config" ) )
 			ses_cfg_save ( &ses_cfg, sdscat( sdsdup ( ses_ctx.ses_dir ), "\\configs\\test.json" ) );
