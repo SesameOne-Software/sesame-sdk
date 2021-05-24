@@ -12,6 +12,6 @@ void __fastcall hooks_accumulate_layers ( REG, void* setup, vec3* pos, void* q, 
 		const animlayer* layer = *player_animlayers ( ent ) + i;
 		
 		if ( layer->weight > 0.0f && layer->order >= 0 && layer->order < *player_num_animlayers ( ent ) )
-			(( void ( __fastcall* )( void*, void*, vec3*, void*, int, float, float, float, void* ) )cs_offsets.accumulate_pose_fn) ( *( void** ) setup, NULL, pos, q, layer->sequence, layer->cycle, layer->weight, time, *player_iks(ent) );
+			(( void ( __fastcall* )( void*, void*, vec3*, void*, int, float, float, float, void* ) )cs_offsets.accumulate_pose_fn) ( *( void** ) setup, NULL, pos, q, layer->seq, layer->cycle, layer->weight, time, *player_iks(ent) );
 	}
 }

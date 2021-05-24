@@ -107,7 +107,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>advapi32.lib;d3d9.lib;d3dx9.lib;SecureEngineSDK32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>advapi32.lib;d3d9.lib;d3dx9.lib;SecureEngineSDK32.lib;shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <DataExecutionPrevention>false</DataExecutionPrevention>
     </Link>
   </ItemDefinitionGroup>
@@ -134,7 +134,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>advapi32.lib;d3d9.lib;d3dx9.lib;SecureEngineSDK32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>advapi32.lib;d3d9.lib;d3dx9.lib;SecureEngineSDK32.lib;shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <DataExecutionPrevention>false</DataExecutionPrevention>
     </Link>
   </ItemDefinitionGroup>
@@ -174,7 +174,6 @@
     <ClInclude Include="include\resources\resources.h" />
     <ClInclude Include="include\ses.h" />
     <ClInclude Include="include\utils.h" />
-    <ClInclude Include="lib\csgo-sdk\animstate.h" />
     <ClInclude Include="lib\csgo-sdk\beams.h" />
     <ClInclude Include="lib\csgo-sdk\client.h" />
     <ClInclude Include="lib\csgo-sdk\crc32.h" />
@@ -267,8 +266,9 @@
     <ClCompile Include="src\hooks\setup_bones.c" />
     <ClCompile Include="src\hooks\should_skip_anim_frame.c" />
     <ClCompile Include="src\hooks\window_proc.c" />
+    <ClCompile Include="src\resources\fontawesome.c" />
     <ClCompile Include="src\resources\logo.c" />
-    <ClCompile Include="src\resources\noto.c" />
+    <ClCompile Include="src\resources\ubuntu.c" />
     <ClCompile Include="src\ses.c" />
     <ClCompile Include="src\utils.c" />
   </ItemGroup>

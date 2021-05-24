@@ -182,6 +182,9 @@ typedef struct {
 	ptrdiff_t player_computed_lod_frame;
 	ptrdiff_t player_move_state;
 
+	ptrdiff_t animstate_set_up_whole_body_action_fn;
+	ptrdiff_t animstate_set_up_flinch_fn;
+	ptrdiff_t animstate_set_up_lean_fn;
 	ptrdiff_t animstate_modifyeyepos;
 	ptrdiff_t animstate_get_weapon_prefix_fn;
 	ptrdiff_t animstate_setup_aim_matrix_fn;

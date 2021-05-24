@@ -10,6 +10,8 @@ typedef enum {
 } ses_round;
 
 typedef struct {
+	/* sesame file dir */
+	sds ses_dir;
 	/* set to true to unload the cheat */
 	bool shutdown;
 	/* determines whether or not the current will be choked at the end of create_move */
@@ -30,8 +32,14 @@ typedef struct {
 	/* nuklear context */
 	struct nk_context* nk_ctx;
 	struct {
+		struct nk_font* menu_icons_font;
+		struct nk_font* menu_icons_large_font;
+		struct nk_font* menu_large_font;
+		struct nk_font* menu_medium_font;
+		struct nk_font* menu_small_font;
+		struct nk_font* menu_xsmall_font;
+
 		struct nk_font* default_font;
-		struct nk_font* menu_font;
 		struct nk_font* esp_font;
 		struct nk_font* indicators_font;
 	} fonts;

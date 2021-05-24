@@ -5,6 +5,7 @@
 #include <d3d9.h>
 #include <d3dx9.h>
 #include <assert.h>
+#include <stdio.h>
 
 #include "include/utils.h"
 
@@ -36,6 +37,7 @@
 #include "usercmd.h"
 #include "vec3.h"
 #include "weapon.h"
+#include "utlvec.h"
 
 extern isurface* cs_isurface;
 extern ipanel* cs_ipanel;
@@ -209,6 +211,10 @@ bool __forceinline cs_offsets_dump ( sds errors ) {
 	cs_dump_offset ( cs_offsets.studiohdr_seq_desc, pattern_search ( "client.dll", "55 8B EC 83 79 04 00 75" ) );
 	cs_dump_offset ( cs_offsets.studiohdr_select_weighted_seq, pattern_search ( "client.dll", "51 A1 ? ? ? ? 53 8B DA" ) );
 	
+	cs_dump_offset ( cs_offsets.animstate_set_up_whole_body_action_fn, pattern_search ( "client.dll", "55 8B EC 83 EC 08 56 57 8B F9 8B 77" ) );
+	cs_dump_offset ( cs_offsets.animstate_set_up_flinch_fn, pattern_search ( "client.dll", "55 8B EC 51 56 8B 71 60 83 BE ? ? ? ? 00 0F 84 ? ? ? ? 8B B6 ? ? ? ? 81 C6 30 02 00 00" ) );
+	cs_dump_offset ( cs_offsets.animstate_set_up_lean_fn, pattern_search ( "client.dll", "55 8B EC 83 E4 F8 A1 ? ? ? ? 83 EC 20 F3" ) );
+
 	cs_dump_offset(cs_offsets.animstate_get_weapon_prefix_fn, pattern_search("client.dll", "53 56 57 8B F9 33 F6 8B 4F 60"));
 	cs_dump_offset(cs_offsets.animstate_setup_aim_matrix_fn, pattern_search("client.dll", "55 8B EC 81 EC ? ? ? ? 53 56 57 8B 3D"));
 	cs_dump_offset(cs_offsets.animstate_pose_param_cache_set_value_fn, pattern_rip(pattern_search("client.dll", "E8 ? ? ? ? D9 45 08 5F")));
@@ -232,7 +238,7 @@ bool __forceinline cs_offsets_dump ( sds errors ) {
 	cs_dump_offset ( cs_offsets.player_set_abs_angles_fn, pattern_search ( "client.dll", "55 8B EC 83 E4 F8 83 EC 64 53 56 57 8B F1 E8" ) );
 	cs_dump_offset ( cs_offsets.player_set_abs_origin_fn, pattern_search ( "client.dll", "55 8B EC 83 E4 F8 51 53 56 57 8B F1 E8 ? ? ? ? 8B 7D" ) );
 	cs_dump_offset ( cs_offsets.player_animstate, *( ptrdiff_t* ) ( pattern_search ( "client.dll", "8B 8E ? ? ? ? F3 0F 10 48 04 E8 ? ? ? ? E9" ) + 2 ) );
-	cs_dump_offset ( cs_offsets.player_weapon_shootposition, pattern_rip ( pattern_search ( "client.dll", "57 E8 ? ? ? ? 8B 06 8B CE FF 90" ) + 1 ) );
+	//cs_dump_offset ( cs_offsets.player_weapon_shootposition, pattern_rip ( pattern_search ( "client.dll", "57 E8 ? ? ? ? 8B 06 8B CE FF 90" ) + 1 ) );
 	cs_dump_offset ( cs_offsets.player_bone_count, *( ptrdiff_t* ) ( pattern_search ( "client.dll", "8B 87 ? ? ? ? 8B 4D 0C" ) + 2 ) );
 	cs_dump_offset ( cs_offsets.player_bone_cache, *( ptrdiff_t* ) ( pattern_search ( "client.dll", "FF B7 ? ? ? ? 52" ) + 2 ) );
 	cs_dump_offset(cs_offsets.player_use_new_animstate, *(ptrdiff_t*)(pattern_search("client.dll", "80 BE ? ? ? ? ? 74 36 8B") + 2));

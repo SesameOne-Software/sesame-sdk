@@ -121,6 +121,11 @@ static inline float cs_gain ( float x, float amount ) {
 	return 1.0f - 0.5f * cs_bias ( 2.0f - 2.0f * x, 1.0f - amount );
 }
 
+static inline float cs_smoothstep_bounds ( float a, float b, float x ) {
+	const auto r = clampf ( ( x - a ) * b, 0.0f, 1.0f );
+	return ( 3.0f - ( r + r ) ) * ( r * r );
+};
+
 typedef struct {
 	float x, y, z;
 } vec3;
@@ -349,7 +354,7 @@ static inline void vec3##_to_vecs ( const vec3* this, vec3* forward, vec3* right
 }
 
 #define VEC3_APPROACH_VEC(vec3)\
-void vec3##_approach_vec ( const vec3* a, const vec3* b, float rate, vec3* out ) {\
+static inline void vec3##_approach_vec ( const vec3* a, const vec3* b, float rate, vec3* out ) {\
 	vec3 delta = *a;\
 	vec3##_sub ( &delta, b );\
 \

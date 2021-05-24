@@ -17,7 +17,7 @@
 
 static int cur_tab = 0;
 static bool menu_open = false;
-static struct nk_rect menu_pos = { 50.0f, 50.0f, 680.0f, 500.0f };
+static struct nk_rect menu_pos = { 50.0f, 50.0f, 530.0f, 435.0f };
 static struct nk_image menu_logo;
 
 static inline struct nk_image image_load(uint8_t* data, size_t size) {
@@ -41,7 +41,7 @@ static inline void menu_set_theme ( ) {
     struct nk_color table [ NK_COLOR_COUNT ];
 
     table [ NK_COLOR_TEXT ] = nk_rgba ( 255, 255, 255, 255 );
-    table [ NK_COLOR_WINDOW ] = nk_rgba ( 32, 38, 45, 255 );
+    table [ NK_COLOR_WINDOW ] = nk_rgba ( 61, 71, 106, 255 );
     table [ NK_COLOR_HEADER ] = nk_rgba ( 33, 42, 54, 255 );
     table [ NK_COLOR_BORDER ] = nk_rgba ( 255, 255, 255, 33 );
     table [ NK_COLOR_BUTTON ] = table [ NK_COLOR_TOGGLE_CURSOR ] = table [ NK_COLOR_SELECT_ACTIVE ]
@@ -51,7 +51,7 @@ static inline void menu_set_theme ( ) {
     table [ NK_COLOR_BUTTON_ACTIVE ] = nk_rgba ( 0, 123, 255, 255 );
     table [ NK_COLOR_TOGGLE ] = table [ NK_COLOR_SLIDER ] = table [ NK_COLOR_PROPERTY ]
         = table [ NK_COLOR_EDIT ] = table [ NK_COLOR_COMBO ] = table [ NK_COLOR_CHART ]
-        = table [ NK_COLOR_SCROLLBAR ] = nk_rgba ( 33, 42, 54, 255 );
+        = table [ NK_COLOR_SCROLLBAR ] = nk_rgba ( 255, 255, 255, 255 );
     table [ NK_COLOR_TOGGLE_HOVER ] = nk_rgba ( 0, 123, 255, 255 );
     table [ NK_COLOR_SELECT ] = nk_rgba ( 0, 123, 255, 255 );
     table [ NK_COLOR_SLIDER_CURSOR_HOVER ] = nk_rgba ( 0, 123, 255, 255 );
@@ -114,26 +114,55 @@ void menu_init ( ) {
         static struct nk_font_atlas* atlas = NULL;
         nk_d3d9_font_stash_begin ( &atlas );
        
+        /*
+        struct nk_font* menu_icons_font;
+		struct nk_font* menu_large_font;
+		struct nk_font* menu_medium_font;
+		struct nk_font* menu_small_font;
+        */
+
         struct nk_font_config config = nk_font_config ( 18.0f );
         config.oversample_v = config.oversample_h = 1;
         config.pixel_snap = true;
-        config.range = custom_font_range;
-        ses_ctx.fonts.menu_font = nk_font_atlas_add_compressed ( atlas, resources_noto_compressed_data, resources_noto_compressed_size, 18.0f, &config );
         
-        config = nk_font_config ( 16.0f );
-        config.pixel_snap = true;
-        config.range = nk_font_default_glyph_ranges ( );
-        ses_ctx.fonts.default_font = nk_font_atlas_add_compressed ( atlas, resources_noto_compressed_data, resources_noto_compressed_size, 16.0f, &config );
-
-        config = nk_font_config ( 16.0f );
-        config.pixel_snap = true;
+        /* menu fonts */
+        config = nk_font_config ( 18.0f );
         config.range = custom_font_range;
-        ses_ctx.fonts.esp_font = nk_font_atlas_add_compressed ( atlas, resources_noto_compressed_data, resources_noto_compressed_size, 16.0f, &config );
+        ses_ctx.fonts.menu_icons_font = nk_font_atlas_add_compressed ( atlas, resources_fontawesome_compressed_data, resources_fontawesome_compressed_size, 18.0f, &config );
+        
+        config = nk_font_config ( 26.0f );
+        config.range = custom_font_range;
+        ses_ctx.fonts.menu_icons_large_font = nk_font_atlas_add_compressed ( atlas, resources_fontawesome_compressed_data, resources_fontawesome_compressed_size, 26.0f, &config );
+
+        config = nk_font_config ( 27.0f );
+        config.range = nk_font_default_glyph_ranges ( );
+        ses_ctx.fonts.menu_large_font = nk_font_atlas_add_compressed ( atlas, resources_ubuntu_compressed_data, resources_ubuntu_compressed_size, 27.0f, &config );
+        
+        config = nk_font_config ( 16.5f );
+        config.range = nk_font_default_glyph_ranges ( );
+        ses_ctx.fonts.menu_medium_font = nk_font_atlas_add_compressed ( atlas, resources_ubuntu_compressed_data, resources_ubuntu_compressed_size, 16.5f, &config );
+
+        config = nk_font_config ( 13.5f );
+        config.range = nk_font_default_glyph_ranges ( );
+        ses_ctx.fonts.menu_small_font = nk_font_atlas_add_compressed ( atlas, resources_ubuntu_compressed_data, resources_ubuntu_compressed_size, 13.5f, &config );
+        
+        config = nk_font_config ( 12.0f );
+        config.range = nk_font_default_glyph_ranges ( );
+        ses_ctx.fonts.menu_xsmall_font = nk_font_atlas_add_compressed ( atlas, resources_ubuntu_compressed_data, resources_ubuntu_compressed_size, 12.0f, &config );
+
+        /* other fonts */
+        config = nk_font_config ( 16.0f );
+        config.range = nk_font_default_glyph_ranges ( );
+        ses_ctx.fonts.default_font = nk_font_atlas_add_compressed ( atlas, resources_ubuntu_compressed_data, resources_ubuntu_compressed_size, 16.0f, &config );
+
+        /* visuals fonts */
+        config = nk_font_config ( 16.0f );
+        config.range = custom_font_range;
+        ses_ctx.fonts.esp_font = nk_font_atlas_add_compressed ( atlas, resources_ubuntu_compressed_data, resources_ubuntu_compressed_size, 16.0f, &config );
 
         config = nk_font_config ( 26.0f );
-        config.pixel_snap = true;
         config.range = nk_font_default_glyph_ranges();
-        ses_ctx.fonts.indicators_font = nk_font_atlas_add_compressed ( atlas, resources_noto_compressed_data, resources_noto_compressed_size, 26.0f, &config );
+        ses_ctx.fonts.indicators_font = nk_font_atlas_add_compressed ( atlas, resources_ubuntu_compressed_data, resources_ubuntu_compressed_size, 26.0f, &config );
         
         nk_d3d9_font_stash_end ( );
         nk_style_set_font ( ses_ctx.nk_ctx, &ses_ctx.fonts.default_font->handle );
@@ -159,23 +188,23 @@ void menu_draw ( ) {
     menu_set_opened ( utils_keybind_active ( VK_INSERT, keybind_mode_toggle ) );
 
     if ( menu_is_open ( ) ) {
-        if ( gui_begin ( "Sesame", &menu_pos, NK_WINDOW_BORDER ) ) {
-            if ( gui_tabs_begin ( 5 ) ) {
-                gui_tab ( "A", &cur_tab );
-                gui_tab ( "B", &cur_tab );
-                gui_tab ( "C", &cur_tab );
-                gui_tab ( "D", &cur_tab );
-                gui_tab ( "E", &cur_tab );
-            }
-            gui_tabs_end ( );
+        if ( gui_begin ( "SESAME", &menu_pos, NK_WINDOW_NO_SCROLLBAR ) ) {
+           if ( gui_tabs_begin ( 5 ) ) {
+               gui_tab ( "", &cur_tab );
+               gui_tab ( "", &cur_tab );
+               gui_tab ( "", &cur_tab );
+               gui_tab ( "", &cur_tab );
+               gui_tab ( "", &cur_tab );
+           }
+           gui_tabs_end ( );
 
             if ( gui_button ( "Reload Theme" ) )
                 menu_set_theme ( );
 
-            const float backup_row_height = ses_ctx.nk_ctx->current->layout->row.height;
-            ses_ctx.nk_ctx->current->layout->row.height = 100.0f;
-            nk_image(ses_ctx.nk_ctx, menu_logo);
-            ses_ctx.nk_ctx->current->layout->row.height = backup_row_height;
+            //const float backup_row_height = ses_ctx.nk_ctx->current->layout->row.height;
+            //ses_ctx.nk_ctx->current->layout->row.height = 100.0f;
+            //nk_image(ses_ctx.nk_ctx, menu_logo);
+            //ses_ctx.nk_ctx->current->layout->row.height = backup_row_height;
 
             //const player* local = cs_get_local();
             //if (local) {
@@ -183,12 +212,6 @@ void menu_draw ( ) {
             //    nk_label(ses_ctx.nk_ctx, desync_str, NK_LEFT);
             //    sdsfree(desync_str);
             //}
-            
-            if ( gui_button ( "Save Config" ) )
-                ses_cfg_save ( &ses_cfg, sdsnew ("D:\\Documents\\test.json") );
-            
-            if ( gui_button ( "Load Config" ) )
-                ses_cfg_load ( &ses_cfg, sdsnew("D:\\Documents\\test.json") );
             
             gui_checkbox ( "Fast stop", ses_cfg_get_item ( &ses_cfg, misc, movement, fast_stop, bool ) );
             gui_checkbox ( "Auto jump", ses_cfg_get_item ( &ses_cfg, misc, movement, auto_jump, bool ) );

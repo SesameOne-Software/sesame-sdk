@@ -5,6 +5,7 @@
 
 #include <windows.h>
 #include <process.h>
+#include <shlobj.h>
 
 ses_ctx_s ses_ctx = { 0 };
 
@@ -30,6 +31,34 @@ static int __stdcall ses_init( HMODULE mod ) {
 #endif
 
     sds errors_out = NULL;
+
+    /* create sesame folders */ {
+        char ses_dir [ MAX_PATH ] = { 0 };
+
+        if ( !SUCCEEDED ( SHGetFolderPathA ( NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, ses_dir ) ) ) ses_fail ( mod, sdsnew ( "Failed to find documents folder.\n" ) );
+        else utils_print_console ( &( uint8_t [ ] ) { 0, 255, 0, 255 }, sdsnew ( "Found documents folder.\n" ) );
+        
+        ses_ctx.ses_dir = sdscat ( sdsnew ( ses_dir ), "\\sesame" );
+
+        if ( CreateDirectoryA ( ses_ctx.ses_dir, NULL )
+            || GetLastError ( ) == ERROR_ALREADY_EXISTS )
+            utils_print_console ( &( uint8_t [ ] ) { 0, 255, 0, 255 }, sdsnew ( "Created sesame folder.\n" ) );
+        else
+            ses_fail ( mod, sdsnew ( "Failed to create sesame folder.\n" ) );
+
+        ses_ctx.ses_dir = sdscat ( ses_ctx.ses_dir, "\\configs" );
+
+        if ( CreateDirectoryA ( ses_ctx.ses_dir, NULL )
+            || GetLastError ( ) == ERROR_ALREADY_EXISTS )
+            utils_print_console ( &( uint8_t [ ] ) { 0, 255, 0, 255 }, sdsnew ( "Created sesame folder.\n" ) );
+        else
+            ses_fail ( mod, sdsnew ( "Failed to create sesame folder.\n" ) );
+
+        sdsfree ( ses_ctx.ses_dir );
+        ses_ctx.ses_dir = sdscat ( sdsnew ( ses_dir ), "\\sesame" );
+    }
+
+    /* initialize other stuff */
     if ( !cs_init( &errors_out ) ) ses_fail ( mod, errors_out ? errors_out : sdsnew("Failed to find offsets.\n") );
     else iengine_execute_cmd ( cs_iengine, "clear" ), utils_print_console ( &( uint8_t [ ] ) { 0, 255, 0, 255 }, sdsnew ( "Found interfaces.\n" ) );
     if ( !netvars_init( ) ) ses_fail ( mod, sdsnew("Failed to dump netvars.\n") );

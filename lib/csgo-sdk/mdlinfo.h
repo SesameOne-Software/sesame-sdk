@@ -51,7 +51,9 @@ static inline mstudiobbox* mstudiohitboxset_hitbox ( mstudiohitboxset* this, int
 	return ( mstudiobbox* )( ( uintptr_t ) this + this->hitbox_idx ) + i;
 }
 
-typedef struct {
+typedef struct studiohdr studiohdr;
+
+struct studiohdr {
 	int id;
 	int version;
 	long checksum;
@@ -78,7 +80,7 @@ typedef struct {
 	int events_indexed;
 	int num_textures;
 	int texture_idx;
-} studiohdr;
+};
 
 static inline mstudiohitboxset* studiohdr_hitbox_set ( studiohdr* this, int i ) {
 	if ( i > this->num_hitbox_sets )
