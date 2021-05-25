@@ -159,6 +159,9 @@
     <ClInclude Include="lib\csgo-sdk\utlvec.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="lib\dirent\dirent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\hooks\create_move.c">

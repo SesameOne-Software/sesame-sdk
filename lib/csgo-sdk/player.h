@@ -1843,7 +1843,7 @@ static inline int player_select_weighted_seq(player* this, anim_activity act) {
 			seq = 9;
 		break;
 	default:
-		return;
+		return -1;
 	}
 
 	if (seq < 2)

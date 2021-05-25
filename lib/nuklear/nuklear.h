@@ -18315,7 +18315,7 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
     scroll->padding         = nk_vec2(0,0);
     scroll->show_buttons    = nk_false;
     scroll->border          = 0;
-    scroll->rounding        = 4.0f;
+    scroll->rounding        = 0.5f;
     scroll->border_cursor   = 0;
     scroll->rounding_cursor = 0;
     scroll->draw_begin      = 0;
@@ -20129,8 +20129,13 @@ nk_begin_titled(struct nk_context *ctx, const char *name, const char *title,
             ctx->active = win;
     } else {
         /* update window */
+        
+        /* ghetto fix so focus switches back to foreground window after pop is closed */
+        win->flags &= ~NK_WINDOW_ROM;
+
         win->flags &= ~(nk_flags)(NK_WINDOW_PRIVATE-1);
         win->flags |= flags;
+
         if (!(win->flags & (NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE)))
             win->bounds = bounds;
         /* If this assert triggers you either:

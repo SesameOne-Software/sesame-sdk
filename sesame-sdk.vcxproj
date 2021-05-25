@@ -204,6 +204,7 @@
     <ClInclude Include="lib\csgo-sdk\utlvec.h" />
     <ClInclude Include="lib\csgo-sdk\vec3.h" />
     <ClInclude Include="lib\csgo-sdk\weapon.h" />
+    <ClInclude Include="lib\dirent\dirent.h" />
     <ClInclude Include="lib\hashmap\hashmap.h" />
     <ClInclude Include="include\gui\custom.h" />
     <ClInclude Include="lib\nuklear\nuklear.h" />
