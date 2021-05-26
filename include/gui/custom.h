@@ -19,6 +19,10 @@ static bool gui_configs_open = false;
 typedef sds* vec_sds;
 static vec_sds gui_configs_list = NULL;
 
+static bool gui_subtabs_open = false;
+static struct nk_rect gui_subtabs_rect;
+static int gui_subtab_count = 0;
+
 static void gui_reload_config_list ( ) {
 	/* refresh config list */
 			/* delete current configs list */
@@ -134,6 +138,21 @@ static inline void gui_combobox ( const char* name, const char** items, int* sel
 	free ( items_new );
 }
 
+// TODO
+static bool gui_subtabs_begin ( int count ) {
+	assert ( !gui_tab_count && "Did you forget to call gui_tabs_end?" );
+
+	gui_subtab_count = count;
+}
+
+static void gui_subtab ( const char** name, int* selected ) {
+	assert ( gui_tab_count && "Did you forget to call gui_subtabs_begin?" );0
+}
+
+static void gui_subtabs_end ( ) {
+	gui_subtab_count = 0;
+}
+
 static bool gui_tabs_begin ( int count ) {
 	assert ( !gui_tab_count && "Did you forget to call gui_tabs_end?" );
 	assert ( !gui_cur_tab_idx && "Did you forget to call gui_tabs_end?" );
@@ -144,7 +163,7 @@ static bool gui_tabs_begin ( int count ) {
 }
 
 static void gui_tab ( const char* name, int* selected ) {
-	assert ( gui_tab_count && "Did you forget to call gui_tabs_end?" );
+	assert ( gui_tab_count && "Did you forget to call gui_tabs_begin?" );
 
 	const float tab_start_x = gui_total_rect.x + gui_total_rect.w * 0.5f - ( ses_ctx.fonts.menu_icons_font->handle.height * 2.5f * ( gui_tab_count - 1 ) ) * 0.5f;
 	const float tab_x = tab_start_x + ( ses_ctx.fonts.menu_icons_font->handle.height * 2.5f ) * gui_cur_tab_idx;
@@ -163,8 +182,20 @@ static void gui_tab ( const char* name, int* selected ) {
 	nk_draw_text ( &ses_ctx.nk_ctx->current->buffer, icon_rect, name, name_len, ses_ctx.fonts.menu_icons_font, dynamic_color );
 
 	nk_flags fl;
-	if ( !gui_configs_open && nk_button_behavior ( &fl, icon_rect, &ses_ctx.nk_ctx->input, NK_BUTTON_DEFAULT ) )
-		*selected = gui_cur_tab_idx;
+	if ( nk_button_behavior ( &fl, icon_rect, &ses_ctx.nk_ctx->input, NK_BUTTON_DEFAULT ) ) {
+		/* if already selected, open subtabs */
+		if ( *selected == gui_cur_tab_idx )
+			gui_subtabs_open = true;
+
+		if ( !gui_configs_open )
+			*selected = gui_cur_tab_idx;
+	}
+	
+	/* set subtabs popup rect according to currently selected tab */
+	if ( *selected == gui_cur_tab_idx ) {
+		const struct nk_vec2 subtabs_rect_dim = nk_vec2 ( GUI_TABS_HEIGHT * 2.0f, GUI_TABS_HEIGHT * 0.1f );
+		gui_subtabs_rect = nk_rect ( icon_rect.x + icon_rect.w * 0.5f - subtabs_rect_dim.x * 0.5f, icon_rect.y + icon_rect.h + GUI_LINE_HEIGHT, subtabs_rect_dim.x, subtabs_rect_dim.y );
+	}
 
 	gui_cur_tab_idx++;
 }
@@ -249,90 +280,119 @@ static inline bool gui_begin ( const char* title, struct nk_rect* bounds, nk_fla
 		}
 	}
 
-	struct nk_anim_data* anim_data = nk_get_anim ( "" );
-	const float dynamic_color = nk_do_anim ( ses_ctx.nk_ctx, &anim_data->main_fraction, gui_configs_open ? 1.0f : -1.0f, 0, 255 );
+	/* popups */ {
+		struct nk_anim_data* anim_data = nk_get_anim ( "" );
+		const float dynamic_color = nk_do_anim ( ses_ctx.nk_ctx, &anim_data->main_fraction, gui_configs_open ? 1.0f : -1.0f, 0, 255 );
 
-	nk_style_push_color ( ses_ctx.nk_ctx, &ses_ctx.nk_ctx->style.window.background, nk_rgba ( ses_ctx.nk_ctx->style.window.background.r, ses_ctx.nk_ctx->style.window.background.g, ses_ctx.nk_ctx->style.window.background.b, dynamic_color ) );
-	nk_style_push_style_item ( ses_ctx.nk_ctx, &ses_ctx.nk_ctx->style.window.fixed_background, nk_style_item_color ( ses_ctx.nk_ctx->style.window.background ) );
-	
-	bool popup_closed = false;
-	if ( dynamic_color > 0.0f && nk_popup_begin ( ses_ctx.nk_ctx, NK_POPUP_STATIC, "config menu", NK_WINDOW_NO_SCROLLBAR, nk_rect ( icon_rect.x + icon_rect.w * 0.25f, icon_rect.y - icon_rect.h, GUI_TABS_HEIGHT * 3.0f, GUI_TABS_HEIGHT * 1.8333f ) ) ) {
-		nk_row_layout ( ses_ctx.nk_ctx, NK_DYNAMIC, GUI_TABS_HEIGHT * 1.333f, 1, 0 );
-		if ( nk_group_begin ( ses_ctx.nk_ctx, "List", 0 ) ) {
-			bool reload_after_done = false;
+		nk_style_push_color ( ses_ctx.nk_ctx, &ses_ctx.nk_ctx->style.window.background, nk_rgba ( ses_ctx.nk_ctx->style.window.background.r, ses_ctx.nk_ctx->style.window.background.g, ses_ctx.nk_ctx->style.window.background.b, dynamic_color ) );
+		nk_style_push_style_item ( ses_ctx.nk_ctx, &ses_ctx.nk_ctx->style.window.fixed_background, nk_style_item_color ( ses_ctx.nk_ctx->style.window.background ) );
 
-			for ( int i = 0; i < vector_size ( gui_configs_list ); i++ ) {
-				const float ratios [ ] = { 0.58f, 0.14f, 0.14f, 0.14f };
-				nk_layout_row( ses_ctx.nk_ctx, NK_DYNAMIC, GUI_LINE_HEIGHT, COUNT_OF( ratios ), ratios );
+		/* config menu popup */
+		if ( dynamic_color > 0.0f && nk_popup_begin ( ses_ctx.nk_ctx, NK_POPUP_STATIC, "config menu", NK_WINDOW_NO_SCROLLBAR, nk_rect ( icon_rect.x + GUI_LINE_HEIGHT, icon_rect.y - icon_rect.h, GUI_TABS_HEIGHT * 3.0f, GUI_TABS_HEIGHT * 1.8333f ) ) ) {
+			bool popup_closed = false;
 
-				sds config_name = sdscat ( sdsnew ( gui_configs_list [ i ] ), "##config" );
-				nk_select_label ( ses_ctx.nk_ctx, config_name, NK_TEXT_CENTERED, false );
-				sdsfree ( config_name );
+			nk_row_layout ( ses_ctx.nk_ctx, NK_DYNAMIC, GUI_TABS_HEIGHT * 1.333f, 1, 0 );
+			if ( nk_group_begin ( ses_ctx.nk_ctx, "List", 0 ) ) {
+				bool reload_after_done = false;
 
-				nk_style_push_font ( ses_ctx.nk_ctx, &ses_ctx.fonts.menu_icons_font->handle );
+				for ( int i = 0; i < vector_size ( gui_configs_list ); i++ ) {
+					const float ratios [ ] = { 0.58f, 0.14f, 0.14f, 0.14f };
+					nk_layout_row ( ses_ctx.nk_ctx, NK_DYNAMIC, GUI_LINE_HEIGHT, COUNT_OF ( ratios ), ratios );
 
-				sds iter_num_str = sdsfromlonglong ( i );
-				sds load_icon = sdscat ( sdsnew ( "##" ), iter_num_str );
-				sds save_icon = sdscat ( sdsnew ( "##" ), iter_num_str );
-				sds delete_icon = sdscat ( sdsnew ( "##" ), iter_num_str );
+					sds config_name = sdscat ( sdsnew ( gui_configs_list [ i ] ), "##config" );
+					nk_select_label ( ses_ctx.nk_ctx, config_name, NK_TEXT_CENTERED, false );
+					sdsfree ( config_name );
 
-				if ( nk_button_label ( ses_ctx.nk_ctx, load_icon ) )
-					ses_cfg_load ( &ses_cfg, sdscatfmt ( sdsempty ( ), "%s\\configs\\%s.json", ses_ctx.ses_dir, gui_configs_list [ i ]) );
-				if ( nk_button_label ( ses_ctx.nk_ctx, save_icon ) )
-					ses_cfg_save ( &ses_cfg, sdscatfmt ( sdsempty ( ), "%s\\configs\\%s.json", ses_ctx.ses_dir, gui_configs_list [ i ]) );
-				if ( nk_button_label ( ses_ctx.nk_ctx, delete_icon ) ) {
-					sds file_dir = sdscatfmt ( sdsempty ( ), "%s\\configs\\%s.json", ses_ctx.ses_dir, gui_configs_list [ i ] );
-					remove ( file_dir );
-					sdsfree ( file_dir );
-					reload_after_done = true;
+					nk_style_push_font ( ses_ctx.nk_ctx, &ses_ctx.fonts.menu_icons_font->handle );
+
+					sds iter_num_str = sdsfromlonglong ( i );
+					sds load_icon = sdscat ( sdsnew ( "##" ), iter_num_str );
+					sds save_icon = sdscat ( sdsnew ( "##" ), iter_num_str );
+					sds delete_icon = sdscat ( sdsnew ( "##" ), iter_num_str );
+
+					if ( nk_button_label ( ses_ctx.nk_ctx, load_icon ) )
+						ses_cfg_load ( &ses_cfg, sdscatfmt ( sdsempty ( ), "%s\\configs\\%s.json", ses_ctx.ses_dir, gui_configs_list [ i ] ) );
+					if ( nk_button_label ( ses_ctx.nk_ctx, save_icon ) )
+						ses_cfg_save ( &ses_cfg, sdscatfmt ( sdsempty ( ), "%s\\configs\\%s.json", ses_ctx.ses_dir, gui_configs_list [ i ] ) );
+					if ( nk_button_label ( ses_ctx.nk_ctx, delete_icon ) ) {
+						sds file_dir = sdscatfmt ( sdsempty ( ), "%s\\configs\\%s.json", ses_ctx.ses_dir, gui_configs_list [ i ] );
+						remove ( file_dir );
+						sdsfree ( file_dir );
+						reload_after_done = true;
+					}
+
+					nk_style_pop_font ( ses_ctx.nk_ctx );
+
+					sdsfree ( iter_num_str );
+					sdsfree ( save_icon );
+					sdsfree ( load_icon );
+					sdsfree ( delete_icon );
 				}
 
-				nk_style_pop_font ( ses_ctx.nk_ctx );
-				
-				sdsfree ( iter_num_str );
-				sdsfree ( save_icon );
-				sdsfree ( load_icon );
-				sdsfree ( delete_icon );
-			}
+				/* reload configs list */
+				if ( reload_after_done )
+					gui_reload_config_list ( );
+			} nk_group_end ( ses_ctx.nk_ctx );
 
-			/* reload configs list */
-			if (reload_after_done)
+			const float ratios [ ] = { 0.86f, 0.14f };
+			nk_layout_row ( ses_ctx.nk_ctx, NK_DYNAMIC, GUI_LINE_HEIGHT, COUNT_OF ( ratios ), ratios );
+
+			static struct nk_text_edit text_edit = { 0 };
+			if ( !text_edit.initialized )
+				nk_textedit_init_default ( &text_edit );
+
+			/* we should probably exlude the "." so people know not to manually add the file extensions */
+			nk_edit_buffer ( ses_ctx.nk_ctx, NK_EDIT_FIELD, &text_edit, nk_filter_default );
+
+			nk_style_push_font ( ses_ctx.nk_ctx, &ses_ctx.fonts.menu_icons_font->handle );
+			if ( nk_button_label ( ses_ctx.nk_ctx, "" ) && text_edit.string.len ) {
+				char* config_name_textbox = nk_str_get ( &text_edit.string );
+				config_name_textbox [ nk_str_len ( &text_edit.string ) ] = '\0';
+				ses_cfg_save ( &ses_cfg, sdscatfmt ( sdsempty ( ), "%s\\configs\\%s.json" ), ses_ctx.ses_dir, config_name_textbox );
+
+				/* reload configs list */
 				gui_reload_config_list ( );
-		} nk_group_end ( ses_ctx.nk_ctx );
+			}
+			nk_style_pop_font ( ses_ctx.nk_ctx );
 
-		const float ratios [ ] = { 0.86f, 0.14f };
-		nk_layout_row ( ses_ctx.nk_ctx, NK_DYNAMIC, GUI_LINE_HEIGHT, COUNT_OF ( ratios ), ratios );
+			/* close popup if we click outside of it */
+			if ( nk_input_is_mouse_pressed ( &ses_ctx.nk_ctx->input, NK_BUTTON_LEFT )
+				&& !nk_input_is_mouse_hovering_rect ( &ses_ctx.nk_ctx->input, ses_ctx.nk_ctx->current->bounds )
+				&& !opened_popup_this_frame ) {
+				nk_popup_close ( ses_ctx.nk_ctx );
+				gui_configs_open = false;
+				popup_closed = true;
+			}
+		} nk_popup_end ( ses_ctx.nk_ctx );
 
-		static struct nk_text_edit text_edit = {0};
-		if (!text_edit.initialized)
-			nk_textedit_init_default( &text_edit);
+		nk_style_pop_style_item ( ses_ctx.nk_ctx );
+		nk_style_pop_color ( ses_ctx.nk_ctx );
 
-		/* we should probably exlude the "." so people know not to manually add the file extensions */
-		nk_edit_buffer(ses_ctx.nk_ctx, NK_EDIT_FIELD, &text_edit, nk_filter_default);
+		struct nk_anim_data* anim_data_subtabs = nk_get_anim ( "##subtabs" );
+		const float dynamic_color_subtabs = nk_do_anim ( ses_ctx.nk_ctx, &anim_data_subtabs->main_fraction, gui_subtabs_open ? 1.0f : -1.0f, 0, 255 );
 
-		nk_style_push_font ( ses_ctx.nk_ctx, &ses_ctx.fonts.menu_icons_font->handle );
-		if ( nk_button_label ( ses_ctx.nk_ctx, "" ) && text_edit.string.len ) {
-			char* config_name_textbox = nk_str_get ( &text_edit.string );
-			config_name_textbox [ nk_str_len ( &text_edit.string ) ] = '\0';
-			ses_cfg_save ( &ses_cfg, sdscatfmt ( sdsempty ( ), "%s\\configs\\%s.json" ), ses_ctx.ses_dir, config_name_textbox );
+		nk_style_push_color ( ses_ctx.nk_ctx, &ses_ctx.nk_ctx->style.window.background, nk_rgba ( ses_ctx.nk_ctx->style.window.background.r, ses_ctx.nk_ctx->style.window.background.g, ses_ctx.nk_ctx->style.window.background.b, dynamic_color ) );
+		nk_style_push_style_item ( ses_ctx.nk_ctx, &ses_ctx.nk_ctx->style.window.fixed_background, nk_style_item_color ( ses_ctx.nk_ctx->style.window.background ) );
 
-			/* reload configs list */
-			gui_reload_config_list ( );
-		}
-		nk_style_pop_font ( ses_ctx.nk_ctx );
+		/* subtabs popup */
+		if ( dynamic_color_subtabs > 0.0f && nk_popup_begin ( ses_ctx.nk_ctx, NK_POPUP_DYNAMIC, "subtabs", NK_WINDOW_NO_SCROLLBAR, gui_subtabs_rect ) ) {
+			bool popup_closed = false;
 
-		/* close popup if we click outside of it */
-		if ( nk_input_is_mouse_pressed ( &ses_ctx.nk_ctx->input, NK_BUTTON_LEFT )
-			&& !nk_input_is_mouse_hovering_rect ( &ses_ctx.nk_ctx->input, ses_ctx.nk_ctx->current->bounds )
-			&& !opened_popup_this_frame ) {
-			nk_popup_close ( ses_ctx.nk_ctx );
-			gui_configs_open = false;
-			popup_closed = true;
-		}
-	} nk_popup_end ( ses_ctx.nk_ctx );
+			gui_button ( "TEST BUTTON" );
 
-	nk_style_pop_style_item ( ses_ctx.nk_ctx );
-	nk_style_pop_color ( ses_ctx.nk_ctx );
+			/* close popup if we click outside of it */
+			if ( nk_input_is_mouse_pressed ( &ses_ctx.nk_ctx->input, NK_BUTTON_LEFT )
+				&& !nk_input_is_mouse_hovering_rect ( &ses_ctx.nk_ctx->input, ses_ctx.nk_ctx->current->bounds )
+				&& !opened_popup_this_frame ) {
+				nk_popup_close ( ses_ctx.nk_ctx );
+				gui_subtabs_open = false;
+				popup_closed = true;
+			}
+		} nk_popup_end ( ses_ctx.nk_ctx );
+
+		nk_style_pop_style_item ( ses_ctx.nk_ctx );
+		nk_style_pop_color ( ses_ctx.nk_ctx );
+	}
 
 	/* window outline */
 	nk_stroke_rect ( &ses_ctx.nk_ctx->current->buffer, *bounds, ses_ctx.nk_ctx->style.window.rounding, ses_ctx.nk_ctx->style.window.border, ses_ctx.nk_ctx->style.window.border_color );

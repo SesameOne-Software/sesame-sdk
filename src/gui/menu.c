@@ -15,7 +15,75 @@
 
 #include "include/resources/resources.h"
 
-static int cur_tab = 0;
+typedef enum {
+    gui_tabs_rage = 0,
+    gui_tabs_antiaim,
+    gui_tabs_legit,
+    gui_tabs_visuals,
+    gui_tabs_misc,
+    gui_tabs_code,
+    gui_tabs_max,
+} gui_tabs;
+
+static gui_tabs menu_cur_tab = gui_tabs_rage;
+
+typedef enum {
+    gui_subtabs_rage_auto = 0,
+    gui_subtabs_rage_awp,
+    gui_subtabs_rage_scout,
+    gui_subtabs_rage_rifle,
+    gui_subtabs_rage_shotgun,
+    gui_subtabs_rage_pistol,
+    gui_subtabs_rage_revolver,
+    gui_subtabs_rage_deagle,
+    gui_subtabs_rage_exploits,
+    gui_subtabs_rage_max,
+} gui_subtabs_rage;
+
+typedef enum {
+    gui_subtabs_antiaim_stand = 0,
+    gui_subtabs_antiaim_air,
+    gui_subtabs_antiaim_run,
+    gui_subtabs_antiaim_walk,
+    gui_subtabs_antiaim_slowwalk,
+    gui_subtabs_antiaim_crouch,
+    gui_subtabs_antiaim_other,
+    gui_subtabs_antiaim_max,
+} gui_subtabs_antiaim;
+
+typedef enum {
+    gui_subtabs_legit_auto = 0,
+    gui_subtabs_legit_awp,
+    gui_subtabs_legit_scout,
+    gui_subtabs_legit_rifle,
+    gui_subtabs_legit_shotgun,
+    gui_subtabs_legit_pistol,
+    gui_subtabs_legit_revolver,
+    gui_subtabs_legit_deagle,
+    gui_subtabs_legit_max,
+} gui_subtabs_legit;
+
+typedef enum {
+    gui_subtabs_visuals_players = 0,
+    gui_subtabs_visuals_viewmodel,
+    gui_subtabs_visuals_weapons,
+    gui_subtabs_visuals_world,
+    gui_subtabs_visuals_other,
+    gui_subtabs_visuals_max,
+} gui_subtabs_visuals;
+
+typedef enum {
+    gui_subtabs_misc_movement = 0,
+    gui_subtabs_misc_skins,
+    gui_subtabs_misc_other,
+    gui_subtabs_misc_max,
+} gui_subtabs_misc;
+
+/* generic subtabs type */
+typedef enum gui_subtabs gui_subtabs;
+
+static gui_subtabs menu_cur_subtab [ gui_tabs_max ] = { 0 };
+
 static bool menu_open = false;
 static struct nk_rect menu_pos = { 50.0f, 50.0f, 530.0f, 435.0f };
 static struct nk_image menu_logo;
@@ -190,12 +258,13 @@ void menu_draw ( ) {
 
     if ( menu_is_open ( ) ) {
         if ( gui_begin ( "SESAME", &menu_pos, NK_WINDOW_NO_SCROLLBAR ) ) {
-           if ( gui_tabs_begin ( 5 ) ) {
-               gui_tab ( "", &cur_tab );
-               gui_tab ( "", &cur_tab );
-               gui_tab ( "", &cur_tab );
-               gui_tab ( "", &cur_tab );
-               gui_tab ( "", &cur_tab );
+           if ( gui_tabs_begin ( gui_tabs_max ) ) {
+               gui_tab ( "", &menu_cur_tab );
+               gui_tab ( "", &menu_cur_tab );
+               gui_tab ( "", &menu_cur_tab );
+               gui_tab ( "", &menu_cur_tab );
+               gui_tab ( "", &menu_cur_tab );
+               gui_tab ( "", &menu_cur_tab );
            }
            gui_tabs_end ( );
 
@@ -213,13 +282,112 @@ void menu_draw ( ) {
             //    nk_label(ses_ctx.nk_ctx, desync_str, NK_LEFT);
             //    sdsfree(desync_str);
             //}
-            
-            gui_checkbox ( "Fast stop", ses_cfg_get_item ( &ses_cfg, misc, movement, fast_stop, bool ) );
-            gui_checkbox ( "Auto jump", ses_cfg_get_item ( &ses_cfg, misc, movement, auto_jump, bool ) );
-            gui_combobox ("Auto strafe", (const char*[] ) { "None", "Legit", "Directional", "Rage", NULL }, ses_cfg_get_item ( &ses_cfg, misc, movement, auto_strafer, int ) );
-            gui_checkbox ( "Checkbox", ses_cfg_get_item ( &ses_cfg, gui, state, test_bool, bool ) );
-            gui_sliderf ("Slider float", -180.0f, ses_cfg_get_item ( &ses_cfg, gui, state, test_float, float ), 180.0f, 1.0f, NULL );
-            gui_slider ( "Slider int", 0, ses_cfg_get_item ( &ses_cfg, gui, state, test_int, int ), 100, 5, NULL );
+
+            switch ( menu_cur_tab ) {
+            case gui_tabs_rage: {
+                // TODO: EXPLOITS IS THE ONLY ICON IN RAGE TO USE THE BUG ICON: ""
+                // TODO: YOU CAN ADD A WEAPON ICON TO TABS LIKE THIS:
+                // "A##WeaponIcon" Where "A" is the character for the weapon icon in the font
+            } break;
+            case gui_tabs_antiaim: {
+                if ( gui_subtabs_begin ( gui_subtabs_antiaim_max ) ) {
+                    gui_subtab ( "", &menu_cur_tab );
+                    gui_subtab ( "", &menu_cur_tab );
+                    gui_subtab ( "", &menu_cur_tab );
+                    gui_subtab ( "", &menu_cur_tab );
+                    gui_subtab ( "", &menu_cur_tab );
+                    gui_subtab ( "", &menu_cur_tab );
+                    gui_subtab ( "", &menu_cur_tab );
+                }
+                gui_subtabs_end ( );
+
+                switch ( menu_cur_tab ) {
+                case gui_subtabs_antiaim_stand: {
+
+                } break;
+                case gui_subtabs_antiaim_air: {
+
+                } break;
+                case gui_subtabs_antiaim_run: {
+
+                } break;
+                case gui_subtabs_antiaim_walk: {
+
+                } break;
+                case gui_subtabs_antiaim_slowwalk: {
+
+                } break;
+                case gui_subtabs_antiaim_crouch: {
+
+                } break;
+                case gui_subtabs_antiaim_other: {
+
+                } break;
+                }
+            } break;
+            case gui_tabs_legit: {
+                // TODO: SIMILAR TO RAGE
+            } break;
+            case gui_tabs_visuals: {
+                if ( gui_subtabs_begin ( gui_subtabs_visuals_max ) ) {
+                    gui_subtab ( "", &menu_cur_tab );
+                    gui_subtab ( "", &menu_cur_tab );
+                    gui_subtab ( "", &menu_cur_tab );
+                    gui_subtab ( "", &menu_cur_tab );
+                    gui_subtab ( "", &menu_cur_tab );
+                }
+                gui_subtabs_end ( );
+
+                switch ( menu_cur_tab ) {
+                case gui_subtabs_visuals_players: {
+
+                } break;
+                case gui_subtabs_visuals_viewmodel: {
+
+                } break;
+                case gui_subtabs_visuals_weapons: {
+
+                } break;
+                case gui_subtabs_visuals_world: {
+
+                } break;
+                case gui_subtabs_visuals_other: {
+
+                } break;
+                }
+            } break;
+            case gui_tabs_misc: {
+                if ( gui_subtabs_begin ( gui_subtabs_misc_max ) ) {
+                    gui_subtab ( "", &menu_cur_tab );
+                    gui_subtab ( "", &menu_cur_tab );
+                    gui_subtab ( "", &menu_cur_tab );
+                }
+                gui_subtabs_end ( );
+                
+                switch ( menu_cur_tab ) {
+                case gui_subtabs_misc_movement: {
+
+                } break;
+                case gui_subtabs_misc_skins: {
+
+                } break;
+                case gui_subtabs_misc_other: {
+
+                } break;
+                }
+
+                gui_checkbox ( "Fast stop", ses_cfg_get_item ( &ses_cfg, misc, movement, fast_stop, bool ) );
+                gui_checkbox ( "Auto jump", ses_cfg_get_item ( &ses_cfg, misc, movement, auto_jump, bool ) );
+                gui_combobox ( "Auto strafe", ( const char* [ ] ) { "None", "Legit", "Directional", "Rage", NULL }, ses_cfg_get_item ( &ses_cfg, misc, movement, auto_strafer, int ) );
+                gui_checkbox ( "Checkbox", ses_cfg_get_item ( &ses_cfg, gui, state, test_bool, bool ) );
+                gui_sliderf ( "Slider float", -180.0f, ses_cfg_get_item ( &ses_cfg, gui, state, test_float, float ), 180.0f, 1.0f, NULL );
+                gui_slider ( "Slider int", 0, ses_cfg_get_item ( &ses_cfg, gui, state, test_int, int ), 100, 5, NULL );
+            } break;
+            case gui_tabs_code: {
+                // TODO
+            } break;
+            default: break;
+            }
         }
 
         gui_end ( );
