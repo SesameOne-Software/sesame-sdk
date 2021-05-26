@@ -149,6 +149,11 @@ void menu_reset ( ) {
     nk_d3d9_resize ( w, h );
 }
 
+static void font_scale_brightness_func(unsigned char* map, int map_size) {
+    for (int i = 0; i < map_size; i++)
+        map[i] = (int)roundf(sqrtf((float)i / (float)(map_size - 1)) * (float)(map_size - 1));
+}
+
 void menu_init ( ) {
     CLEAR_START;
     VM_SHARK_BLACK_START;
@@ -190,47 +195,79 @@ void menu_init ( ) {
 		struct nk_font* menu_small_font;
         */
 
-        struct nk_font_config config = nk_font_config ( 18.0f );
-        config.oversample_v = config.oversample_h = 1;
-        config.pixel_snap = true;
+        struct nk_font_config config = { 0 };
         
         /* menu fonts */
         config = nk_font_config ( 18.0f );
         config.range = custom_font_range;
+        config.oversample_v = 1;
+        config.oversample_h = 1;
+        config.scale_brightness_func = font_scale_brightness_func;
+        //config.pixel_snap = true;
         ses_ctx.fonts.menu_icons_font = nk_font_atlas_add_compressed ( atlas, resources_fontawesome_compressed_data, resources_fontawesome_compressed_size, 18.0f, &config );
         
         config = nk_font_config ( 26.0f );
         config.range = custom_font_range;
+        config.oversample_v = 1;
+        config.oversample_h = 1;
+        config.scale_brightness_func = font_scale_brightness_func;
+        //config.pixel_snap = true;
         ses_ctx.fonts.menu_icons_large_font = nk_font_atlas_add_compressed ( atlas, resources_fontawesome_compressed_data, resources_fontawesome_compressed_size, 26.0f, &config );
 
         config = nk_font_config ( 27.0f );
         config.range = nk_font_default_glyph_ranges ( );
+        config.oversample_v = 1;
+        config.oversample_h = 1;
+        config.scale_brightness_func = font_scale_brightness_func;
+        //config.pixel_snap = true;
         ses_ctx.fonts.menu_large_font = nk_font_atlas_add_compressed ( atlas, resources_ubuntu_compressed_data, resources_ubuntu_compressed_size, 27.0f, &config );
         
-        config = nk_font_config ( 16.5f );
+        config = nk_font_config ( 16.0f );
         config.range = nk_font_default_glyph_ranges ( );
-        ses_ctx.fonts.menu_medium_font = nk_font_atlas_add_compressed ( atlas, resources_ubuntu_compressed_data, resources_ubuntu_compressed_size, 16.5f, &config );
+        config.oversample_v = 1;
+        config.oversample_h = 1;
+        config.scale_brightness_func = font_scale_brightness_func;
+        //config.pixel_snap = true;
+        ses_ctx.fonts.menu_medium_font = nk_font_atlas_add_compressed ( atlas, resources_ubuntu_compressed_data, resources_ubuntu_compressed_size, 16.0f, &config );
 
-        config = nk_font_config ( 13.5f );
+        config = nk_font_config ( 13.0f );
         config.range = nk_font_default_glyph_ranges ( );
-        ses_ctx.fonts.menu_small_font = nk_font_atlas_add_compressed ( atlas, resources_ubuntu_compressed_data, resources_ubuntu_compressed_size, 13.5f, &config );
+        config.oversample_v = 1;
+        config.oversample_h = 1;
+        config.scale_brightness_func = font_scale_brightness_func;
+        //config.pixel_snap = true;
+        ses_ctx.fonts.menu_small_font = nk_font_atlas_add_compressed ( atlas, resources_ubuntu_compressed_data, resources_ubuntu_compressed_size, 13.0f, &config );
         
         config = nk_font_config ( 12.0f );
         config.range = nk_font_default_glyph_ranges ( );
+        config.oversample_v = 1;
+        config.oversample_h = 1;
+        config.scale_brightness_func = font_scale_brightness_func;
+        //config.pixel_snap = true;
         ses_ctx.fonts.menu_xsmall_font = nk_font_atlas_add_compressed ( atlas, resources_ubuntu_compressed_data, resources_ubuntu_compressed_size, 12.0f, &config );
 
         /* other fonts */
         config = nk_font_config ( 16.0f );
         config.range = nk_font_default_glyph_ranges ( );
+        config.oversample_v = 1;
+        config.oversample_h = 1;
+        //config.pixel_snap = true;
         ses_ctx.fonts.default_font = nk_font_atlas_add_compressed ( atlas, resources_ubuntu_compressed_data, resources_ubuntu_compressed_size, 16.0f, &config );
 
         /* visuals fonts */
         config = nk_font_config ( 16.0f );
         config.range = custom_font_range;
+        config.oversample_v = 1;
+        config.oversample_h = 1;
+        //config.pixel_snap = true;
         ses_ctx.fonts.esp_font = nk_font_atlas_add_compressed ( atlas, resources_ubuntu_compressed_data, resources_ubuntu_compressed_size, 16.0f, &config );
 
         config = nk_font_config ( 26.0f );
         config.range = nk_font_default_glyph_ranges();
+        config.oversample_v = 1;
+        config.oversample_h = 1;
+        config.scale_brightness_func = font_scale_brightness_func;
+        //config.pixel_snap = true;
         ses_ctx.fonts.indicators_font = nk_font_atlas_add_compressed ( atlas, resources_ubuntu_compressed_data, resources_ubuntu_compressed_size, 26.0f, &config );
         
         nk_d3d9_font_stash_end ( );
@@ -301,7 +338,7 @@ void menu_draw ( ) {
                 }
                 gui_subtabs_end ( );
 
-                switch ( menu_cur_tab ) {
+                switch ( menu_cur_subtab[gui_tabs_antiaim] ) {
                 case gui_subtabs_antiaim_stand: {
 
                 } break;
@@ -338,7 +375,7 @@ void menu_draw ( ) {
                 }
                 gui_subtabs_end ( );
 
-                switch ( menu_cur_tab ) {
+                switch (menu_cur_subtab[gui_tabs_visuals]) {
                 case gui_subtabs_visuals_players: {
 
                 } break;
@@ -364,7 +401,7 @@ void menu_draw ( ) {
                 }
                 gui_subtabs_end ( );
                 
-                switch ( menu_cur_tab ) {
+                switch (menu_cur_subtab[gui_tabs_misc]) {
                 case gui_subtabs_misc_movement: {
 
                 } break;

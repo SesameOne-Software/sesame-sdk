@@ -140,13 +140,13 @@ static inline void gui_combobox ( const char* name, const char** items, int* sel
 
 // TODO
 static bool gui_subtabs_begin ( int count ) {
-	assert ( !gui_tab_count && "Did you forget to call gui_tabs_end?" );
+	assert ( !gui_subtab_count && "Did you forget to call gui_tabs_end?" );
 
 	gui_subtab_count = count;
 }
 
 static void gui_subtab ( const char** name, int* selected ) {
-	assert ( gui_tab_count && "Did you forget to call gui_subtabs_begin?" );0
+	assert (gui_subtab_count && "Did you forget to call gui_subtabs_begin?" );
 }
 
 static void gui_subtabs_end ( ) {

@@ -3987,6 +3987,7 @@ struct nk_font_config {
     unsigned char oversample_v, oversample_h;
     /* rasterize at hight quality for sub-pixel position */
     unsigned char padding[3];
+    void (*scale_brightness_func)(unsigned char* map, int map_size);
 
     float size;
     /* baked pixel height of the font */
@@ -15514,18 +15515,23 @@ STBTT_DEF int stbtt_PackFontRangesRenderIntoRects(stbtt_pack_context *spc, const
    int old_v_over = spc->v_oversample;
 
    k = 0;
+   
    for (i=0; i < num_ranges; ++i) {
       float fh = ranges[i].font_size;
       float scale = fh > 0 ? stbtt_ScaleForPixelHeight(info, fh) : stbtt_ScaleForMappingEmToPixels(info, -fh);
       float recip_h,recip_v,sub_x,sub_y;
+
       spc->h_oversample = ranges[i].h_oversample;
       spc->v_oversample = ranges[i].v_oversample;
+
       recip_h = 1.0f / spc->h_oversample;
       recip_v = 1.0f / spc->v_oversample;
       sub_x = stbtt__oversample_shift(spc->h_oversample);
       sub_y = stbtt__oversample_shift(spc->v_oversample);
+
       for (j=0; j < ranges[i].num_chars; ++j) {
          stbrp_rect *r = &rects[k];
+
          if (r->was_packed && r->w != 0 && r->h != 0) {
             stbtt_packedchar *bc = &ranges[i].chardata_for_range[j];
             int advance, lsb, x0,y0,x1,y1;
@@ -15538,6 +15544,7 @@ STBTT_DEF int stbtt_PackFontRangesRenderIntoRects(stbtt_pack_context *spc, const
             r->y += pad;
             r->w -= pad;
             r->h -= pad;
+
             stbtt_GetGlyphHMetrics(info, glyph, &advance, &lsb);
             stbtt_GetGlyphBitmapBox(info, glyph,
                                     scale * spc->h_oversample,
@@ -16669,11 +16676,15 @@ nk_font_bake(struct nk_font_baker *baker, void *image_memory, int width, int hei
     nk_zero(image_memory, (nk_size)((nk_size)width * (nk_size)height));
     baker->spc.pixels = (unsigned char*)image_memory;
     baker->spc.height = (int)height;
+    
     for (input_i = 0, config_iter = config_list; input_i < font_count && config_iter;
         config_iter = config_iter->next) {
         it = config_iter;
-        do {const struct nk_font_config *cfg = it;
+
+        do {
+            const struct nk_font_config *cfg = it;
             struct nk_font_bake_data *tmp = &baker->build[input_i++];
+
             stbtt_PackSetOversampling(&baker->spc, cfg->oversample_h, cfg->oversample_v);
             stbtt_PackFontRangesRenderIntoRects(&baker->spc, &tmp->info, tmp->ranges, (int)tmp->range_count, tmp->rects);
         } while ((it = it->n) != config_iter);
@@ -16683,7 +16694,9 @@ nk_font_bake(struct nk_font_baker *baker, void *image_memory, int width, int hei
     for (input_i = 0, config_iter = config_list; input_i < font_count && config_iter;
         config_iter = config_iter->next) {
         it = config_iter;
-        do {nk_size i = 0;
+
+        do {
+            nk_size i = 0;
             int char_idx = 0;
             nk_rune glyph_count = 0;
             const struct nk_font_config *cfg = it;
@@ -16699,9 +16712,10 @@ nk_font_bake(struct nk_font_baker *baker, void *image_memory, int width, int hei
             if (!cfg->merge_mode) {
                 dst_font->ranges = cfg->range;
                 dst_font->height = cfg->size;
-                dst_font->ascent = ((float)unscaled_ascent * font_scale);
-                dst_font->descent = ((float)unscaled_descent * font_scale);
+                dst_font->ascent = (float)unscaled_ascent * font_scale;
+                dst_font->descent = (float)unscaled_descent * font_scale;
                 dst_font->glyph_offset = glyph_n;
+
                 /*
                     Need to zero this, or it will carry over from a previous
                     bake, and cause a segfault when accessing glyphs[].
@@ -16712,8 +16726,8 @@ nk_font_bake(struct nk_font_baker *baker, void *image_memory, int width, int hei
             /* fill own baked font glyph array */
             for (i = 0; i < tmp->range_count; ++i) {
                 stbtt_pack_range *range = &tmp->ranges[i];
-                for (char_idx = 0; char_idx < range->num_chars; char_idx++)
-                {
+
+                for (char_idx = 0; char_idx < range->num_chars; char_idx++) {
                     nk_rune codepoint = 0;
                     float dummy_x = 0, dummy_y = 0;
                     stbtt_aligned_quad q;
@@ -16721,7 +16735,10 @@ nk_font_bake(struct nk_font_baker *baker, void *image_memory, int width, int hei
 
                     /* query glyph bounds from stb_truetype */
                     const stbtt_packedchar *pc = &range->chardata_for_range[char_idx];
-                    if (!pc->x0 && !pc->x1 && !pc->y0 && !pc->y1) continue;
+
+                    if (!pc->x0 && !pc->x1 && !pc->y0 && !pc->y1)
+                        continue;
+
                     codepoint = (nk_rune)(range->first_unicode_codepoint_in_range + char_idx);
                     stbtt_GetPackedQuad(range->chardata_for_range, (int)width,
                         (int)height, char_idx, &dummy_x, &dummy_y, &q, 0);
@@ -16747,12 +16764,16 @@ nk_font_bake(struct nk_font_baker *baker, void *image_memory, int width, int hei
                         glyph->u1 = q.s1;
                         glyph->v1 = q.t1;
                     }
+
                     glyph->xadvance = (pc->xadvance + cfg->spacing.x);
+
                     if (cfg->pixel_snap)
                         glyph->xadvance = (float)(int)(glyph->xadvance + 0.5f);
+
                     glyph_count++;
                 }
             }
+
             dst_font->glyph_count += glyph_count;
             glyph_n += glyph_count;
         } while ((it = it->n) != config_iter);
@@ -17578,6 +17599,15 @@ nk_font_atlas_bake(struct nk_font_atlas *atlas, int *width, int *height,
     /* bake glyphs and custom white pixel into image */
     nk_font_bake(baker, atlas->pixel, *width, *height,
         atlas->glyphs, atlas->glyph_count, atlas->config, atlas->font_num);
+
+    /* @amizu03 */
+    /* FROM IMGUI -- ALLOWS US TO SCALE FONT ALPHA DIFFERENTLY (FIX SMALL FONT BLURINESS) */
+    unsigned char pixel_brightness_map[256];
+    atlas->config->scale_brightness_func(pixel_brightness_map, sizeof(pixel_brightness_map) / sizeof(*pixel_brightness_map));
+
+    for (int i = 0; i < *width * *height; i++)
+        ((unsigned char*)atlas->pixel)[i] = pixel_brightness_map[((unsigned char*)atlas->pixel)[i]];
+
     nk_font_bake_custom_data(atlas->pixel, *width, *height, atlas->custom,
             nk_custom_cursor_data, NK_CURSOR_DATA_W, NK_CURSOR_DATA_H, '.', 'X');
 
@@ -17588,9 +17618,11 @@ nk_font_atlas_bake(struct nk_font_atlas *atlas, int *width, int *height,
         NK_ASSERT(img_rgba);
         if (!img_rgba) goto failed;
         nk_font_bake_convert(img_rgba, *width, *height, atlas->pixel);
+        
         atlas->temporary.free(atlas->temporary.userdata, atlas->pixel);
         atlas->pixel = img_rgba;
     }
+
     atlas->tex_width = *width;
     atlas->tex_height = *height;
 
@@ -17603,7 +17635,8 @@ nk_font_atlas_bake(struct nk_font_atlas *atlas, int *width, int *height,
     }
 
     /* initialize each cursor */
-    {NK_STORAGE const struct nk_vec2 nk_cursor_data[NK_CURSOR_COUNT][3] = {
+    {
+        NK_STORAGE const struct nk_vec2 nk_cursor_data[NK_CURSOR_COUNT][3] = {
         /* Pos      Size        Offset */
         {{ 0, 3},   {12,19},    { 0, 0}},
         {{13, 0},   { 7,16},    { 4, 8}},
