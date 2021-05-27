@@ -12,6 +12,7 @@ static const char* gui_title = NULL;
 static nk_flags gui_flags = 0;
 static struct nk_rect gui_total_rect;
 static struct nk_rect gui_rect;
+static struct nk_rect gui_last_rect;
 static int gui_tab_count = 0;
 static int gui_cur_tab_idx = 0;
 static bool gui_configs_open = false;
@@ -138,6 +139,17 @@ static inline void gui_combobox ( const char* name, const char** items, int* sel
 	free ( items_new );
 }
 
+static inline void gui_header( const char* name, const char* section ) {
+	gui_layout ( 1 );
+	nk_style_push_font ( ses_ctx.nk_ctx, &ses_ctx.fonts.menu_large_font->handle );
+
+	sds new_header = sdscatfmt ( sdsempty(), "%s • %s", name, section);
+	nk_label ( ses_ctx.nk_ctx, new_header, NK_TEXT_LEFT );
+	sdsfree ( new_header );
+
+	nk_style_pop_font ( ses_ctx.nk_ctx );
+}
+
 // TODO
 static bool gui_subtabs_begin ( int count ) {
 	assert ( !gui_subtab_count && "Did you forget to call gui_tabs_end?" );
@@ -168,7 +180,7 @@ static void gui_tab ( const char* name, int* selected ) {
 	const float tab_start_x = gui_total_rect.x + gui_total_rect.w * 0.5f - ( ses_ctx.fonts.menu_icons_font->handle.height * 2.5f * ( gui_tab_count - 1 ) ) * 0.5f;
 	const float tab_x = tab_start_x + ( ses_ctx.fonts.menu_icons_font->handle.height * 2.5f ) * gui_cur_tab_idx;
 
-	const size_t name_len = strlen ( name );
+	const size_t name_len = nk_strlen ( name );
 	const float text_w = ses_ctx.fonts.menu_icons_font->handle.width ( ses_ctx.fonts.menu_icons_font->handle.userdata, ses_ctx.fonts.menu_icons_font->handle.height, name, name_len );
 	const struct nk_rect icon_rect = nk_rect ( tab_x - text_w * 0.5f, gui_total_rect.y + GUI_TABS_HEIGHT * 0.597f - ses_ctx.fonts.menu_icons_font->handle.height * 0.5f, text_w, ses_ctx.fonts.menu_icons_font->handle.height );
 	
@@ -193,8 +205,8 @@ static void gui_tab ( const char* name, int* selected ) {
 	
 	/* set subtabs popup rect according to currently selected tab */
 	if ( *selected == gui_cur_tab_idx ) {
-		const struct nk_vec2 subtabs_rect_dim = nk_vec2 ( GUI_TABS_HEIGHT * 2.0f, GUI_TABS_HEIGHT * 0.1f );
-		gui_subtabs_rect = nk_rect ( icon_rect.x + icon_rect.w * 0.5f - subtabs_rect_dim.x * 0.5f, icon_rect.y + icon_rect.h + GUI_LINE_HEIGHT, subtabs_rect_dim.x, subtabs_rect_dim.y );
+		const struct nk_vec2 subtabs_rect_dim = nk_vec2 ( GUI_TABS_HEIGHT * 2.0f, GUI_TABS_HEIGHT * 2.0f );
+		gui_subtabs_rect = nk_rect ( icon_rect.x - gui_total_rect.x + icon_rect.w * 0.5f - subtabs_rect_dim.x * 0.5f, icon_rect.y - gui_total_rect.y + icon_rect.h + GUI_LINE_HEIGHT * 0.5f, subtabs_rect_dim.x, subtabs_rect_dim.y );
 	}
 
 	gui_cur_tab_idx++;
@@ -209,6 +221,10 @@ static inline bool gui_begin ( const char* title, struct nk_rect* bounds, nk_fla
 	gui_title = title;
 	gui_flags = flags;
 
+	gui_rect.x = bounds->x = gui_last_rect.x;
+	gui_rect.y = bounds->y = gui_last_rect.y;
+	gui_total_rect = *bounds;
+
 	nk_style_push_font ( ses_ctx.nk_ctx, &ses_ctx.fonts.menu_medium_font->handle );
 
 	ses_ctx.nk_ctx->style.window.padding = nk_vec2 ( -5.0f, -5.0f );
@@ -217,7 +233,25 @@ static inline bool gui_begin ( const char* title, struct nk_rect* bounds, nk_fla
 	nk_style_push_style_item ( ses_ctx.nk_ctx, &ses_ctx.nk_ctx->style.window.fixed_background, nk_style_item_color ( nk_rgba ( 0, 0, 0, 0 ) ) );
 
 	nk_begin ( ses_ctx.nk_ctx, gui_title, *bounds, gui_flags );
-	
+
+	/* dragging logic from inside nuklear */ {
+		/* calculate draggable window space */
+		struct nk_rect header = nk_rect ( bounds->x, bounds->y, bounds->w, GUI_TABS_HEIGHT );
+
+		/* window movement by dragging */
+		int left_mouse_down = ses_ctx.nk_ctx->input.mouse.buttons [ NK_BUTTON_LEFT ].down;
+		int left_mouse_clicked = ( int ) ses_ctx.nk_ctx->input.mouse.buttons [ NK_BUTTON_LEFT ].clicked;
+		int left_mouse_click_in_cursor = nk_input_has_mouse_click_down_in_rect ( &ses_ctx.nk_ctx->input, NK_BUTTON_LEFT, header, nk_true );
+
+		if ( left_mouse_down && left_mouse_click_in_cursor && !left_mouse_clicked ) {
+			ses_ctx.nk_ctx->current->bounds.x = ses_ctx.nk_ctx->current->bounds.x + ses_ctx.nk_ctx->input.mouse.delta.x;
+			ses_ctx.nk_ctx->current->bounds.y = ses_ctx.nk_ctx->current->bounds.y + ses_ctx.nk_ctx->input.mouse.delta.y;
+			ses_ctx.nk_ctx->input.mouse.buttons [ NK_BUTTON_LEFT ].clicked_pos.x += ses_ctx.nk_ctx->input.mouse.delta.x;
+			ses_ctx.nk_ctx->input.mouse.buttons [ NK_BUTTON_LEFT ].clicked_pos.y += ses_ctx.nk_ctx->input.mouse.delta.y;
+			ses_ctx.nk_ctx->style.cursor_active = ses_ctx.nk_ctx->style.cursors [ NK_CURSOR_MOVE ];
+		}
+	}
+
 	nk_style_pop_style_item ( ses_ctx.nk_ctx );
 	nk_style_pop_color ( ses_ctx.nk_ctx );
 
@@ -238,11 +272,11 @@ static inline bool gui_begin ( const char* title, struct nk_rect* bounds, nk_fla
 	nk_fill_rect_multi_color ( &ses_ctx.nk_ctx->current->buffer, nk_rect ( bounds->x + ses_ctx.nk_ctx->style.window.rounding, bounds->y, bounds->w - ses_ctx.nk_ctx->style.window.rounding * 2.0f, GUI_TABS_HEIGHT ), left_color, right_color, right_color, left_color );
 	nk_stroke_rect ( &ses_ctx.nk_ctx->current->buffer, nk_rect ( bounds->x, bounds->y, bounds->w, GUI_TABS_HEIGHT ), ses_ctx.nk_ctx->style.window.rounding, ses_ctx.nk_ctx->style.tab.border, ses_ctx.nk_ctx->style.tab.border_color );
 
-	const size_t title_len = strlen ( gui_title );
+	const size_t title_len = nk_strlen ( gui_title );
 	const float text_w = ses_ctx.fonts.menu_xsmall_font->handle.width ( ses_ctx.fonts.menu_xsmall_font->handle.userdata, ses_ctx.fonts.menu_xsmall_font->handle.height, gui_title, title_len );
 
 	/* title text */
-	nk_draw_text ( &ses_ctx.nk_ctx->current->buffer, nk_rect ( bounds->x + bounds->w * 0.5f - text_w * 0.5f, bounds->y + GUI_TABS_HEIGHT * 0.3f - ses_ctx.fonts.menu_xsmall_font->handle.height * 0.5f, text_w, ses_ctx.fonts.menu_xsmall_font->handle.height ), title, title_len, ses_ctx.fonts.menu_xsmall_font, nk_rgba( 255, 255, 255, 255 ) );
+	nk_draw_text ( &ses_ctx.nk_ctx->current->buffer, nk_rect ( bounds->x + bounds->w * 0.5f - text_w * 0.5f, bounds->y + GUI_TABS_HEIGHT * 0.3f - ses_ctx.fonts.menu_xsmall_font->handle.height * 0.5f, text_w, ses_ctx.fonts.menu_xsmall_font->handle.height ), title, title_len, ses_ctx.fonts.menu_xsmall_font, nk_rgba( 255, 255, 255, 150 ) );
 
 	/* side menu icon */
 	struct nk_color side_menu_icon_color = nk_rgba ( 255, 255, 255, 133 );
@@ -265,7 +299,7 @@ static inline bool gui_begin ( const char* title, struct nk_rect* bounds, nk_fla
 	nk_fill_circle ( &ses_ctx.nk_ctx->current->buffer, icon_rect, nk_rgba ( 255, 255, 255, 255 ) );
 	nk_stroke_circle ( &ses_ctx.nk_ctx->current->buffer, icon_rect, 2.0f, icon_border_color );
 
-	const size_t options_text_len = strlen ( "" );
+	const size_t options_text_len = nk_strlen ( "" );
 	const float options_text_w = ses_ctx.fonts.menu_icons_large_font->handle.width ( ses_ctx.fonts.menu_icons_large_font->handle.userdata, ses_ctx.fonts.menu_icons_large_font->handle.height, "", options_text_len );
 	nk_draw_text ( &ses_ctx.nk_ctx->current->buffer, nk_rect ( icon_rect.x + icon_rect.w * 0.5f - options_text_w * 0.5f, icon_rect.y + icon_rect.h * 0.5f - ses_ctx.fonts.menu_icons_large_font->handle.height * 0.5f, options_text_w, ses_ctx.fonts.menu_icons_large_font->handle.height ), "", options_text_len, ses_ctx.fonts.menu_icons_large_font, nk_rgba ( 140, 140, 140, 255 ) );
 	
@@ -288,7 +322,7 @@ static inline bool gui_begin ( const char* title, struct nk_rect* bounds, nk_fla
 		nk_style_push_style_item ( ses_ctx.nk_ctx, &ses_ctx.nk_ctx->style.window.fixed_background, nk_style_item_color ( ses_ctx.nk_ctx->style.window.background ) );
 
 		/* config menu popup */
-		if ( dynamic_color > 0.0f && nk_popup_begin ( ses_ctx.nk_ctx, NK_POPUP_STATIC, "config menu", NK_WINDOW_NO_SCROLLBAR, nk_rect ( icon_rect.x + GUI_LINE_HEIGHT, icon_rect.y - icon_rect.h, GUI_TABS_HEIGHT * 3.0f, GUI_TABS_HEIGHT * 1.8333f ) ) ) {
+		if ( dynamic_color > 0.0f && nk_popup_begin ( ses_ctx.nk_ctx, NK_POPUP_STATIC, "config menu", NK_WINDOW_NO_SCROLLBAR, nk_rect ( icon_rect.x - bounds->x + icon_rect.w + GUI_LINE_HEIGHT * 0.5f, icon_rect.y - bounds->y, GUI_TABS_HEIGHT * 3.0f, GUI_TABS_HEIGHT * 1.8333f ) ) ) {
 			bool popup_closed = false;
 
 			nk_row_layout ( ses_ctx.nk_ctx, NK_DYNAMIC, GUI_TABS_HEIGHT * 1.333f, 1, 0 );
@@ -371,19 +405,21 @@ static inline bool gui_begin ( const char* title, struct nk_rect* bounds, nk_fla
 		struct nk_anim_data* anim_data_subtabs = nk_get_anim ( "##subtabs" );
 		const float dynamic_color_subtabs = nk_do_anim ( ses_ctx.nk_ctx, &anim_data_subtabs->main_fraction, gui_subtabs_open ? 1.0f : -1.0f, 0, 255 );
 
-		nk_style_push_color ( ses_ctx.nk_ctx, &ses_ctx.nk_ctx->style.window.background, nk_rgba ( ses_ctx.nk_ctx->style.window.background.r, ses_ctx.nk_ctx->style.window.background.g, ses_ctx.nk_ctx->style.window.background.b, dynamic_color ) );
+		nk_style_push_color ( ses_ctx.nk_ctx, &ses_ctx.nk_ctx->style.window.background, nk_rgba ( ses_ctx.nk_ctx->style.window.background.r, ses_ctx.nk_ctx->style.window.background.g, ses_ctx.nk_ctx->style.window.background.b, dynamic_color_subtabs ) );
 		nk_style_push_style_item ( ses_ctx.nk_ctx, &ses_ctx.nk_ctx->style.window.fixed_background, nk_style_item_color ( ses_ctx.nk_ctx->style.window.background ) );
 
 		/* subtabs popup */
 		if ( dynamic_color_subtabs > 0.0f && nk_popup_begin ( ses_ctx.nk_ctx, NK_POPUP_DYNAMIC, "subtabs", NK_WINDOW_NO_SCROLLBAR, gui_subtabs_rect ) ) {
 			bool popup_closed = false;
 
-			gui_button ( "TEST BUTTON" );
+			if ( gui_button ( "TEST BUTTON" ) )
+				goto close_subtabs_popup;
 
 			/* close popup if we click outside of it */
 			if ( nk_input_is_mouse_pressed ( &ses_ctx.nk_ctx->input, NK_BUTTON_LEFT )
 				&& !nk_input_is_mouse_hovering_rect ( &ses_ctx.nk_ctx->input, ses_ctx.nk_ctx->current->bounds )
 				&& !opened_popup_this_frame ) {
+			close_subtabs_popup:
 				nk_popup_close ( ses_ctx.nk_ctx );
 				gui_subtabs_open = false;
 				popup_closed = true;
@@ -402,16 +438,17 @@ static inline bool gui_begin ( const char* title, struct nk_rect* bounds, nk_fla
 
 	sds watermark_str = sdscat( sdscat ( sdscat ( sdsempty ( ), "Copyright (c) 2021 " ), gui_title ), ".");
 
-	const size_t watermark_len = strlen ( watermark_str );
+	const size_t watermark_len = nk_strlen ( watermark_str );
 	const float watermark_w = ses_ctx.fonts.menu_xsmall_font->handle.width ( ses_ctx.fonts.menu_xsmall_font->handle.userdata, ses_ctx.fonts.menu_xsmall_font->handle.height, watermark_str, title_len );
 
 	nk_draw_text ( &ses_ctx.nk_ctx->current->buffer, nk_rect ( bounds->x + GUI_MENU_PADDING, bounds->y + bounds->h - ses_ctx.fonts.menu_xsmall_font->handle.height - GUI_MENU_PADDING, watermark_w, ses_ctx.fonts.menu_xsmall_font->handle.height ), watermark_str, watermark_len, ses_ctx.fonts.menu_xsmall_font, watermark_color );
 	sdsfree ( watermark_str );
 
 	struct nk_vec2 window_pos = nk_window_get_position ( ses_ctx.nk_ctx );
-	gui_rect.x = bounds->x = window_pos.x;
-	gui_rect.y = bounds->y = window_pos.y;
-	gui_total_rect = *bounds;
+	
+	gui_last_rect = *bounds;
+	gui_last_rect.x = window_pos.x;
+	gui_last_rect.y = window_pos.y;
 
 	const float extra_padding = GUI_LINE_HEIGHT * 1.269f;
 	ses_ctx.nk_ctx->current->layout->at_y = bounds->y + GUI_TABS_HEIGHT + extra_padding;

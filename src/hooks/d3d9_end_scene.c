@@ -33,7 +33,8 @@ HRESULT __stdcall hooks_d3d9_end_scene ( IDirect3DDevice9* device ) {
 
 		///* remove later */
 		//sds watermark_str = sdsnew ("@ses#1997" );
-		//nk_draw_text ( &ses_ctx.nk_ctx->current->buffer, nk_rect ( 20.0f, 20.0f, 0.0f, 0.0f ), watermark_str, sdslen( watermark_str ), ses_ctx.fonts.esp_font, ( struct nk_color ) { 255, 255, 255, 255 } );
+		const char* text =	"This text is way cleaner now!";
+		nk_draw_text ( &ses_ctx.nk_ctx->current->buffer, nk_rect ( 20.0f, 20.0f, 0.0f, 0.0f ), text, nk_utf_len ( text, strlen( text ) ), ses_ctx.fonts.esp_font, nk_rgba( 255, 255, 255, 255 ) );
 		//sdsfree ( watermark_str );
 	
 		nk_end ( ses_ctx.nk_ctx );
