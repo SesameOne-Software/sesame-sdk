@@ -18397,7 +18397,7 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
     edit->selected_hover    = table[NK_COLOR_TEXT];
     edit->selected_text_normal  = table[NK_COLOR_EDIT];
     edit->selected_text_hover   = table[NK_COLOR_EDIT];
-    edit->scrollbar_size    = nk_vec2(10,10);
+    edit->scrollbar_size    = nk_vec2(2,2);
     edit->scrollbar         = style->scrollv;
     edit->padding           = nk_vec2(4,4);
     edit->row_padding       = 2;
@@ -18642,7 +18642,7 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
 
     win->rounding = 10.0f;
     win->spacing = nk_vec2(4,4);
-    win->scrollbar_size = nk_vec2(10,10);
+    win->scrollbar_size = nk_vec2(2,2);
     win->min_size = nk_vec2(64,64);
 
     win->combo_border = 1.0f;
@@ -19666,6 +19666,7 @@ nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type pan
         body.w = win->bounds.w;
         body.y = (win->bounds.y + layout->header_height);
         body.h = (win->bounds.h - layout->header_height);
+
         if (style->window.fixed_background.type == NK_STYLE_ITEM_IMAGE)
             nk_draw_image(out, body, &style->window.fixed_background.data.image, nk_white);
         else
@@ -24272,7 +24273,7 @@ nk_draw_checkbox(struct nk_context* ctx, struct nk_command_buffer *out,
     }
 
     text.padding.x = 0;
-    text.padding.y = 0;
+    text.padding.y = 0.0f;
     text.background = style->text_background;
     nk_widget_text(out, *label, string, len, &text, NK_TEXT_LEFT, font);
 }
@@ -24360,9 +24361,9 @@ nk_do_toggle( struct nk_context* ctx,nk_flags *state,
 
     /* label behind the selector */
     label.x = r.x;
-    label.y = select.y - font->height * 0.75f;
+    label.y = r.y;
     label.w = NK_MAX(r.x + r.w, label.x) - label.x;
-    label.h = select.w;
+    label.h = r.h;
 
     /* update selector */
     was_active = *active;

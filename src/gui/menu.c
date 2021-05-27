@@ -152,12 +152,12 @@ void menu_reset ( ) {
 /* @emizu03 (my brother) */
 /* NOTE: k and c can be tweaked if results are not ideal */
 static void font_scale_brightness_func(unsigned char* map, int map_size) {
-    const float k = 15.0f;
+    const float k = 10.0f;
     const float c = 0.4f;
 
     for ( int i = 0; i < map_size; i++ ) {
-        const float x = ( float ) i / ( float ) ( map_size - 1 );
-        const float func = 1.0f/(1.0f + expf(-k*( x -c)));
+        const float norm = ( float ) i / ( float ) ( map_size - 1 );
+        const float func = 1.0f/(1.0f + expf(-k*( norm -c)));
         map [ i ] = (unsigned char)( int ) clampf ( roundf ( func * ( float ) ( map_size - 1 ) ), 0.0f, ( float ) ( map_size - 1 ) );
     }
 }
@@ -173,23 +173,13 @@ void menu_init ( ) {
 
         ses_ctx.nk_ctx = nk_d3d9_init ( cs_id3ddev, w, h );
 
-        static const nk_rune custom_font_range[] = {
-            //0x0020, 0x00FF,
-            //0x0102, 0x0103,
-            //0x0110, 0x0111,
-            //0x0128, 0x0129,
-            //0x0168, 0x0169,
-            //0x01A0, 0x01A1,
-            //0x01AF, 0x01B0,
-            //0x0400, 0x052F,
-            //0x1EA0, 0x1EF9,
-            //0x2DE0, 0x2DFF,
-            //0x3000, 0x30FF,
-            //0x31F0, 0x31FF,
-            //0x4e00, 0x9FAF,
-            //0xA640, 0xA69F,
-            //0xFF00, 0xFFEF,
+        static const nk_rune all_font_range[] = {
             0x0020, 0xFFFF,
+            0
+        };
+
+        static const nk_rune fontawesome_font_range[] = {
+            0xF000, 0xF8FF,
             0
         };
 
@@ -200,49 +190,49 @@ void menu_init ( ) {
         
         /* menu fonts */
         config = nk_font_config ( 18.0f );
-        config.range = custom_font_range;
-        config.oversample_v = 3;
-        config.oversample_h = 3;
+        config.range = all_font_range;
+        config.oversample_v = 2;
+        config.oversample_h = 2;
         config.scale_brightness_func = font_scale_brightness_func;
         config.pixel_snap = false;
         ses_ctx.fonts.menu_icons_font = nk_font_atlas_add_compressed ( atlas, resources_fontawesome_compressed_data, resources_fontawesome_compressed_size, 18.0f, &config );
         
         config = nk_font_config ( 26.0f );
-        config.range = custom_font_range;
-        config.oversample_v = 3;
-        config.oversample_h = 3;
+        config.range = all_font_range;
+        config.oversample_v = 2;
+        config.oversample_h = 2;
         config.scale_brightness_func = font_scale_brightness_func;
         config.pixel_snap = false;
         ses_ctx.fonts.menu_icons_large_font = nk_font_atlas_add_compressed ( atlas, resources_fontawesome_compressed_data, resources_fontawesome_compressed_size, 26.0f, &config );
 
         config = nk_font_config ( 27.0f );
-        config.range = custom_font_range;
-        config.oversample_v = 3;
-        config.oversample_h = 3;
+        config.range = all_font_range;
+        config.oversample_v = 2;
+        config.oversample_h = 2;
         config.scale_brightness_func = font_scale_brightness_func;
         config.pixel_snap = false;
         ses_ctx.fonts.menu_large_font = nk_font_atlas_add_compressed ( atlas, resources_ubuntu_compressed_data, resources_ubuntu_compressed_size, 27.0f, &config );
         
         config = nk_font_config ( 16.0f );
         config.range = nk_font_default_glyph_ranges ( );
-        config.oversample_v = 3;
-        config.oversample_h = 3;
+        config.oversample_v = 2;
+        config.oversample_h = 2;
         config.scale_brightness_func = font_scale_brightness_func;
         config.pixel_snap = false;
         ses_ctx.fonts.menu_medium_font = nk_font_atlas_add_compressed ( atlas, resources_ubuntu_compressed_data, resources_ubuntu_compressed_size, 16.0f, &config );
 
         config = nk_font_config ( 13.0f );
         config.range = nk_font_default_glyph_ranges ( );
-        config.oversample_v = 3;
-        config.oversample_h = 3;
+        config.oversample_v = 2;
+        config.oversample_h = 2;
         config.scale_brightness_func = font_scale_brightness_func;
         config.pixel_snap = false;
         ses_ctx.fonts.menu_small_font = nk_font_atlas_add_compressed ( atlas, resources_ubuntu_compressed_data, resources_ubuntu_compressed_size, 13.0f, &config );
         
         config = nk_font_config ( 12.0f );
         config.range = nk_font_default_glyph_ranges ( );
-        config.oversample_v = 3;
-        config.oversample_h = 3;
+        config.oversample_v = 2;
+        config.oversample_h = 2;
         config.scale_brightness_func = font_scale_brightness_func;
         config.pixel_snap = false;
         ses_ctx.fonts.menu_xsmall_font = nk_font_atlas_add_compressed ( atlas, resources_ubuntu_compressed_data, resources_ubuntu_compressed_size, 12.0f, &config );
@@ -250,23 +240,25 @@ void menu_init ( ) {
         /* other fonts */
         config = nk_font_config ( 16.0f );
         config.range = nk_font_default_glyph_ranges ( );
-        config.oversample_v = 3;
-        config.oversample_h = 3;
+        config.oversample_v = 2;
+        config.oversample_h = 2;
+        config.scale_brightness_func = font_scale_brightness_func;
         config.pixel_snap = false;
         ses_ctx.fonts.default_font = nk_font_atlas_add_compressed ( atlas, resources_ubuntu_compressed_data, resources_ubuntu_compressed_size, 16.0f, &config );
 
         /* visuals fonts */
         config = nk_font_config ( 16.0f );
-        config.range = custom_font_range;
-        config.oversample_v = 3;
-        config.oversample_h = 3;
+        config.range = all_font_range;
+        config.oversample_v = 2;
+        config.oversample_h = 2;
+        config.scale_brightness_func = font_scale_brightness_func;
         config.pixel_snap = false;
         ses_ctx.fonts.esp_font = nk_font_atlas_add_compressed ( atlas, resources_ubuntu_compressed_data, resources_ubuntu_compressed_size, 16.0f, &config );
 
         config = nk_font_config ( 26.0f );
         config.range = nk_font_default_glyph_ranges();
-        config.oversample_v = 3;
-        config.oversample_h = 3;
+        config.oversample_v = 2;
+        config.oversample_h = 2;
         config.scale_brightness_func = font_scale_brightness_func;
         config.pixel_snap = false;
         ses_ctx.fonts.indicators_font = nk_font_atlas_add_compressed ( atlas, resources_ubuntu_compressed_data, resources_ubuntu_compressed_size, 26.0f, &config );
@@ -305,9 +297,6 @@ void menu_draw ( ) {
                gui_tab ( "##", &menu_cur_tab );
            } gui_tabs_end ( );
 
-            if ( gui_button ( "Reload Theme" ) )
-                menu_set_theme ( );
-
             //const float backup_row_height = ses_ctx.nk_ctx->current->layout->row.height;
             //ses_ctx.nk_ctx->current->layout->row.height = 100.0f;
             //nk_image(ses_ctx.nk_ctx, menu_logo);
@@ -328,13 +317,13 @@ void menu_draw ( ) {
             } break;
             case gui_tabs_antiaim: {
                 if ( gui_subtabs_begin ( gui_subtabs_antiaim_max ) ) {
-                    gui_subtab ( "", &menu_cur_tab );
-                    gui_subtab ( "", &menu_cur_tab );
-                    gui_subtab ( "", &menu_cur_tab );
-                    gui_subtab ( "", &menu_cur_tab );
-                    gui_subtab ( "", &menu_cur_tab );
-                    gui_subtab ( "", &menu_cur_tab );
-                    gui_subtab ( "", &menu_cur_tab );
+                    gui_subtab ( "", &menu_cur_subtab[gui_tabs_antiaim] );
+                    gui_subtab ( "", &menu_cur_subtab[gui_tabs_antiaim] );
+                    gui_subtab ( "", &menu_cur_subtab[gui_tabs_antiaim] );
+                    gui_subtab ( "", &menu_cur_subtab[gui_tabs_antiaim] );
+                    gui_subtab ( "", &menu_cur_subtab[gui_tabs_antiaim] );
+                    gui_subtab ( "", &menu_cur_subtab[gui_tabs_antiaim] );
+                    gui_subtab ( "", &menu_cur_subtab[gui_tabs_antiaim] );
                 }
                 gui_subtabs_end ( );
 
@@ -367,11 +356,11 @@ void menu_draw ( ) {
             } break;
             case gui_tabs_visuals: {
                 if ( gui_subtabs_begin ( gui_subtabs_visuals_max ) ) {
-                    gui_subtab ( "", &menu_cur_tab );
-                    gui_subtab ( "", &menu_cur_tab );
-                    gui_subtab ( "", &menu_cur_tab );
-                    gui_subtab ( "", &menu_cur_tab );
-                    gui_subtab ( "", &menu_cur_tab );
+                    gui_subtab ( "", &menu_cur_subtab[gui_tabs_visuals] );
+                    gui_subtab ( "", &menu_cur_subtab[gui_tabs_visuals] );
+                    gui_subtab ( "", &menu_cur_subtab[gui_tabs_visuals] );
+                    gui_subtab ( "", &menu_cur_subtab[gui_tabs_visuals] );
+                    gui_subtab ( "", &menu_cur_subtab[gui_tabs_visuals] );
                 }
                 gui_subtabs_end ( );
 
@@ -395,17 +384,26 @@ void menu_draw ( ) {
             } break;
             case gui_tabs_misc: {
                 if ( gui_subtabs_begin ( gui_subtabs_misc_max ) ) {
-                    gui_subtab ( "", &menu_cur_tab );
-                    gui_subtab ( "", &menu_cur_tab );
-                    gui_subtab ( "", &menu_cur_tab );
+                    gui_subtab ( "", &menu_cur_subtab[gui_tabs_misc] );
+                    gui_subtab ( "", &menu_cur_subtab[gui_tabs_misc]);
+                    gui_subtab ( "", &menu_cur_subtab[gui_tabs_misc]);
                 }
                 gui_subtabs_end ( );
-                
-                gui_header ( "Misc", "Movement" );
 
                 switch (menu_cur_subtab[gui_tabs_misc]) {
                 case gui_subtabs_misc_movement: {
+                    gui_header("Misc", "Movement");
+                    
+                    gui_checkbox("Auto Jump", ses_cfg_get_item(&ses_cfg, misc, movement, auto_jump, bool));
 
+                    if (gui_group_begin()) {
+                        gui_combobox("Auto Strafe", (const char* []) { "None", "Legit", "Directional", "Rage", NULL }, ses_cfg_get_item(&ses_cfg, misc, movement, auto_strafer, int));
+                    } gui_group_end();
+
+                    gui_checkbox("Fast Stop", ses_cfg_get_item(&ses_cfg, misc, movement, fast_stop, bool));
+                    gui_checkbox("Checkbox", ses_cfg_get_item(&ses_cfg, gui, state, test_bool, bool));
+                    gui_sliderf("Slider Float", -180.0f, ses_cfg_get_item(&ses_cfg, gui, state, test_float, float), 180.0f, 1.0f, NULL);
+                    gui_slider("Slider Int", 0, ses_cfg_get_item(&ses_cfg, gui, state, test_int, int), 100, 5, NULL);
                 } break;
                 case gui_subtabs_misc_skins: {
 
@@ -414,13 +412,6 @@ void menu_draw ( ) {
 
                 } break;
                 }
-
-                gui_checkbox ( "Fast Stop", ses_cfg_get_item ( &ses_cfg, misc, movement, fast_stop, bool ) );
-                gui_checkbox ( "Auto Jump", ses_cfg_get_item ( &ses_cfg, misc, movement, auto_jump, bool ) );
-                gui_combobox ( "Auto Strafe", ( const char* [ ] ) { "None", "Legit", "Directional", "Rage", NULL }, ses_cfg_get_item ( &ses_cfg, misc, movement, auto_strafer, int ) );
-                gui_checkbox ( "Checkbox", ses_cfg_get_item ( &ses_cfg, gui, state, test_bool, bool ) );
-                gui_sliderf ( "Slider Float", -180.0f, ses_cfg_get_item ( &ses_cfg, gui, state, test_float, float ), 180.0f, 1.0f, NULL );
-                gui_slider ( "Slider Int", 0, ses_cfg_get_item ( &ses_cfg, gui, state, test_int, int ), 100, 5, NULL );
             } break;
             case gui_tabs_code: {
                 // TODO
