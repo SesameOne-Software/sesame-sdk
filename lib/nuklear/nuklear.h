@@ -17602,11 +17602,13 @@ nk_font_atlas_bake(struct nk_font_atlas *atlas, int *width, int *height,
 
     /* @amizu03 */
     /* FROM IMGUI -- ALLOWS US TO SCALE FONT ALPHA DIFFERENTLY (FIX SMALL FONT BLURINESS) */
-    unsigned char pixel_brightness_map[256];
-    atlas->config->scale_brightness_func(pixel_brightness_map, sizeof(pixel_brightness_map) / sizeof(*pixel_brightness_map));
+    if ( atlas->config->scale_brightness_func ) {
+        unsigned char pixel_brightness_map [ 256 ];
+        atlas->config->scale_brightness_func ( pixel_brightness_map, sizeof ( pixel_brightness_map ) / sizeof ( *pixel_brightness_map ) );
 
-    for (int i = 0; i < *width * *height; i++)
-        ((unsigned char*)atlas->pixel)[i] = pixel_brightness_map[((unsigned char*)atlas->pixel)[i]];
+        for ( int i = 0; i < *width * *height; i++ )
+            ( ( unsigned char* ) atlas->pixel ) [ i ] = pixel_brightness_map [ ( ( unsigned char* ) atlas->pixel ) [ i ] ];
+    }
 
     nk_font_bake_custom_data(atlas->pixel, *width, *height, atlas->custom,
             nk_custom_cursor_data, NK_CURSOR_DATA_W, NK_CURSOR_DATA_H, '.', 'X');
