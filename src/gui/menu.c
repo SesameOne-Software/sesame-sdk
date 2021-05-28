@@ -317,13 +317,13 @@ void menu_draw ( ) {
             } break;
             case gui_tabs_antiaim: {
                 if ( gui_subtabs_begin ( gui_subtabs_antiaim_max ) ) {
-                    gui_subtab ( "", &menu_cur_subtab[gui_tabs_antiaim] );
-                    gui_subtab ( "", &menu_cur_subtab[gui_tabs_antiaim] );
-                    gui_subtab ( "", &menu_cur_subtab[gui_tabs_antiaim] );
-                    gui_subtab ( "", &menu_cur_subtab[gui_tabs_antiaim] );
-                    gui_subtab ( "", &menu_cur_subtab[gui_tabs_antiaim] );
-                    gui_subtab ( "", &menu_cur_subtab[gui_tabs_antiaim] );
-                    gui_subtab ( "", &menu_cur_subtab[gui_tabs_antiaim] );
+                    gui_subtab ( "", "stand", &menu_cur_subtab[gui_tabs_antiaim] );
+                    gui_subtab ( "", "air", &menu_cur_subtab[gui_tabs_antiaim] );
+                    gui_subtab ( "", "run", &menu_cur_subtab[gui_tabs_antiaim] );
+                    gui_subtab ( "", "walk", &menu_cur_subtab[gui_tabs_antiaim] );
+                    gui_subtab ( "", "swalk", &menu_cur_subtab[gui_tabs_antiaim] );
+                    gui_subtab ( "", "duck", &menu_cur_subtab[gui_tabs_antiaim] );
+                    gui_subtab ( "", "other", &menu_cur_subtab[gui_tabs_antiaim] );
                 }
                 gui_subtabs_end ( );
 
@@ -356,11 +356,11 @@ void menu_draw ( ) {
             } break;
             case gui_tabs_visuals: {
                 if ( gui_subtabs_begin ( gui_subtabs_visuals_max ) ) {
-                    gui_subtab ( "", &menu_cur_subtab[gui_tabs_visuals] );
-                    gui_subtab ( "", &menu_cur_subtab[gui_tabs_visuals] );
-                    gui_subtab ( "", &menu_cur_subtab[gui_tabs_visuals] );
-                    gui_subtab ( "", &menu_cur_subtab[gui_tabs_visuals] );
-                    gui_subtab ( "", &menu_cur_subtab[gui_tabs_visuals] );
+                    gui_subtab ( "", "player", &menu_cur_subtab[gui_tabs_visuals] );
+                    gui_subtab ( "", "vmodel", &menu_cur_subtab[gui_tabs_visuals] );
+                    gui_subtab ( "", "weapon", &menu_cur_subtab[gui_tabs_visuals] );
+                    gui_subtab ( "", "world", &menu_cur_subtab[gui_tabs_visuals] );
+                    gui_subtab ( "", "other", &menu_cur_subtab[gui_tabs_visuals] );
                 }
                 gui_subtabs_end ( );
 
@@ -384,9 +384,9 @@ void menu_draw ( ) {
             } break;
             case gui_tabs_misc: {
                 if ( gui_subtabs_begin ( gui_subtabs_misc_max ) ) {
-                    gui_subtab ( "", &menu_cur_subtab[gui_tabs_misc] );
-                    gui_subtab ( "", &menu_cur_subtab[gui_tabs_misc]);
-                    gui_subtab ( "", &menu_cur_subtab[gui_tabs_misc]);
+                    gui_subtab ( "", "move", &menu_cur_subtab[gui_tabs_misc] );
+                    gui_subtab ( "", "skins", &menu_cur_subtab[gui_tabs_misc]);
+                    gui_subtab ( "", "other", &menu_cur_subtab[gui_tabs_misc]);
                 }
                 gui_subtabs_end ( );
 

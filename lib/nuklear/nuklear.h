@@ -18283,13 +18283,13 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
     slider->cursor_active   = nk_style_item_color(table[NK_COLOR_SLIDER_CURSOR_ACTIVE]);
     slider->inc_symbol      = NK_SYMBOL_TRIANGLE_RIGHT;
     slider->dec_symbol      = NK_SYMBOL_TRIANGLE_LEFT;
-    slider->cursor_size     = nk_vec2(16,16);
+    slider->cursor_size     = nk_vec2(24,24);
     slider->padding         = nk_vec2(2,2);
     slider->spacing         = nk_vec2(2,2);
     slider->userdata        = nk_handle_ptr(0);
     slider->show_buttons    = nk_false;
     slider->bar_height      = 8;
-    slider->rounding        = 0.0f;
+    slider->rounding        = 0.5f;
     slider->draw_begin      = 0;
     slider->draw_end        = 0;
 
@@ -23736,7 +23736,18 @@ nk_draw_button_symbol(struct nk_command_buffer *out,
     else if (state & NK_WIDGET_STATE_ACTIVED)
         sym = style->text_active;
     else sym = style->text_normal;
-    nk_draw_symbol(out, type, *content, bg, sym, 1, font);
+    
+    struct nk_color side_menu_icon_color = nk_rgba ( 255, 255, 255, 66 );
+
+    const float menu_icon_h = bounds->h / 9.0f;
+    const float menu_icon_w = bounds->w;
+    const float menu_icon_w1 = bounds->w * 0.6f;
+
+    nk_fill_rect ( &ses_ctx.nk_ctx->current->buffer, nk_rect ( bounds->x + roundf(( menu_icon_w - menu_icon_w1 ) * 0.5f), bounds->y + roundf( bounds->h * 0.5f ) - roundf ( menu_icon_h * 0.5f ) - roundf( menu_icon_h * 2.5f ), menu_icon_w1, menu_icon_h ), 0.0f, side_menu_icon_color );
+    nk_fill_rect ( &ses_ctx.nk_ctx->current->buffer, nk_rect ( bounds->x, bounds->y + roundf( bounds->h * 0.5f ) - roundf( menu_icon_h * 0.5f ), menu_icon_w, menu_icon_h ), 0.0f, side_menu_icon_color );
+    nk_fill_rect ( &ses_ctx.nk_ctx->current->buffer, nk_rect ( bounds->x + roundf(( menu_icon_w - menu_icon_w1 ) * 0.5f), bounds->y + roundf ( bounds->h * 0.5f ) - roundf( menu_icon_h * 0.5f ) + roundf ( menu_icon_h * 2.5f ), menu_icon_w1, menu_icon_h ), 0.0f, side_menu_icon_color );
+
+    //nk_draw_symbol(out, type, *content, bg, sym, 1, font);
 }
 NK_LIB nk_bool
 nk_do_button_symbol(nk_flags *state,
@@ -24963,7 +24974,12 @@ nk_draw_slider(struct nk_command_buffer *out, nk_flags state,
     /* draw cursor */
     if (cursor->type == NK_STYLE_ITEM_IMAGE)
         nk_draw_image(out, *visual_cursor, &cursor->data.image, nk_white);
-    else nk_fill_circle(out, *visual_cursor, cursor->data.color);
+    else {
+        const struct nk_color shadow_color = nk_rgba ( 0, 0, 0, 15 );
+        nk_fill_circle ( out, nk_rect ( visual_cursor->x, visual_cursor->y + 2.0f, visual_cursor->w, visual_cursor->h ), shadow_color );
+        nk_fill_circle ( out, nk_rect( visual_cursor->x, visual_cursor->y + 4.0f, visual_cursor->w, visual_cursor->h ), shadow_color );
+        nk_fill_circle ( out, *visual_cursor, nk_rgba ( 255,255,255,255 ) );
+    }
 }
 NK_LIB float
 nk_do_slider(nk_flags *state,
@@ -28494,9 +28510,11 @@ nk_combo_begin_text(struct nk_context *ctx, const char* name, const char *select
         is_clicked = nk_true;
 
     struct nk_anim_data* anim_data = nk_get_anim ( name );
-
-    const struct nk_color dynamic_color = nk_do_anim_color ( ctx, &anim_data->hover_fraction_inner, ( ctx->last_widget_state & NK_WIDGET_STATE_HOVER ) ? 1.0f : -1.0f, &( struct nk_color ){style->combo.border_color.r, style->combo.border_color.g, style->combo.border_color.b, 0}, &style->combo.border_color );
-    const float dynamic_border = nk_do_anim ( ctx, &anim_data->hover_fraction_outer, ( ctx->last_widget_state & NK_WIDGET_STATE_HOVER ) ? 1.0f : -1.0f, 0.0f, style->combo.border );
+    
+    //const struct nk_color dynamic_color = nk_do_anim_color ( ctx, &anim_data->hover_fraction_inner, ( ctx->last_widget_state & NK_WIDGET_STATE_HOVER ) ? 1.0f : -1.0f, &( struct nk_color ){style->combo.border_color.r, style->combo.border_color.g, style->combo.border_color.b, 0}, &style->combo.border_color );
+    //const float dynamic_border = nk_do_anim ( ctx, &anim_data->hover_fraction_outer, ( ctx->last_widget_state & NK_WIDGET_STATE_HOVER ) ? 1.0f : -1.0f, 0.0f, style->combo.border );
+    const struct nk_color dynamic_color = style->combo.border_color;
+    const float dynamic_border = 2.0f;
 
     /* draw combo box header background and border */
     if (ctx->last_widget_state & NK_WIDGET_STATE_ACTIVED) {
@@ -28564,7 +28582,8 @@ nk_combo_begin_text(struct nk_context *ctx, const char* name, const char *select
             nk_draw_button_symbol(&win->buffer, &button, &content, ctx->last_widget_state,
                 &ctx->style.combo.button, sym, style->font);
     }
-    return nk_combo_begin(ctx, win, size, is_clicked, header);
+
+    return nk_combo_begin ( ctx, win, size, is_clicked, header );
 }
 NK_API nk_bool
 nk_combo_begin_label(struct nk_context *ctx, const char* name, const char *selected, struct nk_vec2 size)
@@ -29097,7 +29116,7 @@ nk_combo(struct nk_context *ctx, const char* name, const char **items, int count
     item_spacing = ctx->style.window.spacing;
     window_padding = nk_panel_get_padding(&ctx->style, ctx->current->layout->type);
     max_height = count * item_height + count * (int)item_spacing.y;
-    max_height += (int)item_spacing.y * 2 + (int)window_padding.y * 2;
+    max_height += (int)item_spacing.y * 2.0f + (int)window_padding.y * 2.0f;
     size.y = NK_MIN(size.y, (float)max_height);
 
     if (nk_combo_begin_label(ctx, name, items[selected], size)) {

@@ -20,6 +20,7 @@ static bool gui_configs_open = false;
 typedef sds* vec_sds;
 static vec_sds gui_configs_list = NULL;
 static vec_sds gui_subtabs_list = NULL;
+static vec_sds gui_subtabs_subtitles_list = NULL;
 static int* gui_subtabs_cur_val_ptr = NULL;
 
 static bool gui_subtabs_open = false;
@@ -178,13 +179,20 @@ static bool gui_subtabs_begin ( int count ) {
 		gui_just_refreshed_subtabs = true;
 		gui_subtabs_list = vector_create();
 	}
+
+	if ( !gui_subtabs_subtitles_list ) {
+		gui_just_refreshed_subtabs = true;
+		gui_subtabs_subtitles_list = vector_create ( );
+	}
 }
 
-static void gui_subtab ( const char* name, int* selected ) {
+static void gui_subtab ( const char* name, const char* subtitle, int* selected ) {
 	//assert (gui_subtab_count && "Did you forget to call gui_subtabs_begin?" );
 
-	if (gui_just_refreshed_subtabs)
-		vector_add(&gui_subtabs_list, sds, sdscat(sdsnew(name), "##Subtab"));
+	if ( gui_just_refreshed_subtabs ) {
+		vector_add ( &gui_subtabs_list, sds, sdscat ( sdsnew ( name ), "##Subtab" ) );
+		vector_add ( &gui_subtabs_subtitles_list, sds, sdscat( sdscat ( sdsnew ( subtitle ), "##SubtabSubtitle" ), name ) );
+	}
 
 	gui_subtabs_cur_val_ptr = selected;
 }
@@ -237,6 +245,14 @@ static void gui_tab ( const char* name, int* selected ) {
 				gui_subtabs_list = NULL;
 			}
 
+			if ( gui_subtabs_subtitles_list ) {
+				for ( int i = 0; i < vector_size ( gui_subtabs_subtitles_list ); i++ )
+					sdsfree ( gui_subtabs_subtitles_list [ i ] );
+
+				vector_free ( gui_subtabs_subtitles_list );
+				gui_subtabs_subtitles_list = NULL;
+			}
+
 			gui_subtab_count = 0;
 		}
 
@@ -246,7 +262,7 @@ static void gui_tab ( const char* name, int* selected ) {
 	
 	/* set subtabs popup rect according to currently selected tab */
 	if ( *selected == gui_cur_tab_idx ) {
-		const struct nk_vec2 subtabs_rect_dim = nk_vec2 ( gui_subtab_count * (GUI_TABS_HEIGHT * 0.5f), ses_ctx.fonts.menu_icons_font->handle.height + ses_ctx.nk_ctx->style.window.popup_padding.y * 3.0f );
+		const struct nk_vec2 subtabs_rect_dim = nk_vec2 ( gui_subtab_count * (GUI_TABS_HEIGHT * 0.5f), ses_ctx.fonts.menu_icons_font->handle.height + ses_ctx.fonts.menu_xsmall_font->handle.height + ses_ctx.nk_ctx->style.window.popup_padding.y * 2.0f );
 		gui_subtabs_rect = nk_rect ( icon_rect.x - gui_total_rect.x + icon_rect.w * 0.5f - subtabs_rect_dim.x * 0.5f, icon_rect.y - gui_total_rect.y + icon_rect.h + GUI_LINE_HEIGHT * 0.5f, subtabs_rect_dim.x, subtabs_rect_dim.y );
 	}
 
@@ -322,7 +338,7 @@ static inline bool gui_begin ( const char* title, struct nk_rect* bounds, nk_fla
 	/* side menu icon */
 	struct nk_color side_menu_icon_color = nk_rgba ( 255, 255, 255, 133 );
 
-	const float menu_icon_h = GUI_TABS_HEIGHT * 0.050f;
+	const float menu_icon_h = GUI_TABS_HEIGHT * 0.055f;
 	const float menu_icon_w = bounds->w * 0.075f;
 	const float menu_icon_w1 = menu_icon_w * 0.7f;
 
@@ -445,7 +461,7 @@ static inline bool gui_begin ( const char* title, struct nk_rect* bounds, nk_fla
 		nk_style_pop_color ( ses_ctx.nk_ctx );
 
 		struct nk_anim_data* anim_data_subtabs = nk_get_anim ( "subtabs" );
-		const struct nk_color dynamic_color_subtabs = nk_do_anim_color( ses_ctx.nk_ctx, &anim_data_subtabs->main_fraction, gui_subtabs_open ? 1.0f : -1.0f, &(struct nk_color){255, 255, 255, 0}, & (struct nk_color){255, 255, 255, 125});
+		const struct nk_color dynamic_color_subtabs = nk_do_anim_color( ses_ctx.nk_ctx, &anim_data_subtabs->main_fraction, gui_subtabs_open ? 1.0f : -1.0f, &(struct nk_color){255, 255, 255, 0}, & (struct nk_color){255, 255, 255, 100});
 
 		nk_style_push_color ( ses_ctx.nk_ctx, &ses_ctx.nk_ctx->style.window.background, dynamic_color_subtabs);
 		nk_style_push_style_item ( ses_ctx.nk_ctx, &ses_ctx.nk_ctx->style.window.fixed_background, nk_style_item_color ( ses_ctx.nk_ctx->style.window.background ) );
@@ -458,31 +474,47 @@ static inline bool gui_begin ( const char* title, struct nk_rect* bounds, nk_fla
 		nk_style_push_color(ses_ctx.nk_ctx, &ses_ctx.nk_ctx->style.button.active.data.color, nk_rgba(0, 0, 0, 0));
 
 		/* subtabs popup */
-		if (gui_subtabs_list && gui_subtab_count > 0
+		if (gui_subtabs_list && gui_subtabs_subtitles_list && gui_subtab_count > 0
 			&& dynamic_color_subtabs.a > 0 && nk_popup_begin ( ses_ctx.nk_ctx, NK_POPUP_STATIC, "subtabs", NK_WINDOW_NO_SCROLLBAR, gui_subtabs_rect ) ) {
 			bool popup_closed = false;
 			bool clicked_tab = false;
 
-			nk_style_push_font(ses_ctx.nk_ctx, &ses_ctx.fonts.menu_icons_font->handle);
-			gui_layout(gui_subtab_count);
+			/* subtitles */
+			nk_row_layout ( ses_ctx.nk_ctx, NK_DYNAMIC, 2.0f, gui_subtab_count, 0 );
 			
-			for (int i = 0; i < vector_size(gui_subtabs_list); i++) {
+			nk_style_push_font ( ses_ctx.nk_ctx, &ses_ctx.fonts.menu_xsmall_font->handle );
+			for (int i = 0; i < vector_size( gui_subtabs_subtitles_list ); i++) {
 				struct nk_anim_data* anim_data = nk_get_anim(gui_subtabs_list[i]);
-				const struct nk_color text_color = nk_do_anim_color(ses_ctx.nk_ctx, &anim_data->main_fraction, *gui_subtabs_cur_val_ptr == i ? 1.0f : -1.0f, &(struct nk_color){255, 255, 255, 100}, & (struct nk_color){255, 255, 255, 200});
-				nk_style_push_color(ses_ctx.nk_ctx, &ses_ctx.nk_ctx->style.button.text_active, text_color);
-				nk_style_push_color(ses_ctx.nk_ctx, &ses_ctx.nk_ctx->style.button.text_hover, text_color);
-				nk_style_push_color(ses_ctx.nk_ctx, &ses_ctx.nk_ctx->style.button.text_normal, text_color);
+				/* TODO: FIX LATER -- i cant think of a better color to show unselected items without losing visibility... */
+				const struct nk_color text_color = nk_lerp_color ( &( struct nk_color ) { 255, 255, 255, 255 }, & ( struct nk_color ){255, 255, 255, 255}, anim_data->main_fraction );
+				nk_style_push_color(ses_ctx.nk_ctx, &ses_ctx.nk_ctx->style.text.color, text_color);
 
-				if (nk_button_label(ses_ctx.nk_ctx, gui_subtabs_list[i])) {
+				nk_label ( ses_ctx.nk_ctx, gui_subtabs_subtitles_list[i], NK_TEXT_CENTERED );
+
+				nk_style_pop_color(ses_ctx.nk_ctx);
+			}
+			nk_style_pop_font ( ses_ctx.nk_ctx );
+
+			/* icons */
+			gui_layout ( gui_subtab_count );
+
+			nk_style_push_font ( ses_ctx.nk_ctx, &ses_ctx.fonts.menu_icons_font->handle );
+			for ( int i = 0; i < vector_size ( gui_subtabs_list ); i++ ) {
+				struct nk_anim_data* anim_data = nk_get_anim ( gui_subtabs_list [ i ] );
+				const struct nk_color text_color = nk_do_anim_color ( ses_ctx.nk_ctx, &anim_data->main_fraction, *gui_subtabs_cur_val_ptr == i ? 1.0f : -1.0f, &( struct nk_color ){255, 255, 255, 100}, & ( struct nk_color ){255, 255, 255, 255} );
+				nk_style_push_color ( ses_ctx.nk_ctx, &ses_ctx.nk_ctx->style.button.text_active, text_color );
+				nk_style_push_color ( ses_ctx.nk_ctx, &ses_ctx.nk_ctx->style.button.text_hover, text_color );
+				nk_style_push_color ( ses_ctx.nk_ctx, &ses_ctx.nk_ctx->style.button.text_normal, text_color );
+
+				if ( nk_button_label ( ses_ctx.nk_ctx, gui_subtabs_list [ i ] ) ) {
 					*gui_subtabs_cur_val_ptr = i;
 					clicked_tab = true;
 				}
 
-				nk_style_pop_color(ses_ctx.nk_ctx);
-				nk_style_pop_color(ses_ctx.nk_ctx);
-				nk_style_pop_color(ses_ctx.nk_ctx);
+				nk_style_pop_color ( ses_ctx.nk_ctx );
+				nk_style_pop_color ( ses_ctx.nk_ctx );
+				nk_style_pop_color ( ses_ctx.nk_ctx );
 			}
-
 			nk_style_pop_font(ses_ctx.nk_ctx);
 
 			/* close popup if we click outside of it */
