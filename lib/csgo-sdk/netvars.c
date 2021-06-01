@@ -1,7 +1,7 @@
 #include "netvars.h"
 #include "sdk.h"
 
-#include "include/utils.h"
+#include "utils.h"
 
 typedef struct {
 	sds name;

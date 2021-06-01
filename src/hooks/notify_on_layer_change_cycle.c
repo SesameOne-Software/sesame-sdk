@@ -1,5 +1,5 @@
-#include "include/hooks/hooks.h"
+#include "hooks/hooks.h"
 
-void __fastcall hooks_notify_on_layer_change_cycle ( REG, animlayer* layer, float new_cycle ) {
+__attribute__( ( thiscall ) ) void hooks_notify_on_layer_change_cycle( animstate* this, animlayer* layer, float new_cycle ) {
 
 }

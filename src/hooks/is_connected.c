@@ -1,12 +1,10 @@
-#include "include/hooks/hooks.h"
+#include "hooks/hooks.h"
 
-#include <intrin.h>
+__attribute__( ( thiscall ) ) bool hooks_is_connected( iengine* this ) {
+	typedef __attribute__( ( thiscall ) ) bool( *hooks_is_connected_fn )( iengine* this );
 
-bool __fastcall hooks_is_connected ( REG ) {
-	typedef bool ( __fastcall* hooks_is_connected_fn )( REG );
-
-	if ( _ReturnAddress ( ) == cs_offsets.loadout_allowed_ret )
+	if ( __builtin_return_address( 0 ) == cs_offsets.loadout_allowed_ret )
 		return false;
 
-	return ( ( hooks_is_connected_fn ) subhook_get_trampoline ( hooks_subhooks [ subhook_is_connected ] ) )( REG_OUT );
+	return ( ( hooks_is_connected_fn )subhook_get_trampoline( hooks_subhooks[ subhook_is_connected ] ) )( this );
 }

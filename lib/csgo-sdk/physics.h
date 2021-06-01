@@ -1,7 +1,7 @@
 #ifndef SDK_PHYSICS_H
 #define SDK_PHYSICS_H
 
-#include "include/utils.h"
+#include "utils.h"
 
 typedef struct {
 	PAD( 20 );
@@ -33,6 +33,6 @@ typedef struct {
 
 typedef struct iphys iphys;
 
-VIRTUAL ( iphys, surfacedata*, get_surface, cs_idx_get_surface, ( idx ), uint32_t idx );
+VIRTUAL( iphys, surfacedata*, get_surface, cs_idx_get_surface, ( this, idx ), uint32_t idx );
 
 #endif // !SDK_PHYSICS_H

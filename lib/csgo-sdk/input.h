@@ -4,17 +4,17 @@
 #include "vec3.h"
 #include "usercmd.h"
 
-#include "include/utils.h"
+#include "utils.h"
 
 typedef struct {
-	PAD ( 12 );
+	PAD( 12 );
 	bool track_ir_available;
 	bool mouse_initialized;
 	bool mouse_active;
 	bool joystick_advanced_init;
-	PAD ( 44 );
+	PAD( 44 );
 	void* keys;
-	PAD ( 108 );
+	PAD( 108 );
 	bool camera_intercepting_mouse;
 	bool camera_in_thirdperson;
 	bool camera_moving_with_mouse;
@@ -33,12 +33,12 @@ typedef struct {
 	verified_usercmd* verified_cmds;
 } iinput;
 
-static inline usercmd* iinput_get_cmd ( iinput* this, int sequence_number ) {
-	return &this->cmds [ sequence_number % MULTIPLAYER_BACKUP ];
+static inline usercmd* iinput_get_cmd( iinput* this, int sequence_number ) {
+	return &this->cmds[ sequence_number % MULTIPLAYER_BACKUP ];
 }
 
-static inline verified_usercmd* iinput_get_verified_cmd ( iinput* this, int sequence_number ) {
-	return &this->verified_cmds [ sequence_number % MULTIPLAYER_BACKUP ];
+static inline verified_usercmd* iinput_get_verified_cmd( iinput* this, int sequence_number ) {
+	return &this->verified_cmds[ sequence_number % MULTIPLAYER_BACKUP ];
 }
 
 #endif // !SDK_INPUT_H

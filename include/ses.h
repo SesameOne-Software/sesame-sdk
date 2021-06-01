@@ -1,7 +1,7 @@
 #ifndef SES_H
 #define SES_H
 
-#include "lib/csgo-sdk/sdk.h"
+#include "csgo-sdk/sdk.h"
 
 typedef enum {
 	ses_round_starting,
@@ -47,7 +47,7 @@ typedef struct {
 
 extern ses_ctx_s ses_ctx;
 
-static inline void ses_shutdown ( ) {
+static inline void ses_shutdown( ) {
 	ses_ctx.shutdown = true;
 }
 

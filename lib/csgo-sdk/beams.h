@@ -6,7 +6,7 @@
 #include "trace.h"
 #include "offsets.h"
 
-#include "include/utils.h"
+#include "utils.h"
 
 typedef struct beam beam;
 
@@ -43,7 +43,7 @@ typedef struct {
 	float end_radius;
 } beam_info;
 
-static inline void beam_info_init ( beam_info* this ) {
+static inline void beam_info_init( beam_info* this ) {
 	this->type = 0;
 	this->segments = -1;
 	this->model_name = NULL;
@@ -56,10 +56,10 @@ static inline void beam_info_init ( beam_info* this ) {
 
 typedef struct ibeams ibeams;
 
-VIRTUAL ( ibeams, void, init, cs_idx_ibeams_init, ( ) );
-VIRTUAL ( ibeams, void, shutdown, cs_idx_ibeams_shutdown, ( ) );
-VIRTUAL ( ibeams, void, clear, cs_idx_ibeams_clear, ( ) );
-VIRTUAL ( ibeams, void, draw, cs_idx_ibeams_draw, ( pbeam ), beam* pbeam );
-VIRTUAL ( ibeams, beam*, create_points, cs_idx_ibeams_create_points, ( pbeam_info ), beam_info* pbeam_info );
+VIRTUAL( ibeams, void, init, cs_idx_ibeams_init, ( this ) );
+VIRTUAL( ibeams, void, shutdown, cs_idx_ibeams_shutdown, ( this ) );
+VIRTUAL( ibeams, void, clear, cs_idx_ibeams_clear, ( this ) );
+VIRTUAL( ibeams, void, draw, cs_idx_ibeams_draw, ( this, pbeam ), beam* pbeam );
+VIRTUAL( ibeams, beam*, create_points, cs_idx_ibeams_create_points, ( this, pbeam_info ), beam_info* pbeam_info );
 
 #endif // !SDK_BEAMS_H

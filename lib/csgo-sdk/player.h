@@ -9,7 +9,7 @@
 #include "sdk.h"
 #include "utlvec.h"
 
-#include "include/utils.h"
+#include "utils.h"
 
 typedef struct player player;
 
@@ -63,7 +63,6 @@ typedef enum {
 	movetype_custom
 } move_types;
 
-#pragma region ANIMS
 /* adjust some code in animation update function to make it more straightforward to use */
 #define SES_ANIMSTATE_ADJUSTMENTS
 
@@ -1492,7 +1491,7 @@ typedef struct {
 	float foot_lerp;
 	bool feet_crossed;
 	bool in_accel;
-	animstate_pose_param_cache pose_param_map [ pose_param_count ];
+	animstate_pose_param_cache pose_param_map[ pose_param_count ];
 	float move_weight_time_too_high;
 	float static_lerp_speed;
 	int last_move_state;
@@ -1529,7 +1528,6 @@ typedef struct {
 	/* extra info that is just for us to do some ghetto workarounds */
 	float last_flash_duration;
 } server_animstate;
-#pragma endregion ANIMS
 
 NETVAR( player, ehandle, ground_entity_handle, "DT_BasePlayer->m_hGroundEntity" );
 NETVAR( player, move_flags, flags, "DT_BasePlayer->m_fFlags" );
@@ -1579,28 +1577,27 @@ OFFSET( player, mat3x4a*, bones, cs_offsets.player_bones );
 OFFSET( player, animlayer*, animlayers, cs_offsets.player_animlayers );
 OFFSET( player, uint32_t, num_animlayers, cs_offsets.player_num_animlayers );
 OFFSET( player, float, poses, cs_offsets.player_poses );
-OFFSET ( player, void*, jiggle_bones, cs_offsets.player_jiggle_bones );
-OFFSET ( player, float, thirdperson_recoil, cs_offsets.player_thirdperson_recoil );
-OFFSET ( player, int, computed_lod_frame, cs_offsets.player_computed_lod_frame );
-OFFSET(player, bool, strafing, cs_offsets.player_is_strafing);
-OFFSET(player, uint32_t*, bone_count, cs_offsets.player_bone_count);
-OFFSET(player, mat3x4*, bone_cache, cs_offsets.player_bone_cache);
-OFFSET(player, in_buttons, buttons, cs_offsets.player_buttons);
+OFFSET( player, void*, jiggle_bones, cs_offsets.player_jiggle_bones );
+OFFSET( player, float, thirdperson_recoil, cs_offsets.player_thirdperson_recoil );
+OFFSET( player, int, computed_lod_frame, cs_offsets.player_computed_lod_frame );
+OFFSET( player, bool, strafing, cs_offsets.player_is_strafing );
+OFFSET( player, uint32_t*, bone_count, cs_offsets.player_bone_count );
+OFFSET( player, mat3x4*, bone_cache, cs_offsets.player_bone_cache );
+OFFSET( player, in_buttons, buttons, cs_offsets.player_buttons );
 
+VIRTUAL( player, void, set_local_viewangles, cs_idx_player_set_local_viewangles, ( this, angles ), vec3* angles );
+VIRTUAL( player, void, think, cs_idx_player_think, ( this ) );
+VIRTUAL( player, void, pre_think, cs_idx_player_pre_think, ( this ) );
+VIRTUAL( player, void, post_think, cs_idx_player_post_think, ( this ) );
 
-VIRTUAL( player, void, set_local_viewangles, cs_idx_player_set_local_viewangles, ( angles ), vec3* angles );
-VIRTUAL( player, void, think, cs_idx_player_think, ( ) );
-VIRTUAL( player, void, pre_think, cs_idx_player_pre_think, ( ) );
-VIRTUAL( player, void, post_think, cs_idx_player_post_think, ( ) );
-
-static inline bool player_physics_run_think ( player* this, int unk01 ) {
-	return ( ( bool ( __fastcall* )( player*, void*, int ) )cs_offsets.player_physics_run_think_fn )( this, NULL, unk01 );
+static inline bool player_physics_run_think( player* this, int unk01 ) {
+	return ( ( __attribute__( ( thiscall ) ) bool( * )( player*, int ) )cs_offsets.player_physics_run_think_fn )( this, unk01 );
 }
 
 static inline vec3* player_world_space( player* this, vec3* out ) {
 	vec3 va, vb;
 
-	( ( void( __fastcall* )( renderable*, void*, vec3*, vec3* ) )utils_vfunc( entity_renderable( ( entity* )this ), cs_idx_player_world_space ) )( entity_renderable( ( entity* )this ), NULL, &va, &vb );
+	( ( __attribute__( ( thiscall ) ) void( * )( renderable*, vec3*, vec3* ) )utils_vfunc( entity_renderable( ( entity* )this ), cs_idx_player_world_space ) )( entity_renderable( ( entity* )this ), &va, &vb );
 
 	vec3_zero( out );
 	*out = *entity_origin( ( entity* )this );
@@ -1617,127 +1614,136 @@ static inline bool player_is_alive( player* this ) {
 	return player_health( this ) > 0;
 }
 
-static inline bool player_is_local(player* this) {
-	return *(bool*)((uintptr_t)this + cs_offsets.player_is_local);
+static inline bool player_is_local( player* this ) {
+	return *( bool* )( ( uintptr_t )this + cs_offsets.player_is_local );
 }
 
-VIRTUAL( player, vec3*, abs_origin, cs_idx_player_abs_origin, ( ) );
-VIRTUAL( player, vec3*, abs_angles, cs_idx_player_abs_angles, ( ) );
+VIRTUAL( player, vec3*, abs_origin, cs_idx_player_abs_origin, ( this ) );
+VIRTUAL( player, vec3*, abs_angles, cs_idx_player_abs_angles, ( this ) );
 
-static inline ehandle player_handle ( player* this ) {
-	return ( ( ehandle ( __fastcall* )( player*, void* ) ) cs_offsets.player_handle_fn )( this, NULL );
+static inline ehandle player_handle( player* this ) {
+	return ( ( __attribute__( ( thiscall ) ) ehandle( * )( player* ) ) cs_offsets.player_handle_fn )( this );
 }
 
 static inline vec3* player_render_origin( player* this ) {
-	return ( ( vec3 * ( __fastcall* )( renderable*, void* ) )utils_vfunc( entity_renderable( ( entity* )this ), cs_idx_player_render_origin ) )( entity_renderable( ( entity* )this ), NULL );
+	return ( ( __attribute__( ( thiscall ) ) vec3 * ( * )( renderable* ) )utils_vfunc( entity_renderable( ( entity* )this ), cs_idx_player_render_origin ) )( entity_renderable( ( entity* )this ) );
 }
 
-static inline void player_set_abs_angles ( player* this, vec3* ang ) {
-	( ( void ( __fastcall* )( player*, void*, vec3* ) )cs_offsets.player_set_abs_angles_fn )( this, NULL, ang );
+static inline void player_set_abs_angles( player* this, vec3* ang ) {
+	( ( __attribute__( ( thiscall ) ) void( * )( player*, vec3* ) )cs_offsets.player_set_abs_angles_fn )( this, ang );
 }
 
-static inline void player_set_abs_origin ( player* this, vec3* vec ) {
-	( ( void ( __fastcall* )( player*, void*, vec3* ) )cs_offsets.player_set_abs_origin_fn )( this, NULL, vec );
+static inline void player_set_abs_origin( player* this, vec3* vec ) {
+	( ( __attribute__( ( thiscall ) ) void( * )( player*, vec3* ) )cs_offsets.player_set_abs_origin_fn )( this, vec );
 }
 
-static inline animstate* player_animstate(player* this) {
-	return *(animstate**)((uintptr_t)this + cs_offsets.player_animstate);
+static inline animstate* player_animstate( player* this ) {
+	return *( animstate** )( ( uintptr_t )this + cs_offsets.player_animstate );
 }
 
-static inline void player_create_animstate(player* this, animstate* state) {
-	((void(__fastcall*)(player*, void*, animstate*))cs_offsets.player_create_animstate_fn)(state, NULL, this);
+static inline void player_create_animstate( player* this, animstate* state ) {
+	( ( __attribute__( ( thiscall ) ) void( * )( player*, animstate* ) )cs_offsets.player_create_animstate_fn )( state, this );
 }
 
-static inline void player_weapon_shootposition ( player* this, vec3* pos ) {
-	vec3_init ( pos );
+static inline void player_weapon_shootposition( player* this, vec3* pos ) {
+	vec3_init( pos );
 
 	/* eye position */
-	( ( void ( __fastcall* )( player*, void*, vec3* ) )utils_vfunc ( this, cs_idx_player_get_shoot_pos ) ) ( this, NULL, pos );
+	( ( __attribute__( ( thiscall ) ) void( * )( player*, vec3* ) )utils_vfunc( this, cs_idx_player_get_shoot_pos ) ) ( this, pos );
 
-	if ( *( bool* ) ( ( uintptr_t ) this + cs_offsets.player_use_new_animstate ) && player_animstate ( this ) )
-		( ( void ( __fastcall* )( animstate*, void*, vec3* ) ) cs_offsets.animstate_modifyeyepos) ( player_animstate ( this ), NULL, pos );
+	if ( *( bool* )( ( uintptr_t )this + cs_offsets.player_use_new_animstate ) && player_animstate( this ) )
+		( ( __attribute__( ( thiscall ) ) void( * )( animstate*, vec3* ) ) cs_offsets.animstate_modifyeyepos ) ( player_animstate( this ), pos );
 }
 
-static inline weapon* player_get_weapon ( player* this ) {
+static inline weapon* player_get_weapon( player* this ) {
 	extern struct ientlist* cs_ientlist;
-	return ( weapon* ) ientlist_get_entity_from_handle ( cs_ientlist, player_weapon_handle ( this ) );
+	return ( weapon* )ientlist_get_entity_from_handle( cs_ientlist, player_weapon_handle( this ) );
 }
 
 typedef weapon** vec_weapons;
 typedef weapon** vec_wearables;
 
-static inline vec_weapons player_weapons ( player* this ) {
-	const ehandle* weapon_handles = player_weapon_handles ( this );
-	vec_weapons ret = vector_create ( );
+static inline vec_weapons player_weapons( player* this ) {
+	const ehandle* weapon_handles = player_weapon_handles( this );
+	vec_weapons ret = vector_create( );
 
-	for ( int i = 0; weapon_handles [ i ] != 0xFFFFFFFF; i++ ) {
+	for ( int i = 0; weapon_handles[ i ] != 0xFFFFFFFF; i++ ) {
 		extern struct ientlist* cs_ientlist;
-		const weapon* cur_weapon = ( weapon* ) ientlist_get_entity_from_handle ( cs_ientlist, weapon_handles [ i ] );
+		const weapon* cur_weapon = ( weapon* )ientlist_get_entity_from_handle( cs_ientlist, weapon_handles[ i ] );
 
 		if ( !cur_weapon )
 			continue;
 
-		vector_add ( &ret, weapon*, cur_weapon );
+		vector_add( &ret, cur_weapon );
 	}
 
 	/* MAKE SURE TO CALL vector_free */
 	return ret;
 }
 
-static inline vec_wearables player_wearables ( player* this ) {
-	const ehandle* wearable_handles = player_wearable_handles ( this );
-	vec_wearables ret = vector_create ( );
+static inline vec_wearables player_wearables( player* this ) {
+	const ehandle* wearable_handles = player_wearable_handles( this );
+	vec_wearables ret = vector_create( );
 
-	for ( int i = 0; wearable_handles [ i ] != -1; i++ ) {
+	for ( int i = 0; wearable_handles[ i ] != -1; i++ ) {
 		extern struct ientlist* cs_ientlist;
-		const weapon* cur_wearable = ( weapon* ) ientlist_get_entity_from_handle ( cs_ientlist, wearable_handles [ i ] );
+		const weapon* cur_wearable = ( weapon* )ientlist_get_entity_from_handle( cs_ientlist, wearable_handles[ i ] );
 
 		if ( !cur_wearable )
 			continue;
 
-		vector_add ( &ret, weapon*, cur_wearable );
+		vector_add( &ret, cur_wearable );
 	}
 
 	/* MAKE SURE TO CALL vector_free */
 	return ret;
 }
 
-static inline void player_get_sequence_linear_motion ( player* this, studiohdr* studio_hdr, int seq, float* poses, vec3* vec ) {
-	const ptrdiff_t fn = cs_offsets.player_get_sequence_linear_motion_fn;
-
-	__asm {
-		mov edx, seq
-		mov ecx, studio_hdr
-		push vec
-		push poses
-		call fn
-		add esp, 8
-	}
+static inline void player_get_sequence_linear_motion( player* this, studiohdr* studio_hdr, int seq, float* poses, vec3* vec ) {
+	asm volatile(
+		"mov edx, %0;"
+		"mov ecx, %1;"
+		"push %2;"
+		"push %3;"
+		"call %4;"
+		"add esp, 8;"
+		:: "g"( seq ), "g"( studio_hdr ), "g"( vec ), "g"( poses ), "g"( cs_offsets.player_get_sequence_linear_motion_fn )
+		: "edx", "ecx"
+		);
 }
 
-static inline float player_get_sequence_move_distance ( player* this, int seq) {
+static inline float player_get_sequence_move_distance( player* this, int seq ) {
 	vec3 ret;
-	player_get_sequence_linear_motion ( this, *entity_model_ptr((entity*)this), seq, player_poses ( this ), &ret );
-	return vec3_len ( &ret );
+	player_get_sequence_linear_motion( this, *entity_model_ptr( ( entity* )this ), seq, player_poses( this ), &ret );
+	return vec3_len( &ret );
 }
 
-static inline int player_lookup_sequence ( player* this, const char* seq ) {
-	return ( ( int ( __fastcall* )( player*, void*, const char* ) ) cs_offsets.player_lookup_sequence_fn ) ( this, NULL, seq );
+static inline int player_lookup_sequence( player* this, const char* seq ) {
+	return ( ( __attribute__( ( thiscall ) ) int( * )( player*, const char* ) ) cs_offsets.player_lookup_sequence_fn ) ( this, seq );
 }
 
-static inline int player_lookup_bone ( player* this, const char* bone ) {
-	return ( ( int ( __fastcall* )( player*, void*, const char* ) ) cs_offsets.player_lookup_bone_fn ) ( this, NULL, bone );
+static inline int player_lookup_bone( player* this, const char* bone ) {
+	return ( ( __attribute__( ( thiscall ) ) int( * )( player*, const char* ) ) cs_offsets.player_lookup_bone_fn ) ( this, bone );
 }
 
-static inline float player_sequence_duration ( player* this, int seq) {
-	float retval;
-	( ( float ( __fastcall* )( player*, void*, int ) )cs_offsets.player_sequence_duration_fn ) ( this, NULL, seq);
-	__asm movss retval, xmm0;
-	return retval;
+static inline float player_sequence_duration( player* this, int seq ) {
+	volatile float ret = 0.0f;
+
+	asm volatile(
+		"mov ecx, %1;"
+		"push %2;"
+		"call %3;"
+		"movss %0, xmm0;"
+		: "=g"( ret )
+		: "g"( this ), "g"( seq ), "g"( cs_offsets.player_sequence_duration_fn )
+		: "ecx", "xmm0"
+		);
+
+	return ret;
 }
 
-static inline float player_get_sequence_cycle_rate_server ( player* this, int seq) {
-	float t = player_sequence_duration ( this, seq);
+static inline float player_get_sequence_cycle_rate_server( player* this, int seq ) {
+	float t = player_sequence_duration( this, seq );
 
 	if ( t > 0.0f )
 		return 1.0f / t;
@@ -1745,66 +1751,66 @@ static inline float player_get_sequence_cycle_rate_server ( player* this, int se
 	return 1.0f / 0.1f;
 }
 
-static inline void player_invalidate_physics_recursive(player* this, int flags) {
-	( ( void ( __fastcall* )( player*, void*, int ) )cs_offsets.player_invalidate_physics_recursive_fn ) ( this, NULL, flags );
+static inline void player_invalidate_physics_recursive( player* this, int flags ) {
+	( ( __attribute__( ( thiscall ) ) void( * )( player*, int ) )cs_offsets.player_invalidate_physics_recursive_fn ) ( this, flags );
 }
 
-static inline void player_set_sequence ( player* this, int seq ) {
-	( ( void ( __fastcall* )( player*, void*, int ) )cs_offsets.player_set_sequence_fn ) ( this, NULL, seq );
+static inline void player_set_sequence( player* this, int seq ) {
+	( ( __attribute__( ( thiscall ) ) void( * )( player*, int ) )cs_offsets.player_set_sequence_fn ) ( this, seq );
 }
 
-static inline void player_set_playback_rate ( player* this, float rate ) {
-	*( float* ) ( ( uintptr_t ) this + cs_offsets.player_playback_rate ) = rate;
+static inline void player_set_playback_rate( player* this, float rate ) {
+	*( float* )( ( uintptr_t )this + cs_offsets.player_playback_rate ) = rate;
 }
 
-static inline void player_set_cycle ( player* this, float cycle ) {
-	*( float* ) ( ( uintptr_t ) this + cs_offsets.player_cycle ) = cycle;
+static inline void player_set_cycle( player* this, float cycle ) {
+	*( float* )( ( uintptr_t )this + cs_offsets.player_cycle ) = cycle;
 }
 
-static inline float player_get_layer_sequence_cycle_rate ( player* this, animlayer_idx idx, int seq ) {
-	return ( ( float ( __fastcall* )( player*, void*, animlayer_idx, int ) )cs_offsets.player_get_layer_sequence_cycle_rate_fn ) ( this, NULL, idx, seq );
+static inline float player_get_layer_sequence_cycle_rate( player* this, animlayer_idx idx, int seq ) {
+	return ( ( __attribute__( ( thiscall ) ) float( * )( player*, animlayer_idx, int ) )cs_offsets.player_get_layer_sequence_cycle_rate_fn ) ( this, idx, seq );
 }
 
-static inline float player_get_first_sequence_anim_tag(player* this, int seq, int tag, float start, float end) {
-	const void* animstate_get_first_sequence_anim_tag_fn = (void*)cs_offsets.animstate_get_first_sequence_anim_tag_fn;
-	
-	const studiohdr* model_ptr = *entity_model_ptr((entity*)this);
-	float ret = 0.0f;
+static inline float player_get_first_sequence_anim_tag( player* this, int seq, int tag, float start, float end ) {
+	volatile float ret = 0.0f;
 
-	__asm {
-		push model_ptr
-		push tag
-		push seq
-		mov ecx, this
-		call animstate_get_first_sequence_anim_tag_fn
-		movss ret, xmm0
-	}
+	asm volatile(
+		"push %1;"
+		"push %2;"
+		"push %3;"
+		"mov ecx, %4;"
+		"call %5;"
+		"movss %0, xmm0;"
+		: "=g"( ret )
+		: "g"( *entity_model_ptr( ( entity* )this ) ), "g"( tag ), "g"( seq ), "g"( this ), "g"( cs_offsets.animstate_get_first_sequence_anim_tag_fn )
+		: "ecx", "xmm0"
+		);
 
 	return ret;
 }
 
-static inline int* player_move_state(player* this) {
-	return (int*)((uintptr_t)this + cs_offsets.player_move_state);
+static inline int* player_move_state( player* this ) {
+	return ( int* )( ( uintptr_t )this + cs_offsets.player_move_state );
 }
 
 /* ty @cbrs */
-static inline int player_select_weighted_seq(player* this, anim_activity act) {
-	animstate* animstate = player_animstate(this);
-	weapon* weapon = player_get_weapon ( this );
-	weapon_info* data = weapon ? weapon_data ( weapon ) : NULL;
+static inline int player_select_weighted_seq( player* this, anim_activity act ) {
+	animstate* animstate = player_animstate( this );
+	weapon* weapon = player_get_weapon( this );
+	weapon_info* data = weapon ? weapon_data( weapon ) : NULL;
 
-	if (!animstate)
+	if ( !animstate )
 		return -1;
 
 	int seq = -1;
-	
+
 	const bool crouching = animstate->duck_amount > 0.55f;
 	const bool moving = animstate->speed_to_walk_fraction > 0.25f;
-	
-	switch (act) {
+
+	switch ( act ) {
 	case act_csgo_land_heavy:
 		seq = 23;
-		if (crouching)
+		if ( crouching )
 			seq = 24;
 		break;
 	case act_csgo_fall:
@@ -1812,7 +1818,7 @@ static inline int player_select_weighted_seq(player* this, anim_activity act) {
 		break;
 	case act_csgo_jump:
 		seq = moving + 17;
-		if (!crouching)
+		if ( !crouching )
 			seq = moving + 15;
 		break;
 	case act_csgo_climb_ladder:
@@ -1820,9 +1826,9 @@ static inline int player_select_weighted_seq(player* this, anim_activity act) {
 		break;
 	case act_csgo_land_light:
 		seq = 2 * moving + 20;
-		if (crouching) {
+		if ( crouching ) {
 			seq = 21;
-			if (moving)
+			if ( moving )
 				seq = 19;
 		}
 		break;
@@ -1846,7 +1852,7 @@ static inline int player_select_weighted_seq(player* this, anim_activity act) {
 		return -1;
 	}
 
-	if (seq < 2)
+	if ( seq < 2 )
 		return -1;
 
 	return seq;
@@ -1855,53 +1861,52 @@ static inline int player_select_weighted_seq(player* this, anim_activity act) {
 vec_weapons player_weapons( player* this );
 vec_wearables player_wearables( player* this );
 
-#pragma region ANIMS
-static inline void animstate_pose_param_cache_set_value ( animstate_pose_param_cache* this, player* player, float value ) {
-	const void* animstate_pose_param_cache_set_value_fn = ( void* ) cs_offsets.animstate_pose_param_cache_set_value_fn;
-
-	__asm {
-		push this
-		movss xmm2, value
-		mov ecx, player
-		call animstate_pose_param_cache_set_value_fn
-	}
+static inline void animstate_pose_param_cache_set_value( animstate_pose_param_cache* this, player* player, float value ) {
+	asm volatile(
+		"push %0;"
+		"movss xmm2, %1;"
+		"mov ecx, %2;"
+		"call %3;"
+		:: "g"( this ), "g"( value ), "g"( player ), "g"( cs_offsets.animstate_pose_param_cache_set_value_fn )
+		: "xmm2", "ecx"
+		);
 }
 
-static inline void animlayer_set_seq ( animlayer* this, int seq ) {
+static inline void animlayer_set_seq( animlayer* this, int seq ) {
 	if ( this->owner && this->seq != seq )
-		player_invalidate_physics_recursive ( this->owner, invalidate_phys_bits_bounds_changed );
+		player_invalidate_physics_recursive( this->owner, invalidate_phys_bits_bounds_changed );
 
 	this->seq = seq;
 }
 
-static inline void animlayer_set_playback_rate ( animlayer* this, float rate ) {
+static inline void animlayer_set_playback_rate( animlayer* this, float rate ) {
 	this->playback_rate = rate;
 }
 
-static inline void animlayer_set_cycle ( animlayer* this, float cycle ) {
+static inline void animlayer_set_cycle( animlayer* this, float cycle ) {
 	if ( this->owner && this->cycle != cycle )
-		player_invalidate_physics_recursive ( this->owner, invalidate_phys_bits_anim_changed );
+		player_invalidate_physics_recursive( this->owner, invalidate_phys_bits_anim_changed );
 
 	this->cycle = cycle;
 }
 
-static inline void animlayer_set_weight ( animlayer* this, float weight ) {
+static inline void animlayer_set_weight( animlayer* this, float weight ) {
 	if ( weight >= 0.0f )
-		weight = min ( weight, 1.0f );
+		weight = min( weight, 1.0f );
 	else
 		weight = 0.0f;
 
 	if ( this->owner && ( this->weight != weight && ( !this->weight || !weight ) ) )
-		player_invalidate_physics_recursive ( this->owner, invalidate_phys_bits_bounds_changed );
+		player_invalidate_physics_recursive( this->owner, invalidate_phys_bits_bounds_changed );
 
 	this->weight = weight;
 }
 
-static inline bool server_animstate_cache_sequences ( server_animstate* this ) {
-	return ( ( bool ( __fastcall* )( animstate*, void* ) )cs_offsets.animstate_cache_sequences_fn ) ( &this->base, NULL );
+static inline bool server_animstate_cache_sequences( server_animstate* this ) {
+	return ( ( __attribute__( ( thiscall ) ) bool( * )( animstate* ) )cs_offsets.animstate_cache_sequences_fn ) ( &this->base );
 }
 
-static inline void server_animstate_reset ( server_animstate* this ) {
+static inline void server_animstate_reset( server_animstate* this ) {
 	/* these server members are not set on the client, nor do they exist; we need to remember to initialize them ourselves */
 	this->flash_start_time = 0.0f;
 	this->flash_end_time = 0.0f;
@@ -1911,47 +1916,46 @@ static inline void server_animstate_reset ( server_animstate* this ) {
 	this->last_flash_duration = 0.0f;
 
 	/* the reset can be done with the normal client func */
-	( ( void ( __fastcall* )( animstate*, void* ) )cs_offsets.animstate_reset_fn ) ( &this->base, NULL );
+	( ( __attribute__( ( thiscall ) ) void( * )( animstate* ) )cs_offsets.animstate_reset_fn ) ( &this->base );
 }
 
-static inline const char* server_animstate_get_weapon_move_animation ( server_animstate* this ) {
-	return ( ( const char* ( __fastcall* )( animstate*, void* ) )cs_offsets.animstate_get_weapon_move_animation_fn ) ( &this->base, NULL );
+static inline const char* server_animstate_get_weapon_move_animation( server_animstate* this ) {
+	return ( ( __attribute__( ( thiscall ) ) const char* ( * )( animstate* ) )cs_offsets.animstate_get_weapon_move_animation_fn ) ( &this->base );
 }
 
-static inline float server_animstate_get_max_desync ( server_animstate* this ) {
+static inline float server_animstate_get_max_desync( server_animstate* this ) {
 	if ( !this || !this->base.player )
 		return 0.0f;
 
-	float aim_matrix_width = lerpf ( clampf ( this->base.speed_to_walk_fraction, 0.0f, 1.0f ), 1.0f, lerpf ( this->base.walk_to_run_fraction, CSGO_ANIM_AIM_NARROW_WALK, CSGO_ANIM_AIM_NARROW_RUN ) );
+	float aim_matrix_width = lerpf( clampf( this->base.speed_to_walk_fraction, 0.0f, 1.0f ), 1.0f, lerpf( this->base.walk_to_run_fraction, CSGO_ANIM_AIM_NARROW_WALK, CSGO_ANIM_AIM_NARROW_RUN ) );
 
 	if ( this->base.duck_amount > 0.0f )
-		aim_matrix_width = lerpf ( this->base.duck_amount * clampf ( this->base.speed_to_crouch_fraction, 0.0f, 1.0f ), aim_matrix_width, CSGO_ANIM_AIM_NARROW_CROUCHMOVING );
+		aim_matrix_width = lerpf( this->base.duck_amount * clampf( this->base.speed_to_crouch_fraction, 0.0f, 1.0f ), aim_matrix_width, CSGO_ANIM_AIM_NARROW_CROUCHMOVING );
 
 	return aim_matrix_width * this->base.aim_yaw_max;
 }
 
-static inline void server_animstate_update_layer_order_preset ( server_animstate* this, float weight, animlayer_idx idx, int seq ) {
-	animstate* client_animstate = &this->base;
-	void* update_layer_order_preset_fn = ( void* ) cs_offsets.animstate_update_layer_order_preset_fn;
-
-	__asm {
-		mov ecx, client_animstate
-		movss xmm0, weight
-		push seq
-		push idx
-		call update_layer_order_preset_fn
-	}
+static inline void server_animstate_update_layer_order_preset( server_animstate* this, float weight, animlayer_idx idx, int seq ) {
+	asm volatile(
+		"mov ecx, %0;"
+		"movss xmm0, %1;"
+		"push %2;"
+		"push %3;"
+		"call %4;"
+		:: "g"( &this->base ), "g"( weight ), "g"( seq ), "g"( idx ), "g"( cs_offsets.animstate_update_layer_order_preset_fn )
+		: "ecx", "xmm0"
+		);
 }
 
-static inline bool server_animstate_is_sequence_completed ( server_animstate* this, animlayer_idx idx ) {
-	animlayer* layer = &( ( *player_animlayers ( this->base.player ) ) [ idx ] );
+static inline bool server_animstate_is_sequence_completed( server_animstate* this, animlayer_idx idx ) {
+	animlayer* layer = &( ( *player_animlayers( this->base.player ) )[ idx ] );
 	return layer->cycle + this->base.last_update_delta_time * layer->playback_rate >= 1.0f;
 }
 
-static inline void server_animstate_increment_layer_cycle ( server_animstate* this, animlayer_idx idx, bool allow_loop ) {
-	animlayer* layer = &( ( *player_animlayers ( this->base.player ) ) [ idx ] );
+static inline void server_animstate_increment_layer_cycle( server_animstate* this, animlayer_idx idx, bool allow_loop ) {
+	animlayer* layer = &( ( *player_animlayers( this->base.player ) )[ idx ] );
 
-	if ( fabsf ( layer->playback_rate ) <= 0.0f )
+	if ( fabsf( layer->playback_rate ) <= 0.0f )
 		return;
 
 	float cur_cycle = layer->cycle;
@@ -1960,50 +1964,48 @@ static inline void server_animstate_increment_layer_cycle ( server_animstate* th
 	if ( !allow_loop && cur_cycle >= 1.0f )
 		cur_cycle = 0.999f;
 
-	animlayer_set_cycle ( layer, cur_cycle );
+	animlayer_set_cycle( layer, cur_cycle );
 }
 
-float server_animstate_get_layer_ideal_weight_from_seq_cycle ( server_animstate* this, animlayer_idx idx );
+float server_animstate_get_layer_ideal_weight_from_seq_cycle( server_animstate* this, animlayer_idx idx );
 
-static inline void server_animstate_increment_layer_cycle_weight_rate_generic ( server_animstate* this, animlayer_idx idx ) {
-	const animlayer* layer = &( ( *player_animlayers ( this->base.player ) ) [ idx ] );
+static inline void server_animstate_increment_layer_cycle_weight_rate_generic( server_animstate* this, animlayer_idx idx ) {
+	const animlayer* layer = &( ( *player_animlayers( this->base.player ) )[ idx ] );
 	const float last_weight = layer->weight;
-	server_animstate_increment_layer_cycle ( this, idx, false );
-	animlayer_set_weight ( layer, server_animstate_get_layer_ideal_weight_from_seq_cycle ( this, idx ) );
-	animlayer_set_playback_rate ( layer, last_weight );
+	server_animstate_increment_layer_cycle( this, idx, false );
+	animlayer_set_weight( layer, server_animstate_get_layer_ideal_weight_from_seq_cycle( this, idx ) );
+	animlayer_set_playback_rate( layer, last_weight );
 }
 
-static inline const char* server_animstate_get_weapon_prefix ( server_animstate* this ) {
-	return ( ( const char* ( __fastcall* )( animstate*, void* ) )cs_offsets.animstate_get_weapon_prefix_fn )( &this->base, NULL );
+static inline const char* server_animstate_get_weapon_prefix( server_animstate* this ) {
+	return ( ( __attribute__( ( thiscall ) ) const char* ( * )( animstate* ) )cs_offsets.animstate_get_weapon_prefix_fn )( &this->base );
 }
 
-static inline void server_animstate_set_layer_weight_rate ( server_animstate* this, animlayer_idx idx, float previous ) {
+static inline void server_animstate_set_layer_weight_rate( server_animstate* this, animlayer_idx idx, float previous ) {
 	if ( !this->base.last_update_delta_time )
 		return;
 
-	animlayer* layer = &( ( *player_animlayers ( this->base.player ) ) [ idx ] );
+	animlayer* layer = &( ( *player_animlayers( this->base.player ) )[ idx ] );
 
 	layer->weight_delta_rate = ( layer->weight - previous ) / this->base.last_update_delta_time;
 }
 
-static inline anim_activity server_animstate_get_layer_activity ( server_animstate* this, animlayer_idx idx ) {
-	anim_activity ( __fastcall * animstate_get_layer_activity_fn )( animstate*, void*, animlayer_idx ) = ( void* ) cs_offsets.animstate_get_layer_activity_fn;
-	return animstate_get_layer_activity_fn ( &this->base, NULL, idx );
+static inline anim_activity server_animstate_get_layer_activity( server_animstate* this, animlayer_idx idx ) {
+	return ( ( __attribute__( ( thiscall ) ) anim_activity( * )( animstate*, animlayer_idx ) )cs_offsets.animstate_get_layer_activity_fn )( &this->base, idx );
 }
 
-void server_animstate_set_layer_sequence ( server_animstate* this, animlayer_idx idx, int seq );
-void server_animstate_update_animlayer ( server_animstate* this, animlayer_idx idx, int seq, float playback_rate, float weight, float cycle );
+void server_animstate_set_layer_sequence( server_animstate* this, animlayer_idx idx, int seq );
+void server_animstate_update_animlayer( server_animstate* this, animlayer_idx idx, int seq, float playback_rate, float weight, float cycle );
 
-void server_animstate_set_up_velocity ( server_animstate* this );
-void server_animstate_set_up_aim_matrix ( server_animstate* this );
-void server_animstate_set_up_weapon_action ( server_animstate* this );
-void server_animstate_set_up_movement ( server_animstate* this );
-void server_animstate_set_up_flashed_reaction ( server_animstate* this );
-void server_animstate_set_up_whole_body_action ( server_animstate* this );
-void server_animstate_set_up_flinch ( server_animstate* this );
-void server_animstate_set_up_lean ( server_animstate* this );
+void server_animstate_set_up_velocity( server_animstate* this );
+void server_animstate_set_up_aim_matrix( server_animstate* this );
+void server_animstate_set_up_weapon_action( server_animstate* this );
+void server_animstate_set_up_movement( server_animstate* this );
+void server_animstate_set_up_flashed_reaction( server_animstate* this );
+void server_animstate_set_up_whole_body_action( server_animstate* this );
+void server_animstate_set_up_flinch( server_animstate* this );
+void server_animstate_set_up_lean( server_animstate* this );
 
-void server_animstate_update ( server_animstate* this, vec3* ang, bool force );
-#pragma endregion ANIMS
+void server_animstate_update( server_animstate* this, vec3* ang, bool force );
 
 #endif // !SDK_PLAYER_H

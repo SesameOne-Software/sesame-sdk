@@ -1,7 +1,7 @@
 #ifndef SDK_VEC3_H
 #define SDK_VEC3_H
 
-#include "include/utils.h"
+#include "utils.h"
 
 static inline float cs_deg2rad( float deg ) {
 	return deg * M_PI / 180.0f;
@@ -17,21 +17,21 @@ static inline void cs_sincos( float rad, float* sin_out, float* cos_out ) {
 }
 
 static inline float cs_norm_rotation( float ang ) {
-	if ( isnan ( ang ) || isinf ( ang ) )
+	if ( isnan( ang ) || isinf( ang ) )
 		ang = 0.0f;
 
-	ang = fmodf ( ang, 360.0f );
+	ang = fmodf( ang, 360.0f );
 
 	if ( ang > 180.0f )
 		ang -= 360.0f;
-	
+
 	if ( ang < -180.0f )
 		ang += 360.0f;
 
 	return ang;
 }
 
-static inline float cs_approachf ( float target, float value, float speed ) {
+static inline float cs_approachf( float target, float value, float speed ) {
 	float delta = target - value;
 
 	if ( delta > speed )
@@ -44,31 +44,31 @@ static inline float cs_approachf ( float target, float value, float speed ) {
 	return value;
 }
 
-static inline float cs_remap_val_clamped ( float val, float a, float b, float c, float d ) {
+static inline float cs_remap_val_clamped( float val, float a, float b, float c, float d ) {
 	if ( a == b )
 		return val >= b ? d : c;
-	
-	return d + ( d - c ) * clampf ( ( val - a ) / ( b - a ), 0.0f, 1.0f );
+
+	return d + ( d - c ) * clampf( ( val - a ) / ( b - a ), 0.0f, 1.0f );
 }
 
-static inline float cs_anglemod ( float a ) {
-	return ( 360.0f / 65536 ) * ( ( int ) ( a * ( 65536.0f / 360.0f ) ) & 65535 );
+static inline float cs_anglemod( float a ) {
+	return ( 360.0f / 65536 ) * ( ( int )( a * ( 65536.0f / 360.0f ) ) & 65535 );
 }
 
-static inline float cs_clamp_cycle(float x) {
-	x -= (int)x;
+static inline float cs_clamp_cycle( float x ) {
+	x -= ( int )x;
 
-	if (x < 0.0f)
+	if ( x < 0.0f )
 		x += 1.0f;
-	else if (x > 1.0f)
+	else if ( x > 1.0f )
 		x -= 1.0f;
 
 	return x;
 }
 
-static inline float cs_approach_rotation ( float target, float value, float speed ) {
-	target = cs_anglemod ( target );
-	value = cs_anglemod ( value );
+static inline float cs_approach_rotation( float target, float value, float speed ) {
+	target = cs_anglemod( target );
+	value = cs_anglemod( value );
 
 	float delta = target - value;
 
@@ -90,8 +90,8 @@ static inline float cs_approach_rotation ( float target, float value, float spee
 	return value;
 }
 
-static inline float cs_angle_diff ( float dst, float src ) {
-	float delta = fmodf ( dst - src, 360.0f );
+static inline float cs_angle_diff( float dst, float src ) {
+	float delta = fmodf( dst - src, 360.0f );
 
 	if ( dst > src ) {
 		if ( delta >= 180.0f )
@@ -105,24 +105,24 @@ static inline float cs_angle_diff ( float dst, float src ) {
 	return delta;
 }
 
-static inline float cs_bias ( float x, float amount ) {
+static inline float cs_bias( float x, float amount ) {
 	static float last_exponent = 0.0f;
 
 	if ( amount != -1.0f )
-		last_exponent = logf ( amount ) * -1.4427f;
+		last_exponent = logf( amount ) * -1.4427f;
 
-	return powf ( x, last_exponent );
+	return powf( x, last_exponent );
 }
 
-static inline float cs_gain ( float x, float amount ) {
+static inline float cs_gain( float x, float amount ) {
 	if ( x < 0.5f )
-		return 0.5f * cs_bias ( 2.0f * x, 1.0f - amount );
-	
-	return 1.0f - 0.5f * cs_bias ( 2.0f - 2.0f * x, 1.0f - amount );
+		return 0.5f * cs_bias( 2.0f * x, 1.0f - amount );
+
+	return 1.0f - 0.5f * cs_bias( 2.0f - 2.0f * x, 1.0f - amount );
 }
 
-static inline float cs_smoothstep_bounds ( float a, float b, float x ) {
-	const auto r = clampf ( ( x - a ) * b, 0.0f, 1.0f );
+static inline float cs_smoothstep_bounds( float a, float b, float x ) {
+	const auto r = clampf( ( x - a ) * b, 0.0f, 1.0f );
 	return ( 3.0f - ( r + r ) ) * ( r * r );
 };
 
@@ -130,7 +130,7 @@ typedef struct {
 	float x, y, z;
 } vec3;
 
-typedef struct __declspec( align( 16 ) ) {
+typedef struct __attribute__( ( aligned( 16 ) ) ) {
 	float x, y, z;
 } vec3a;
 
@@ -390,64 +390,64 @@ static inline float vec3##_fov_to( vec3* this, vec3* angs_towards ) {\
 	return cs_rad2deg( acosf( vec3##_dot(&fwd_vec, &aim_vec) / vec3##_len_sqr(&fwd_vec) ) );\
 }
 
-VEC3_INIT ( vec3 )
-VEC3_ZERO ( vec3 )
-VEC3_IS_VALID ( vec3 )
-VEC3_IS_ZERO ( vec3 )
-VEC3_EQUALS ( vec3 )
-VEC3_ADD ( vec3 )
-VEC3_ADDF ( vec3 )
-VEC3_SUB ( vec3 )
-VEC3_SUBF ( vec3 )
-VEC3_MUL ( vec3 )
-VEC3_MULF ( vec3 )
-VEC3_DIV ( vec3 )
-VEC3_DIVF ( vec3 )
-VEC3_LEN ( vec3 )
-VEC3_LEN_SQR ( vec3 )
-VEC3_LEN2D ( vec3 )
-VEC3_LEN2D_SQR ( vec3 )
-VEC3_NORM ( vec3 )
-VEC3_DIST ( vec3 )
-VEC3_DIST_SQR ( vec3 )
-VEC3_DOT ( vec3 )
-VEC3_CROSS ( vec3 )
-VEC3_CLAMP_ANGLE ( vec3 )
-VEC3_TO_ANGLE(vec3)
-VEC3_TO_VEC ( vec3 )
-VEC3_TO_VECS ( vec3 )
-VEC3_APPROACH_VEC ( vec3 )
-VEC3_ANGLE_TO(vec3)
-VEC3_FOV_TO(vec3)
+VEC3_INIT( vec3 )
+VEC3_ZERO( vec3 )
+VEC3_IS_VALID( vec3 )
+VEC3_IS_ZERO( vec3 )
+VEC3_EQUALS( vec3 )
+VEC3_ADD( vec3 )
+VEC3_ADDF( vec3 )
+VEC3_SUB( vec3 )
+VEC3_SUBF( vec3 )
+VEC3_MUL( vec3 )
+VEC3_MULF( vec3 )
+VEC3_DIV( vec3 )
+VEC3_DIVF( vec3 )
+VEC3_LEN( vec3 )
+VEC3_LEN_SQR( vec3 )
+VEC3_LEN2D( vec3 )
+VEC3_LEN2D_SQR( vec3 )
+VEC3_NORM( vec3 )
+VEC3_DIST( vec3 )
+VEC3_DIST_SQR( vec3 )
+VEC3_DOT( vec3 )
+VEC3_CROSS( vec3 )
+VEC3_CLAMP_ANGLE( vec3 )
+VEC3_TO_ANGLE( vec3 )
+VEC3_TO_VEC( vec3 )
+VEC3_TO_VECS( vec3 )
+VEC3_APPROACH_VEC( vec3 )
+VEC3_ANGLE_TO( vec3 )
+VEC3_FOV_TO( vec3 )
 
-VEC3_INIT ( vec3a )
-VEC3_ZERO ( vec3a )
-VEC3_IS_VALID ( vec3a )
-VEC3_IS_ZERO ( vec3a )
-VEC3_EQUALS ( vec3a )
-VEC3_ADD ( vec3a )
-VEC3_ADDF ( vec3a )
-VEC3_SUB ( vec3a )
-VEC3_SUBF ( vec3a )
-VEC3_MUL ( vec3a )
-VEC3_MULF ( vec3a )
-VEC3_DIV ( vec3a )
-VEC3_DIVF ( vec3a )
-VEC3_LEN ( vec3a )
-VEC3_LEN_SQR ( vec3a )
-VEC3_LEN2D ( vec3a )
-VEC3_LEN2D_SQR ( vec3a )
-VEC3_NORM ( vec3a )
-VEC3_DIST ( vec3a )
-VEC3_DIST_SQR ( vec3a )
-VEC3_DOT ( vec3a )
-VEC3_CROSS ( vec3a )
-VEC3_CLAMP_ANGLE ( vec3a )
-VEC3_TO_ANGLE(vec3a)
-VEC3_TO_VEC ( vec3a )
-VEC3_TO_VECS ( vec3a )
-VEC3_APPROACH_VEC ( vec3a )
-VEC3_ANGLE_TO(vec3a)
-VEC3_FOV_TO(vec3a)
+VEC3_INIT( vec3a )
+VEC3_ZERO( vec3a )
+VEC3_IS_VALID( vec3a )
+VEC3_IS_ZERO( vec3a )
+VEC3_EQUALS( vec3a )
+VEC3_ADD( vec3a )
+VEC3_ADDF( vec3a )
+VEC3_SUB( vec3a )
+VEC3_SUBF( vec3a )
+VEC3_MUL( vec3a )
+VEC3_MULF( vec3a )
+VEC3_DIV( vec3a )
+VEC3_DIVF( vec3a )
+VEC3_LEN( vec3a )
+VEC3_LEN_SQR( vec3a )
+VEC3_LEN2D( vec3a )
+VEC3_LEN2D_SQR( vec3a )
+VEC3_NORM( vec3a )
+VEC3_DIST( vec3a )
+VEC3_DIST_SQR( vec3a )
+VEC3_DOT( vec3a )
+VEC3_CROSS( vec3a )
+VEC3_CLAMP_ANGLE( vec3a )
+VEC3_TO_ANGLE( vec3a )
+VEC3_TO_VEC( vec3a )
+VEC3_TO_VECS( vec3a )
+VEC3_APPROACH_VEC( vec3a )
+VEC3_ANGLE_TO( vec3a )
+VEC3_FOV_TO( vec3a )
 
 #endif // !SDK_VEC3_H

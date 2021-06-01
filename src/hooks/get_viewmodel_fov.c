@@ -1,7 +1,7 @@
-#include "include/hooks/hooks.h"
+#include "hooks/hooks.h"
 
-float __fastcall hooks_get_viewmodel_fov ( REG ) {
-	typedef float ( __fastcall* hooks_get_viewmodel_fov_fn )( REG );
-	
-	return ( ( hooks_get_viewmodel_fov_fn ) subhook_get_trampoline ( hooks_subhooks [ subhook_get_viewmodel_fov ] ) )( REG_OUT );
+__attribute__( ( thiscall ) ) float hooks_get_viewmodel_fov( void* this ) {
+	typedef __attribute__( ( thiscall ) ) float( *hooks_get_viewmodel_fov_fn )( void* this );
+
+	return ( ( hooks_get_viewmodel_fov_fn )subhook_get_trampoline( hooks_subhooks[ subhook_get_viewmodel_fov ] ) )( this );
 }

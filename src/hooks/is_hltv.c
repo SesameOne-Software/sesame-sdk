@@ -1,12 +1,10 @@
-#include "include/hooks/hooks.h"
+#include "hooks/hooks.h"
 
-#include <intrin.h>
+__attribute__( ( thiscall ) ) bool hooks_is_hltv( iengine* this ) {
+	typedef __attribute__( ( thiscall ) ) bool( *hooks_is_hltv_fn )( iengine* this );
 
-bool __fastcall hooks_is_hltv ( REG ) {
-	typedef bool ( __fastcall* hooks_is_hltv_fn )( REG );
-
-	if ( _ReturnAddress ( ) == cs_offsets.accumulate_layers_ret )
+	if ( __builtin_return_address( 0 ) == cs_offsets.accumulate_layers_ret )
 		return false;
 
-	return ( ( hooks_is_hltv_fn ) subhook_get_trampoline ( hooks_subhooks [ subhook_is_hltv ] ) )( REG_OUT );
+	return ( ( hooks_is_hltv_fn )subhook_get_trampoline( hooks_subhooks[ subhook_is_hltv ] ) )( this );
 }

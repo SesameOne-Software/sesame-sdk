@@ -1,12 +1,12 @@
-#include "include/hooks/hooks.h"
+#include "hooks/hooks.h"
 
-#include "include/gui/menu.h"
+#include "gui/menu.h"
 
-void __fastcall hooks_lock_cursor ( REG ) {
-	typedef void ( __fastcall* hooks_lock_cursor_fn )( REG );
+__attribute__( ( thiscall ) ) void hooks_lock_cursor( isurface* this ) {
+	typedef __attribute__( ( thiscall ) ) void( *hooks_lock_cursor_fn )( isurface* this );
 
-	if ( menu_is_open() )
-		return isurface_unlock_cursor ( cs_isurface );
+	if ( menu_is_open( ) )
+		return isurface_unlock_cursor( this );
 
-	( ( hooks_lock_cursor_fn ) subhook_get_trampoline ( hooks_subhooks [ subhook_lock_cursor ] ) )( REG_OUT );
+	( ( hooks_lock_cursor_fn )subhook_get_trampoline( hooks_subhooks[ subhook_lock_cursor ] ) )( this );
 }

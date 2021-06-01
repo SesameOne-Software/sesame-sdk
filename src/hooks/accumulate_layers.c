@@ -1,17 +1,15 @@
-#include "include/hooks/hooks.h"
+#include "hooks/hooks.h"
 
-void __fastcall hooks_accumulate_layers ( REG, void* setup, vec3* pos, void* q, float time ) {
-	typedef void ( __fastcall* hooks_accumulate_layers_fn )( REG, void* setup, vec3* pos, void* q, float time );
+__attribute__( ( thiscall ) ) void hooks_accumulate_layers( player* this, void* setup, vec3* pos, void* q, float time ) {
+	typedef __attribute__( ( thiscall ) ) void( *hooks_accumulate_layers_fn )( player* this, void* setup, vec3* pos, void* q, float time );
 
-	const player* ent = ( player* ) ecx;
+	if ( !this || !entity_is_player( ( entity* )this ) || !player_is_alive( this ) || !*player_animlayers( this ) )
+		return ( ( hooks_accumulate_layers_fn )subhook_get_trampoline( hooks_subhooks[ subhook_accumulate_layers ] ) )( this, setup, pos, q, time );
 
-	if ( !ent || !entity_is_player((entity*) ent ) || !player_is_alive( ent ) || !*player_animlayers(ent) )
-		return ( ( hooks_accumulate_layers_fn ) subhook_get_trampoline ( hooks_subhooks [ subhook_accumulate_layers ] ) )( REG_OUT, setup, pos, q, time );
+	for ( auto i = 0; i < *player_num_animlayers( this ); i++ ) {
+		const animlayer* layer = *player_animlayers( this ) + i;
 
-	for ( auto i = 0; i < *player_num_animlayers ( ent ); i++ ) {
-		const animlayer* layer = *player_animlayers ( ent ) + i;
-		
-		if ( layer->weight > 0.0f && layer->order >= 0 && layer->order < *player_num_animlayers ( ent ) )
-			(( void ( __fastcall* )( void*, void*, vec3*, void*, int, float, float, float, void* ) )cs_offsets.accumulate_pose_fn) ( *( void** ) setup, NULL, pos, q, layer->seq, layer->cycle, layer->weight, time, *player_iks(ent) );
+		if ( layer->weight > 0.0f && layer->order >= 0 && layer->order < *player_num_animlayers( this ) )
+			( ( __attribute__( ( thiscall ) ) void( * )( void*, vec3*, void*, int, float, float, float, void* ) )cs_offsets.accumulate_pose_fn ) ( *( void** )setup, pos, q, layer->seq, layer->cycle, layer->weight, time, *player_iks( this ) );
 	}
 }

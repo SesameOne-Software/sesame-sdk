@@ -1,5 +1,5 @@
-#include "include/hooks/hooks.h"
+#include "hooks/hooks.h"
 
-bool __fastcall hooks_should_skip_anim_frame ( REG ) {
+__attribute__( ( thiscall ) ) bool hooks_should_skip_anim_frame( renderable* this ) {
 	return false;
 }

@@ -96,209 +96,209 @@ typedef enum {
 
 // Generated using ReClass 2016
 typedef struct {
-	PAD ( 20 );
+	PAD( 20 );
 	int max_clip;
-	PAD ( 12 );
+	PAD( 12 );
 	int max_reserved_ammo;
-	PAD ( 96 );
+	PAD( 96 );
 	const char* hud_name;
 	const char* weapon_name;
-	PAD ( 56 );
+	PAD( 56 );
 	weapontype type;
-	PAD ( 4 );
+	PAD( 4 );
 	int price;
 	int reward;
-	PAD ( 4 );
+	PAD( 4 );
 	float fire_rate;
-	PAD ( 12 );
+	PAD( 12 );
 	uint8_t full_auto;
-	PAD ( 3 );
+	PAD( 3 );
 	int dmg;
 	float armor_ratio;
 	int bullets;
 	float penetration;
-	PAD ( 8 );
+	PAD( 8 );
 	float range;
 	float range_modifier;
 	float throw_velocity;
-	PAD ( 12 );
+	PAD( 12 );
 	bool has_silencer;
-	PAD ( 15 );
+	PAD( 15 );
 	float max_speed;
 	float max_speed_alt;
-	PAD ( 76 );
+	PAD( 76 );
 	int recoil_seed;
-	PAD ( 32 );
+	PAD( 32 );
 } weapon_info;
 
 typedef struct econitem econitem;
 
-OFFSET ( econitem, uint32_t, account_id, cs_offsets.econitem_account_id );
-OFFSET ( econitem, const char*, icon_name, cs_offsets.econitem_icon_name );
-OFFSET ( econitem, const char*, mdl_name, cs_offsets.econitem_mdl_name );
-OFFSET ( econitem, const char*, world_mdl_name, cs_offsets.econitem_world_mdl_name );
-VIRTUAL ( econitem, const char*, inventory_img, cs_idx_econitem_inventory_img, () );
-OFFSET ( econitem, uint64_t, item_id, cs_offsets.econitem_item_id );
-OFFSET ( econitem, uint64_t, original_id, cs_offsets.econitem_original_id );
-OFFSET ( econitem, uint16_t, item_definition_index, cs_offsets.econitem_item_definition_index );
-OFFSET ( econitem, uint32_t, inventory, cs_offsets.econitem_inventory );
-OFFSET ( econitem, uint8_t, flags, cs_offsets.econitem_flags );
-OFFSET ( econitem, int, equipped_position, cs_offsets.econitem_equipped_position );
+OFFSET( econitem, uint32_t, account_id, cs_offsets.econitem_account_id );
+OFFSET( econitem, const char*, icon_name, cs_offsets.econitem_icon_name );
+OFFSET( econitem, const char*, mdl_name, cs_offsets.econitem_mdl_name );
+OFFSET( econitem, const char*, world_mdl_name, cs_offsets.econitem_world_mdl_name );
+VIRTUAL( econitem, const char*, inventory_img, cs_idx_econitem_inventory_img, ( this ) );
+OFFSET( econitem, uint64_t, item_id, cs_offsets.econitem_item_id );
+OFFSET( econitem, uint64_t, original_id, cs_offsets.econitem_original_id );
+OFFSET( econitem, uint16_t, item_definition_index, cs_offsets.econitem_item_definition_index );
+OFFSET( econitem, uint32_t, inventory, cs_offsets.econitem_inventory );
+OFFSET( econitem, uint8_t, flags, cs_offsets.econitem_flags );
+OFFSET( econitem, int, equipped_position, cs_offsets.econitem_equipped_position );
 
 /*
 *	XREF: "Error Parsing PaintData in %s! \n" offset is in same function call
 *	https://github.com/perilouswithadollarsign/cstrike15_src/blob/29e4c1fda9698d5cebcdaf1a0de4b829fa149bf8/game/shared/cstrike15/cstrike15_item_schema.cpp#L188
 */
-OFFSET ( econitem, const char*, definition_name, cs_offsets.econitem_definition_name );
+OFFSET( econitem, const char*, definition_name, cs_offsets.econitem_definition_name );
 
-static inline econitem* econitem_static_data ( econitem* this ) {
-	return ( ( econitem * ( __fastcall* )( econitem*, void* ) )cs_offsets.econitem_static_data_fn ) ( this, NULL );
+static inline econitem* econitem_static_data( econitem* this ) {
+	return ( ( __attribute__( ( thiscall ) ) econitem * ( * )( econitem* ) )cs_offsets.econitem_static_data_fn ) ( this );
 }
 
-static inline void econitem_update_equipped_state ( econitem* this, bool state ) {
-	( ( int ( __fastcall* )( econitem*, void*, uint32_t ) )cs_offsets.econitem_update_equipped_state_fn ) ( this, NULL, state );
+static inline void econitem_update_equipped_state( econitem* this, bool state ) {
+	( ( __attribute__( ( thiscall ) ) int( * )( econitem*, uint32_t ) )cs_offsets.econitem_update_equipped_state_fn ) ( this, state );
 }
 
 /* XREF: "resource/flash/econ/weapons/cached/*.iic" string is inside the function */
-static inline void econitem_clean_inventory_image_cache_dir ( econitem* this ) {
-	( ( void ( __fastcall* )( econitem*, void* ) )cs_offsets.econitem_clean_inventory_image_cache_dir_fn ) ( this, NULL );
+static inline void econitem_clean_inventory_image_cache_dir( econitem* this ) {
+	( ( __attribute__( ( thiscall ) ) void( * )( econitem* ) )cs_offsets.econitem_clean_inventory_image_cache_dir_fn ) ( this );
 }
 
-static inline void econitem_set_or_add_attribute_by_name ( econitem* this, float val, const char* attribute_name ) {
-	const void* fn = ( void* ) cs_offsets.econitem_set_or_add_attribute_by_name_fn;
-
-	__asm {
-		mov ecx, this
-		movss xmm2, val
-		push attribute_name
-		call fn
-	}
+static inline void econitem_set_or_add_attribute_by_name( econitem* this, float val, const char* attribute_name ) {
+	asm volatile(
+		"mov ecx, %0;"
+		"movss xmm2, %1;"
+		"push %2;"
+		"call %3;"
+		:: "g"( this ), "g"( val ), "g"( attribute_name ), "g"( cs_offsets.econitem_set_or_add_attribute_by_name_fn )
+		: "ecx", "xmm2"
+		);
 }
 
-static inline void econitem_set_custom_name ( econitem* this, const char* name ) {
-	( ( econitem * ( __fastcall* )( econitem*, void*, const char* ) )cs_offsets.econitem_set_custom_name_fn ) ( this, NULL, name );
+static inline void econitem_set_custom_name( econitem* this, const char* name ) {
+	( ( __attribute__( ( thiscall ) ) econitem * ( * )( econitem*, const char* ) )cs_offsets.econitem_set_custom_name_fn ) ( this, name );
 }
 
-static inline void econitem_set_custom_desc ( econitem* this, const char* name ) {
-	( ( econitem * ( __fastcall* )( econitem*, void*, const char* ) )cs_offsets.econitem_set_custom_desc_fn ) ( this, NULL, name );
+static inline void econitem_set_custom_desc( econitem* this, const char* name ) {
+	( ( __attribute__( ( thiscall ) ) econitem * ( * )( econitem*, const char* ) )cs_offsets.econitem_set_custom_desc_fn ) ( this, name );
 }
 
-static inline void econitem_set_attributei ( econitem* this, int index, int val ) {
-	uint32_t* v15 = ( uint32_t* ) ( ( ( void* ( __cdecl* )( ) )cs_offsets.econitem_get_item_schema_fn ) ( ) );
-	uint32_t v16 = *( uint32_t* ) ( v15 [ 72 ] + 4 * index );
+static inline void econitem_set_attributei( econitem* this, int index, int val ) {
+	uint32_t* v15 = ( uint32_t* )( ( ( __attribute__( ( cdecl ) ) void* ( * )( ) )cs_offsets.econitem_get_item_schema_fn ) ( ) );
+	uint32_t v16 = *( uint32_t* )( v15[ 72 ] + 4 * index );
 
-	( ( int ( __fastcall* )( econitem*, void*, uint32_t, void* ) )cs_offsets.econitem_set_dynamic_attribute_val_fn ) ( this, NULL, v16, &val );
+	( ( __attribute__( ( thiscall ) ) int( * )( econitem*, uint32_t, void* ) )cs_offsets.econitem_set_dynamic_attribute_val_fn ) ( this, v16, &val );
 }
 
-static inline void econitem_set_attributef ( econitem* this, int index, float val ) {
-	econitem_set_attributei ( this, index, *( int* ) &val );
+static inline void econitem_set_attributef( econitem* this, int index, float val ) {
+	econitem_set_attributei( this, index, *( int* )&val );
 }
 
-static inline econitem* econitem_soc_data ( econitem* this ) {
-	return ( ( econitem * ( __fastcall* )( econitem*, void* ) )cs_offsets.econitem_soc_data_fn ) ( this, NULL );
+static inline econitem* econitem_soc_data( econitem* this ) {
+	return ( ( __attribute__( ( thiscall ) ) econitem * ( * )( econitem* ) )cs_offsets.econitem_soc_data_fn ) ( this );
 }
 
-static inline uint16_t* econitem_item_data ( econitem* this ) {
-	return ( uint16_t* ) ( ( uintptr_t ) this + 0x26 );
+static inline uint16_t* econitem_item_data( econitem* this ) {
+	return ( uint16_t* )( ( uintptr_t )this + 0x26 );
 }
 
-static inline void econitem_set_origin ( econitem* this, int origin ) {
-	const uint16_t data = *econitem_item_data ( this );
-	*econitem_item_data ( this ) = data ^ ( ( uint8_t ) data ^ ( uint8_t ) origin ) & 0x1F;
+static inline void econitem_set_origin( econitem* this, int origin ) {
+	const uint16_t data = *econitem_item_data( this );
+	*econitem_item_data( this ) = data ^ ( ( uint8_t )data ^ ( uint8_t )origin ) & 0x1F;
 }
 
-static inline void econitem_set_level ( econitem* this, int level ) {
-	const uint16_t data = *econitem_item_data ( this );
-	*econitem_item_data ( this ) = data ^ ( data ^ ( level << 9 ) ) & 0x600;
+static inline void econitem_set_level( econitem* this, int level ) {
+	const uint16_t data = *econitem_item_data( this );
+	*econitem_item_data( this ) = data ^ ( data ^ ( level << 9 ) ) & 0x600;
 }
 
-static inline void econitem_set_in_use ( econitem* this, bool in_use ) {
-	const uint16_t data = *econitem_item_data ( this );
-	*econitem_item_data ( this ) = data & 0x7FFF | ( in_use << 15 );
+static inline void econitem_set_in_use( econitem* this, bool in_use ) {
+	const uint16_t data = *econitem_item_data( this );
+	*econitem_item_data( this ) = data & 0x7FFF | ( in_use << 15 );
 }
 
-static inline void econitem_set_rarity ( econitem* this, int rarity ) {
-	const uint16_t data = *econitem_item_data ( this );
-	*econitem_item_data ( this ) = ( data ^ ( rarity << 11 ) ) & 0x7800 ^ data;
+static inline void econitem_set_rarity( econitem* this, int rarity ) {
+	const uint16_t data = *econitem_item_data( this );
+	*econitem_item_data( this ) = ( data ^ ( rarity << 11 ) ) & 0x7800 ^ data;
 }
 
-static inline void econitem_set_quality ( econitem* this, int quality ) {
-	const uint16_t data = *econitem_item_data ( this );
-	*econitem_item_data ( this ) = data ^ ( data ^ 32 * quality ) & 0x1E0;
+static inline void econitem_set_quality( econitem* this, int quality ) {
+	const uint16_t data = *econitem_item_data( this );
+	*econitem_item_data( this ) = data ^ ( data ^ 32 * quality ) & 0x1E0;
 }
 
-static inline void econitem_add_sticker ( econitem* this, int index, int kit, float wear, float scale, float rotation ) {
-	econitem_set_attributef ( this, 113 + 4 * index, kit );
-	econitem_set_attributef ( this, 114 + 4 * index, wear );
-	econitem_set_attributef ( this, 115 + 4 * index, scale );
-	econitem_set_attributef ( this, 116 + 4 * index, rotation );
+static inline void econitem_add_sticker( econitem* this, int index, int kit, float wear, float scale, float rotation ) {
+	econitem_set_attributef( this, 113 + 4 * index, kit );
+	econitem_set_attributef( this, 114 + 4 * index, wear );
+	econitem_set_attributef( this, 115 + 4 * index, scale );
+	econitem_set_attributef( this, 116 + 4 * index, rotation );
 }
 
-static inline void econitem_set_stattrak ( econitem* this, int val ) {
-	econitem_set_attributei ( this, 80, val );
-	econitem_set_attributei ( this, 81, 0 );
-	econitem_set_quality ( this, 9 );
+static inline void econitem_set_stattrak( econitem* this, int val ) {
+	econitem_set_attributei( this, 80, val );
+	econitem_set_attributei( this, 81, 0 );
+	econitem_set_quality( this, 9 );
 }
 
-static inline void econitem_set_paintkit ( econitem* this, float kit ) {
-	econitem_set_attributef ( this, 6, kit );
+static inline void econitem_set_paintkit( econitem* this, float kit ) {
+	econitem_set_attributef( this, 6, kit );
 }
 
-static inline void econitem_set_paint_seed ( econitem* this, float seed ) {
-	econitem_set_attributef ( this, 7, seed );
+static inline void econitem_set_paint_seed( econitem* this, float seed ) {
+	econitem_set_attributef( this, 7, seed );
 }
 
-static inline void econitem_set_paint_wear ( econitem* this, float wear ) {
-	econitem_set_attributef ( this, 8, wear );
+static inline void econitem_set_paint_wear( econitem* this, float wear ) {
+	econitem_set_attributef( this, 8, wear );
 }
 
 typedef struct weapon weapon;
 
-NETVAR ( weapon, uint16_t, item_def_idx, "DT_BaseAttributableItem->m_iItemDefinitionIndex" );
-NETVAR ( weapon, int, mdl_idx, "DT_BaseAttributableItem->m_nModelIndex" );
-NETVAR ( weapon, float, next_primary_attack, "DT_BaseCombatWeapon->m_flNextPrimaryAttack" );
-NETVAR ( weapon, float, next_secondary_attack, "DT_BaseCombatWeapon->m_flNextSecondaryAttack" );
-NETVAR ( weapon, int, ammo, "DT_BaseCombatWeapon->m_iClip1" );
-NETVAR ( weapon, int, ammo2, "DT_BaseCombatWeapon->m_iClip2" );
-NETVAR ( weapon, float, postpone_fire_time, "DT_BaseCombatWeapon->m_flPostponeFireReadyTime" );
-NETVAR ( weapon, uint32_t, world_mdl_handle, "DT_BaseCombatWeapon->m_hWeaponWorldModel" );
-NETVAR ( weapon, float, throw_time, "DT_BaseCSGrenade->m_fThrowTime" );
-NETVAR ( weapon, bool, pin_pulled, "DT_BaseCSGrenade->m_bPinPulled" );
-NETVAR ( weapon, float, throw_strength, "DT_BaseCSGrenade->m_flThrowStrength" );
-NETVAR ( weapon, uint64_t, original_owner_xuid, "DT_BaseAttributableItem->m_OriginalOwnerXuidLow" );
-NETVAR ( weapon, uint32_t, original_owner_xuid_lo, "DT_BaseAttributableItem->m_OriginalOwnerXuidLow" );
-NETVAR ( weapon, uint32_t, original_owner_xuid_hi, "DT_BaseAttributableItem->m_OriginalOwnerXuidHigh" );
-NETVAR ( weapon, uint32_t, fallback_stattrak, "DT_BaseAttributableItem->m_nFallbackStatTrak" );
-NETVAR ( weapon, uint32_t, fallback_paintkit, "DT_BaseAttributableItem->m_nFallbackPaintKit" );
-NETVAR ( weapon, uint32_t, fallback_seed, "DT_BaseAttributableItem->m_nFallbackSeed" );
-NETVAR ( weapon, float, fallback_wear, "DT_BaseAttributableItem->m_flFallbackWear" );
-NETVAR ( weapon, uint32_t, fallback_quality, "DT_BaseAttributableItem->m_iEntityQuality" );
-NETVAR ( weapon, uint32_t, item_id_low, "DT_BaseAttributableItem->m_iItemIDLow" );
-NETVAR ( weapon, uint32_t, item_id_high, "DT_BaseAttributableItem->m_iItemIDHigh" );
-NETVAR ( weapon, uint32_t, account, "DT_BaseAttributableItem->m_iAccountID" );
-NETVAR ( weapon, const char*, name, "DT_BaseAttributableItem->m_szCustomName" );
-NETVAR ( weapon, float, last_shot_time, "DT_WeaponCSBase->m_fLastShotTime" );
-NETVAR ( weapon, int, sequence, "DT_BaseViewModel->m_nSequence" );
-NETVAR ( weapon, bool, initialized, "DT_BaseAttributableItem->m_bInitialized" );
-NETVAR ( weapon, int, zoom_level, "DT_WeaponCSBaseGun->m_zoomLevel" );
-NETVAR ( weapon, float, accuracy_penalty, "DT_WeaponCSBase->m_fAccuracyPenalty" );
-NETVAR ( weapon, float, recoil_index, "DT_WeaponCSBase->m_flRecoilIndex" );
-NETVAR ( weapon, float, cycle, "DT_BaseAnimating->m_flCycle" );
-NETVAR ( weapon, float, anim_time, "DT_BaseEntity->m_flAnimTime" );
-NETVAR ( weapon, econitem, econ_item, "DT_BaseAttributableItem->m_Item" );
+NETVAR( weapon, uint16_t, item_def_idx, "DT_BaseAttributableItem->m_iItemDefinitionIndex" );
+NETVAR( weapon, int, mdl_idx, "DT_BaseAttributableItem->m_nModelIndex" );
+NETVAR( weapon, float, next_primary_attack, "DT_BaseCombatWeapon->m_flNextPrimaryAttack" );
+NETVAR( weapon, float, next_secondary_attack, "DT_BaseCombatWeapon->m_flNextSecondaryAttack" );
+NETVAR( weapon, int, ammo, "DT_BaseCombatWeapon->m_iClip1" );
+NETVAR( weapon, int, ammo2, "DT_BaseCombatWeapon->m_iClip2" );
+NETVAR( weapon, float, postpone_fire_time, "DT_BaseCombatWeapon->m_flPostponeFireReadyTime" );
+NETVAR( weapon, uint32_t, world_mdl_handle, "DT_BaseCombatWeapon->m_hWeaponWorldModel" );
+NETVAR( weapon, float, throw_time, "DT_BaseCSGrenade->m_fThrowTime" );
+NETVAR( weapon, bool, pin_pulled, "DT_BaseCSGrenade->m_bPinPulled" );
+NETVAR( weapon, float, throw_strength, "DT_BaseCSGrenade->m_flThrowStrength" );
+NETVAR( weapon, uint64_t, original_owner_xuid, "DT_BaseAttributableItem->m_OriginalOwnerXuidLow" );
+NETVAR( weapon, uint32_t, original_owner_xuid_lo, "DT_BaseAttributableItem->m_OriginalOwnerXuidLow" );
+NETVAR( weapon, uint32_t, original_owner_xuid_hi, "DT_BaseAttributableItem->m_OriginalOwnerXuidHigh" );
+NETVAR( weapon, uint32_t, fallback_stattrak, "DT_BaseAttributableItem->m_nFallbackStatTrak" );
+NETVAR( weapon, uint32_t, fallback_paintkit, "DT_BaseAttributableItem->m_nFallbackPaintKit" );
+NETVAR( weapon, uint32_t, fallback_seed, "DT_BaseAttributableItem->m_nFallbackSeed" );
+NETVAR( weapon, float, fallback_wear, "DT_BaseAttributableItem->m_flFallbackWear" );
+NETVAR( weapon, uint32_t, fallback_quality, "DT_BaseAttributableItem->m_iEntityQuality" );
+NETVAR( weapon, uint32_t, item_id_low, "DT_BaseAttributableItem->m_iItemIDLow" );
+NETVAR( weapon, uint32_t, item_id_high, "DT_BaseAttributableItem->m_iItemIDHigh" );
+NETVAR( weapon, uint32_t, account, "DT_BaseAttributableItem->m_iAccountID" );
+NETVAR( weapon, const char*, name, "DT_BaseAttributableItem->m_szCustomName" );
+NETVAR( weapon, float, last_shot_time, "DT_WeaponCSBase->m_fLastShotTime" );
+NETVAR( weapon, int, sequence, "DT_BaseViewModel->m_nSequence" );
+NETVAR( weapon, bool, initialized, "DT_BaseAttributableItem->m_bInitialized" );
+NETVAR( weapon, int, zoom_level, "DT_WeaponCSBaseGun->m_zoomLevel" );
+NETVAR( weapon, float, accuracy_penalty, "DT_WeaponCSBase->m_fAccuracyPenalty" );
+NETVAR( weapon, float, recoil_index, "DT_WeaponCSBase->m_flRecoilIndex" );
+NETVAR( weapon, float, cycle, "DT_BaseAnimating->m_flCycle" );
+NETVAR( weapon, float, anim_time, "DT_BaseEntity->m_flAnimTime" );
+NETVAR( weapon, econitem, econ_item, "DT_BaseAttributableItem->m_Item" );
 
-VIRTUAL ( weapon, void, update_accuracy, cs_idx_weapon_update_accuracy, ( ) );
-VIRTUAL ( weapon, float, innacuracy, cs_idx_weapon_innacuracy, (  ) );
-VIRTUAL ( weapon, float, spread, cs_idx_weapon_spread, ( ) );
-VIRTUAL ( weapon, float, max_speed, cs_idx_weapon_max_speed, ( ) );
+VIRTUAL( weapon, void, update_accuracy, cs_idx_weapon_update_accuracy, ( this ) );
+VIRTUAL( weapon, float, innacuracy, cs_idx_weapon_innacuracy, ( this ) );
+VIRTUAL( weapon, float, spread, cs_idx_weapon_spread, ( this ) );
+VIRTUAL( weapon, float, max_speed, cs_idx_weapon_max_speed, ( this ) );
 
-static inline weapon_info* weapon_data ( weapon* this ) {
-	return ( ( weapon_info * ( __fastcall* )( void*, void*, uint16_t ) )utils_vfunc ( ( void* ) cs_offsets.weapon_sys, cs_idx_weaponsys_data ) )( ( void* ) cs_offsets.weapon_sys, NULL, weapon_item_def_idx ( this ) );
+static inline weapon_info* weapon_data( weapon* this ) {
+	return ( ( __attribute__( ( thiscall ) ) weapon_info * ( * )( void*, uint16_t ) )utils_vfunc( ( void* )cs_offsets.weapon_sys, cs_idx_weaponsys_data ) )( ( void* )cs_offsets.weapon_sys, weapon_item_def_idx( this ) );
 }
 
-static inline weapon* weapon_world_mdl ( weapon* this ) {
+static inline weapon* weapon_world_mdl( weapon* this ) {
 	extern struct ientlist* cs_ientlist;
-	return ientlist_get_entity_from_handle ( cs_ientlist, weapon_world_mdl_handle ( this ) );
+	return ientlist_get_entity_from_handle( cs_ientlist, weapon_world_mdl_handle( this ) );
 }
 
 #endif // !SDK_WEAPON_H

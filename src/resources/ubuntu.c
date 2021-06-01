@@ -1,9 +1,9 @@
-#include "include/resources/resources.h"
+#include "resources/resources.h"
 
 // File: '.\Ubuntu-Regular.ttf' (298928 bytes)
 // Exported using binary_to_compressed_c.cpp
 const unsigned int resources_ubuntu_compressed_size = 198667;
-const unsigned int resources_ubuntu_compressed_data [ 198668 / 4 ] =
+const unsigned int resources_ubuntu_compressed_data[ 198668 / 4 ] =
 {
     0x0000bc57, 0x00000000, 0xb08f0400, 0x00000400, 0x00010025, 0x82120000, 0x00043e04, 0x4f504720, 0x6f1d5453, 0x5203002c, 0x2a0100a4, 0x5553477e,
     0x8bf6c542, 0x7d04003d, 0x2c248224, 0x2f534f8c, 0xf92e8932, 0x730200a9, 0x2835821c, 0x4d445660, 0xf7d8ef58, 0x080f82c5, 0x00007c3c, 0x6d63d616,

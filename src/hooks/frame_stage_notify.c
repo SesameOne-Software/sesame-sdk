@@ -1,11 +1,11 @@
-#include "include/hooks/hooks.h"
+#include "hooks/hooks.h"
 
-void __fastcall hooks_frame_stage_notify ( REG, int stage ) {
-	typedef void ( __fastcall* hooks_frame_stage_notify_fn )( REG, int stage );
+__attribute__( ( thiscall ) ) void hooks_frame_stage_notify( iclient* this, int stage ) {
+	typedef __attribute__( ( thiscall ) ) void( *hooks_frame_stage_notify_fn )( iclient* this, int stage );
 
 	/**/
 
-	( ( hooks_frame_stage_notify_fn ) subhook_get_trampoline ( hooks_subhooks [ subhook_frame_stage_notify ] ) )( REG_OUT, stage );
+	( ( hooks_frame_stage_notify_fn )subhook_get_trampoline( hooks_subhooks[ subhook_frame_stage_notify ] ) )( this, stage );
 
 	/**/
 }

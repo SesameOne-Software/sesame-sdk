@@ -4,7 +4,7 @@
 #include "vec3.h"
 #include "crc32.h"
 
-#include "include/utils.h"
+#include "utils.h"
 
 #define MULTIPLAYER_BACKUP 150
 
@@ -55,29 +55,29 @@ typedef struct {
 	short mouse_dx;
 	short mouse_dy;
 	bool has_been_predicted;
-	PAD ( 24 );
+	PAD( 24 );
 } usercmd;
 
-static inline crc32 usercmd_get_checksum ( usercmd* this ) {
+static inline crc32 usercmd_get_checksum( usercmd* this ) {
 	crc32 crc;
-	crc32_init ( crc );
-	
-	crc32_process ( crc, &this->cmd_num );
-	crc32_process ( crc, &this->tick_count );
-	crc32_process ( crc, &this->angles );
-	crc32_process ( crc, &this->aim_dir );
-	crc32_process ( crc, &this->forward_move );
-	crc32_process ( crc, &this->side_move );
-	crc32_process ( crc, &this->up_move );
-	crc32_process ( crc, &this->buttons );
-	crc32_process ( crc, &this->impulse );
-	crc32_process ( crc, &this->weapon_select );
-	crc32_process ( crc, &this->weapon_subtype );
-	crc32_process ( crc, &this->rand_seed );
-	crc32_process ( crc, &this->mouse_dx );
-	crc32_process ( crc, &this->mouse_dy );
+	crc32_init( crc );
 
-	crc32_final ( crc );
+	crc32_process( crc, &this->cmd_num );
+	crc32_process( crc, &this->tick_count );
+	crc32_process( crc, &this->angles );
+	crc32_process( crc, &this->aim_dir );
+	crc32_process( crc, &this->forward_move );
+	crc32_process( crc, &this->side_move );
+	crc32_process( crc, &this->up_move );
+	crc32_process( crc, &this->buttons );
+	crc32_process( crc, &this->impulse );
+	crc32_process( crc, &this->weapon_select );
+	crc32_process( crc, &this->weapon_subtype );
+	crc32_process( crc, &this->rand_seed );
+	crc32_process( crc, &this->mouse_dx );
+	crc32_process( crc, &this->mouse_dy );
+
+	crc32_final( crc );
 
 	return crc;
 }

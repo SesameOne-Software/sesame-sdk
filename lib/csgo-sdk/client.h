@@ -1,7 +1,7 @@
 #ifndef SDK_CLIENT_H
 #define SDK_CLIENT_H
 
-#include "include/utils.h"
+#include "utils.h"
 
 typedef struct recv_prop recv_prop;
 typedef struct recv_table recv_table;
@@ -44,6 +44,6 @@ struct client_class {
 
 typedef struct iclient iclient;
 
-VIRTUAL( iclient, client_class*, get_classes, cs_idx_iclient_get_classes, ( ) );
+VIRTUAL( iclient, client_class*, get_classes, cs_idx_iclient_get_classes, ( this ) );
 
 #endif // !SDK_CLIENT_H

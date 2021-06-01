@@ -1,12 +1,10 @@
-#include "include/hooks/hooks.h"
+#include "hooks/hooks.h"
 
-#include <intrin.h>
+__attribute__( ( thiscall ) ) bool hooks_in_prediction( ipred* this ) {
+	typedef __attribute__( ( thiscall ) ) ( *hooks_in_prediction_fn )( ipred* this );
 
-bool __fastcall hooks_in_prediction ( REG ) {
-	typedef bool ( __fastcall* hooks_in_prediction_fn )( REG );
-	
-	if ( _ReturnAddress ( ) == cs_offsets.maintain_sequence_transitions_ret )
+	if ( __builtin_return_address( 0 ) == cs_offsets.maintain_sequence_transitions_ret )
 		return true;
 
-	return ( ( hooks_in_prediction_fn ) subhook_get_trampoline ( hooks_subhooks [ subhook_in_prediction ] ) )( REG_OUT );
+	return ( ( hooks_in_prediction_fn )subhook_get_trampoline( hooks_subhooks[ subhook_in_prediction ] ) )( this );
 }

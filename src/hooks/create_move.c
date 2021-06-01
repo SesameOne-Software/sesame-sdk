@@ -1,23 +1,23 @@
-#include "include/hooks/hooks.h"
-#include "include/ses.h"
+#include "hooks/hooks.h"
+#include "ses.h"
 
-#include "include/features/movement.h"
+#include "features/movement.h"
 
-bool __fastcall hooks_create_move( REG, float sample_time, usercmd* cmd ) {
-	typedef bool( __fastcall* hooks_create_move_fn )( REG, float sample_time, usercmd* cmd );
-	
-	const bool ret = ( ( hooks_create_move_fn )subhook_get_trampoline( hooks_subhooks[ subhook_create_move ] ) )( REG_OUT, sample_time, cmd );
+__attribute__( ( thiscall ) ) bool hooks_create_move( void* this, float sample_time, usercmd* cmd ) {
+	typedef __attribute__( ( thiscall ) ) bool( *hooks_create_move_fn )( void* this, float sample_time, usercmd* cmd );
+
+	const bool ret = ( ( hooks_create_move_fn )subhook_get_trampoline( hooks_subhooks[ subhook_create_move ] ) )( this, sample_time, cmd );
 
 	if ( !cmd || !cmd->cmd_num ) {
 		/* call is from sample_input */
 		if ( cmd ) {
-			iengine_set_angles ( cs_iengine, &cmd->angles );
-			ipred_set_local_viewangles ( cs_ipred, &cmd->angles );
+			iengine_set_angles( cs_iengine, &cmd->angles );
+			ipred_set_local_viewangles( cs_ipred, &cmd->angles );
 		}
 
 		return ret;
 	}
-	
+
 	/* notify other parts of hack that we are in create_move */
 	ses_ctx.in_move = true;
 	/* we should not choke by default */
@@ -31,32 +31,32 @@ bool __fastcall hooks_create_move( REG, float sample_time, usercmd* cmd ) {
 	/* run input-related code here */
 	player* local = cs_get_local( );
 
-	if ( local && player_is_alive ( local ) )
-		ses_ctx.unpredicted_vel = *player_vel ( local );
-	
-	features_movement_run ( cmd );
+	if ( local && player_is_alive( local ) )
+		ses_ctx.unpredicted_vel = *player_vel( local );
+
+	features_movement_run( cmd );
 
 	/* clamp viewangles */
 	vec3 angles;
-	iengine_get_angles ( cs_iengine, &angles );
-	iengine_set_angles ( cs_iengine, vec3_clamp_angle ( &angles ) );
+	iengine_get_angles( cs_iengine, &angles );
+	iengine_set_angles( cs_iengine, vec3_clamp_angle( &angles ) );
 
-	vec3_clamp_angle ( &cmd->angles );
+	vec3_clamp_angle( &cmd->angles );
 
 	/* clamp movement */
-	cmd->forward_move = clampf ( cmd->forward_move, -450.0f, 450.0f );
-	cmd->side_move = clampf ( cmd->side_move, -450.0f, 450.0f );
-	cmd->up_move = clampf ( cmd->up_move, -450.0f, 450.0f );
+	cmd->forward_move = clampf( cmd->forward_move, -450.0f, 450.0f );
+	cmd->side_move = clampf( cmd->side_move, -450.0f, 450.0f );
+	cmd->up_move = clampf( cmd->up_move, -450.0f, 450.0f );
 
 	/* fix movement */
-	cs_rotate_movement ( cmd, ses_ctx.input_side_move, ses_ctx.input_forward_move, &ses_ctx.input_angles );
+	cs_rotate_movement( cmd, ses_ctx.input_side_move, ses_ctx.input_forward_move, &ses_ctx.input_angles );
 
 	/* handle choking packets */
-	*( bool* ) ( *( uintptr_t* ) ( ( uintptr_t ) _AddressOfReturnAddress ( ) - 0x4 ) - 0x1C ) = !ses_ctx.choke;
-	
+	*( bool* )( *( uintptr_t* )( ( uintptr_t )__builtin_frame_address( 0 ) - 0x4 ) - 0x1C ) = !ses_ctx.choke;
+
 	ses_ctx.num_sent = ses_ctx.choke ? 0 : ++ses_ctx.num_sent;
 	ses_ctx.num_choked = ses_ctx.choke ? ++ses_ctx.num_choked : 0;
-	
+
 	/* notify other parts of hack that we are exiting create_move */
 	ses_ctx.in_move = false;
 

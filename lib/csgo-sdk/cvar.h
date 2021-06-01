@@ -1,7 +1,7 @@
 #ifndef SDK_CVAR_H
 #define SDK_CVAR_H
 
-#include "include/utils.h"
+#include "utils.h"
 
 typedef enum {
 	fcvar_none = 0,
@@ -39,7 +39,7 @@ typedef struct {
 typedef struct cvar cvar;
 
 struct cvar {
-	PAD ( 4 );
+	PAD( 4 );
 	cvar* next;
 	int registered;
 	const char* name;
@@ -56,36 +56,36 @@ struct cvar {
 	void* callbacks;
 };
 
-static inline void cvar_get_string ( cvar* this ) {
+static inline void cvar_get_string( cvar* this ) {
 	if ( this->flags & fcvar_never_as_string )
 		return "FCVAR_NEVER_AS_STRING";
 
 	return this->value.str ? this->value.str : "";
 }
 
-static inline float cvar_get_float ( cvar* this ) {
-	const uint32_t xored = *( uint32_t* ) &this->value.f ^ ( uint32_t ) this;
-	return *( float* ) &xored;
+static inline float cvar_get_float( cvar* this ) {
+	const uint32_t xored = *( uint32_t* )&this->value.f ^ ( uint32_t )this;
+	return *( float* )&xored;
 }
 
-static inline int cvar_get_int ( cvar* this ) {
-	return ( int ) ( this->value.i ^ ( uint32_t ) this );
+static inline int cvar_get_int( cvar* this ) {
+	return ( int )( this->value.i ^ ( uint32_t )this );
 }
 
 static inline bool cvar_get_bool( cvar* this ) {
 	return cvar_get_int( this );
 }
 
-static inline void cvar_null_cb ( cvar* this ) {
-	*( int* ) ( ( uintptr_t ) &this->callbacks + 0xC ) = 0;
+static inline void cvar_null_cb( cvar* this ) {
+	*( int* )( ( uintptr_t )&this->callbacks + 0xC ) = 0;
 }
 
-VIRTUAL ( cvar, void, set_valuesz, cs_idx_cvar_set_valuesz, ( value ), const char* value );
-VIRTUAL ( cvar, void, set_valuef, cs_idx_cvar_set_valuef, ( value ), float value );
-VIRTUAL ( cvar, void, set_valuei, cs_idx_cvar_set_valuei, ( value ), int value );
+VIRTUAL( cvar, void, set_valuesz, cs_idx_cvar_set_valuesz, ( this, value ), const char* value );
+VIRTUAL( cvar, void, set_valuef, cs_idx_cvar_set_valuef, ( this, value ), float value );
+VIRTUAL( cvar, void, set_valuei, cs_idx_cvar_set_valuei, ( this, value ), int value );
 
 typedef struct icvar icvar;
 
-VIRTUAL ( icvar, cvar*, find, cs_idx_icvar_find, ( name ), const char* name );
+VIRTUAL( icvar, cvar*, find, cs_idx_icvar_find, ( this, name ), const char* name );
 
 #endif // !SDK_CVAR_H

@@ -1,7 +1,7 @@
-#include "include/hooks/hooks.h"
+#include "hooks/hooks.h"
 
-void __fastcall hooks_perform_flashbang_effect ( REG, void* view_setup ) {
-	typedef void ( __fastcall* hooks_perform_flashbang_effect_fn )( REG, void* view_setup );
+__attribute__( ( thiscall ) ) void hooks_perform_flashbang_effect( ipanel* this, void* view_setup ) {
+	typedef __attribute__( ( thiscall ) ) void( *hooks_perform_flashbang_effect_fn )( ipanel* this, void* view_setup );
 
-	( ( hooks_perform_flashbang_effect_fn ) subhook_get_trampoline ( hooks_subhooks [ subhook_perform_flashbang_effect ] ) )( REG_OUT, view_setup );
+	( ( hooks_perform_flashbang_effect_fn )subhook_get_trampoline( hooks_subhooks[ subhook_perform_flashbang_effect ] ) )( this, view_setup );
 }

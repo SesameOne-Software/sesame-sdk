@@ -3,14 +3,14 @@
 
 #include "vec3.h"
 
-#include "include/utils.h"
+#include "utils.h"
 
 typedef struct {
-	float values [ 3 ][ 4 ];
+	float values[ 3 ][ 4 ];
 } mat3x4;
 
-typedef struct __declspec( align( 16 ) ) {
-	float values [ 3 ][ 4 ];
+typedef struct __attribute__( ( aligned( 16 ) ) ) {
+	float values[ 3 ][ 4 ];
 } mat3x4a;
 
 #define MAT3X4_GET(mat3x4)\
@@ -48,16 +48,16 @@ static inline bool mat3x4##_equals ( mat3x4* this, mat3x4* src ) {\
 	return true;\
 }
 
-MAT3X4_INIT ( mat3x4 )
-MAT3X4_GET(mat3x4)
-MAT3X4_SET_ORIGIN ( mat3x4 )
-MAT3X4_GET_ORIGIN ( mat3x4 )
-MAT3X4_EQUALS ( mat3x4 )
+MAT3X4_INIT( mat3x4 )
+MAT3X4_GET( mat3x4 )
+MAT3X4_SET_ORIGIN( mat3x4 )
+MAT3X4_GET_ORIGIN( mat3x4 )
+MAT3X4_EQUALS( mat3x4 )
 
-MAT3X4_INIT ( mat3x4a )
-MAT3X4_GET(mat3x4a)
-MAT3X4_SET_ORIGIN ( mat3x4a )
-MAT3X4_GET_ORIGIN ( mat3x4a )
-MAT3X4_EQUALS ( mat3x4a )
+MAT3X4_INIT( mat3x4a )
+MAT3X4_GET( mat3x4a )
+MAT3X4_SET_ORIGIN( mat3x4a )
+MAT3X4_GET_ORIGIN( mat3x4a )
+MAT3X4_EQUALS( mat3x4a )
 
 #endif // !SDK_MAT3X4_H

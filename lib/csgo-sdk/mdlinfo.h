@@ -5,12 +5,12 @@
 #include "quat.h"
 #include "mat3x4.h"
 
-#include "include/utils.h"
+#include "utils.h"
 
 typedef struct {
 	int name_idx;
 	int parent;
-	int bone_controller [ 6 ];
+	int bone_controller[ 6 ];
 	vec3 pos;
 	quat q;
 	vec3 rot;
@@ -44,11 +44,11 @@ typedef struct {
 	int hitbox_idx;
 } mstudiohitboxset;
 
-static inline mstudiobbox* mstudiohitboxset_hitbox ( mstudiohitboxset* this, int i ) {
+static inline mstudiobbox* mstudiohitboxset_hitbox( mstudiohitboxset* this, int i ) {
 	if ( i > this->num_hitboxes )
 		return NULL;
 
-	return ( mstudiobbox* )( ( uintptr_t ) this + this->hitbox_idx ) + i;
+	return ( mstudiobbox* )( ( uintptr_t )this + this->hitbox_idx ) + i;
 }
 
 typedef struct studiohdr studiohdr;
@@ -57,7 +57,7 @@ struct studiohdr {
 	int id;
 	int version;
 	long checksum;
-	char name [ 64 ];
+	char name[ 64 ];
 	int length;
 	vec3 eye_pos;
 	vec3 illumination_pos;
@@ -82,34 +82,34 @@ struct studiohdr {
 	int texture_idx;
 };
 
-static inline mstudiohitboxset* studiohdr_hitbox_set ( studiohdr* this, int i ) {
+static inline mstudiohitboxset* studiohdr_hitbox_set( studiohdr* this, int i ) {
 	if ( i > this->num_hitbox_sets )
 		return NULL;
 
-	return ( mstudiohitboxset* ) ( ( uintptr_t ) this + this->hitbox_set_idx ) + i;
+	return ( mstudiohitboxset* )( ( uintptr_t )this + this->hitbox_set_idx ) + i;
 }
 
-static inline mstudiobone* studiohdr_bone ( studiohdr* this, int i ) {
+static inline mstudiobone* studiohdr_bone( studiohdr* this, int i ) {
 	if ( i > this->num_bones )
 		return NULL;
 
-	return ( mstudiobone* ) ( ( uintptr_t ) this + this->bone_idx ) + i;
+	return ( mstudiobone* )( ( uintptr_t )this + this->bone_idx ) + i;
 }
 
-static inline void* studiohdr_find_mapping ( studiohdr* this ) {
-	return ( ( void*(__fastcall*)( studiohdr*, void* ))cs_offsets.studiohdr_findmapping ) (this, NULL);
+static inline void* studiohdr_find_mapping( studiohdr* this ) {
+	return ( ( __attribute__( ( thiscall ) ) void* ( * )( studiohdr* ) )cs_offsets.studiohdr_findmapping ) ( this );
 }
 
-static inline void* studiohdr_seq_desc ( studiohdr* this, int seq ) {
-	return ( ( void* ( __fastcall* )( studiohdr*, void*, int ) )cs_offsets.studiohdr_seq_desc ) ( this, NULL, seq );
+static inline void* studiohdr_seq_desc( studiohdr* this, int seq ) {
+	return ( ( __attribute__( ( thiscall ) ) void* ( * )( studiohdr*, int ) )cs_offsets.studiohdr_seq_desc ) ( this, seq );
 }
 
 typedef struct mdl mdl;
 typedef struct imdlinfo imdlinfo;
 
-VIRTUAL ( imdlinfo, mdl*, get_mdl, cs_idx_imdlinfo_get_mdl, ( idx ), uint32_t idx );
-VIRTUAL ( imdlinfo, uint32_t, get_mdl_idx, cs_idx_imdlinfo_get_mdl_idx, ( name ), const char* name );
-VIRTUAL ( imdlinfo, const char*, get_mdl_name, cs_idx_imdlinfo_get_mdl_name, ( pmdl ), mdl* pmdl );
-VIRTUAL ( imdlinfo, studiohdr*, get_studio_mdl, cs_idx_imdlinfo_get_studio_mdl, ( pmdl ), mdl* pmdl );
+VIRTUAL( imdlinfo, mdl*, get_mdl, cs_idx_imdlinfo_get_mdl, ( this, idx ), uint32_t idx );
+VIRTUAL( imdlinfo, uint32_t, get_mdl_idx, cs_idx_imdlinfo_get_mdl_idx, ( this, name ), const char* name );
+VIRTUAL( imdlinfo, const char*, get_mdl_name, cs_idx_imdlinfo_get_mdl_name, ( this, pmdl ), mdl* pmdl );
+VIRTUAL( imdlinfo, studiohdr*, get_studio_mdl, cs_idx_imdlinfo_get_studio_mdl, ( this, pmdl ), mdl* pmdl );
 
 #endif // !SDK_MDLINFO_H

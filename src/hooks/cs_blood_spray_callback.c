@@ -1,4 +1,4 @@
-#include "include/hooks/hooks.h"
+#include "hooks/hooks.h"
 
 typedef struct {
 	vec3 origin;
@@ -21,10 +21,10 @@ typedef struct {
 	const char* effect_name;
 } effect_data;
 
-void __cdecl hooks_cs_blood_spray_callback ( const void* pdata ) {
-	typedef void ( __cdecl* hooks_cs_blood_spray_callback_fn )( const void* pdata );
+__attribute__( ( cdecl ) ) void hooks_cs_blood_spray_callback( const void* pdata ) {
+	typedef __attribute__( ( cdecl ) ) void( *hooks_cs_blood_spray_callback_fn )( const void* pdata );
 
-	const effect_data* data = ( effect_data* ) pdata;
+	const effect_data* data = ( effect_data* )pdata;
 
-	( ( hooks_cs_blood_spray_callback_fn ) subhook_get_trampoline ( hooks_subhooks [ subhook_cs_blood_spray_callback ] ) )( pdata );
+	( ( hooks_cs_blood_spray_callback_fn )subhook_get_trampoline( hooks_subhooks[ subhook_cs_blood_spray_callback ] ) )( pdata );
 }

@@ -1,7 +1,7 @@
 #ifndef GUI_CONFIG_H
 #define GUI_CONFIG_H
 
-#include "include/utils.h"
+#include "utils.h"
 
 typedef struct {
 	int key, mode;
@@ -70,9 +70,9 @@ extern ses_cfg_data ses_cfg;
 /* get amount of entries in config struct */
 #define ses_cfg_get_len(cfg) (sizeof ( ses_cfg_data ) / sizeof ( ses_cfg_entry ))
 
-bool ses_cfg_save ( ses_cfg_data* cfg, sds file_name );
-bool ses_cfg_load ( ses_cfg_data* cfg, sds file_name );
-bool ses_cfg_new ( ses_cfg_data* cfg );
-bool ses_cfg_free ( ses_cfg_data* cfg );
+bool ses_cfg_save( ses_cfg_data* cfg, sds file_name );
+bool ses_cfg_load( ses_cfg_data* cfg, sds file_name );
+bool ses_cfg_new( ses_cfg_data* cfg );
+bool ses_cfg_free( ses_cfg_data* cfg );
 
 #endif // !GUI_CONFIG_H

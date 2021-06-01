@@ -1,4 +1,4 @@
-#include "include/utils.h"
+#include "utils.h"
 
 #include <windows.h>
 #include <psapi.h>
@@ -12,7 +12,7 @@ pattern pattern_search( const char* mod, const char* pat ) {
 	const char* backup_pat = pat;
 
 	MODULEINFO mi;
-	K32GetModuleInformation( GetCurrentProcess( ), ( HMODULE )range_start, &mi, sizeof( MODULEINFO ) );
+	GetModuleInformation( GetCurrentProcess( ), ( HMODULE )range_start, &mi, sizeof( MODULEINFO ) );
 
 	uintptr_t first_match = 0;
 
@@ -43,7 +43,7 @@ pattern pattern_search( const char* mod, const char* pat ) {
 	return 0;
 }
 
-bool mouse_down [ 5 ];
-bool key_down [ 512 ];
-bool key_toggled [ 512 ];
-bool last_key_toggled [ 512 ];
+bool mouse_down[ 5 ];
+bool key_down[ 512 ];
+bool key_toggled[ 512 ];
+bool last_key_toggled[ 512 ];

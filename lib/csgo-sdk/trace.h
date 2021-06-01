@@ -151,19 +151,19 @@ typedef struct {
 	int hitbox;
 } trace;
 
-static inline bool trace_did_hit ( trace* this ) {
-	return ( ( base_trace* ) this )->fraction < 1.0f || ( ( base_trace* ) this )->all_solid || ( ( base_trace* ) this )->start_solid;
+static inline bool trace_did_hit( trace* this ) {
+	return ( ( base_trace* )this )->fraction < 1.0f || ( ( base_trace* )this )->all_solid || ( ( base_trace* )this )->start_solid;
 }
 
-static inline bool trace_is_visible ( trace* this ) {
-	return ( ( base_trace* ) this )->fraction > 0.97f;
+static inline bool trace_is_visible( trace* this ) {
+	return ( ( base_trace* )this )->fraction > 0.97f;
 }
 
 typedef struct itrace_filter itrace_filter;
 
 struct itrace_filter {
-	bool ( __fastcall* should_hit_entity ) ( itrace_filter*, void*, entity*, int );
-	trace_type ( __fastcall* get_trace_type ) ( itrace_filter*, void*, entity*, int );
+	__attribute__( ( thiscall ) ) bool ( *should_hit_entity ) ( itrace_filter*, entity*, int );
+	__attribute__( ( thiscall ) ) trace_type( *get_trace_type ) ( itrace_filter*, entity*, int );
 };
 
 typedef struct {
@@ -172,10 +172,10 @@ typedef struct {
 	const char* ignore;
 } trace_filter;
 
-static bool __fastcall trace_filter_should_hit_entity_override ( trace_filter* this, void* edx, entity* ent, int contents_mask ) {
+__attribute__( ( thiscall ) ) static bool trace_filter_should_hit_entity_override( trace_filter* this, entity* ent, int contents_mask ) {
 	client_class* ent_cc = entity_get_client_class( ent );
-	
-	if ( ent_cc && strcmp ( this->ignore, "" ) ) {
+
+	if ( ent_cc && strcmp( this->ignore, "" ) ) {
 		if ( ent_cc->network_name == this->ignore )
 			return false;
 	}
@@ -183,17 +183,17 @@ static bool __fastcall trace_filter_should_hit_entity_override ( trace_filter* t
 	return !( ent == this->skip );
 }
 
-static trace_type __fastcall trace_filter_get_trace_type_override ( trace_filter* this, void* edx ) {
+__attribute__( ( thiscall ) ) static trace_type trace_filter_get_trace_type_override( trace_filter* this ) {
 	return trace_everything;
 }
 
-static inline void trace_filter_set_ignore_class ( trace_filter* this, char* cc ) {
+static inline void trace_filter_set_ignore_class( trace_filter* this, char* cc ) {
 	this->ignore = cc;
 }
 
-static inline trace_filter* trace_filter_init ( trace_filter* this, entity* to_skip ) {
-	( ( itrace_filter* ) this )->should_hit_entity = trace_filter_should_hit_entity_override;
-	( ( itrace_filter* ) this )->get_trace_type = trace_filter_get_trace_type_override;
+static inline trace_filter* trace_filter_init( trace_filter* this, entity* to_skip ) {
+	( ( itrace_filter* )this )->should_hit_entity = trace_filter_should_hit_entity_override;
+	( ( itrace_filter* )this )->get_trace_type = trace_filter_get_trace_type_override;
 	this->skip = to_skip;
 	return this;
 }
@@ -208,55 +208,55 @@ typedef struct {
 	bool is_swept;
 } ray;
 
-static inline ray* ray_init ( ray* ray, vec3* src, vec3* dst ) {
+static inline ray* ray_init( ray* ray, vec3* src, vec3* dst ) {
 	const vec3a src_aligned = { src->x, src->y, src->z };
 	const vec3a dst_aligned = { dst->x, dst->y, dst->z };
-	
+
 	ray->delta = dst_aligned;
-	vec3a_sub ( &ray->delta, &src_aligned );
-	ray->is_swept = vec3a_len_sqr ( &ray->delta ) != 0.0f;
-	vec3a_init ( &ray->extents );
+	vec3a_sub( &ray->delta, &src_aligned );
+	ray->is_swept = vec3a_len_sqr( &ray->delta ) != 0.0f;
+	vec3a_init( &ray->extents );
 	ray->world_axis_transform = NULL;
 	ray->is_ray = true;
-	vec3a_init ( &ray->start_offset );
+	vec3a_init( &ray->start_offset );
 	ray->start = src_aligned;
 
 	return ray;
 }
 
-static inline ray* ray_bbox_init ( ray* ray, vec3* src, vec3* dst, vec3* mins, vec3* maxs ) {
+static inline ray* ray_bbox_init( ray* ray, vec3* src, vec3* dst, vec3* mins, vec3* maxs ) {
 	const vec3a src_aligned = { src->x, src->y, src->z };
 	const vec3a dst_aligned = { dst->x, dst->y, dst->z };
 	const vec3a mins_aligned = { mins->x, mins->y, mins->z };
 	const vec3a maxs_aligned = { maxs->x, maxs->y, maxs->z };
 
 	ray->delta = dst_aligned;
-	vec3a_sub ( &ray->delta, &src_aligned );
+	vec3a_sub( &ray->delta, &src_aligned );
 	ray->world_axis_transform = NULL;
-	ray->is_swept = vec3a_len ( &ray->delta ) != 0.0f;
-	
+	ray->is_swept = vec3a_len( &ray->delta ) != 0.0f;
+
 	ray->extents = maxs_aligned;
-	vec3a_sub ( &ray->extents, &mins_aligned );
-	vec3a_mulf ( &ray->extents, 0.5f );
-	ray->is_ray = vec3a_len_sqr ( &ray->extents ) < 1e-6f;
+	vec3a_sub( &ray->extents, &mins_aligned );
+	vec3a_mulf( &ray->extents, 0.5f );
+	ray->is_ray = vec3a_len_sqr( &ray->extents ) < 1e-6f;
 
 	ray->start_offset = maxs_aligned;
-	vec3a_add ( &ray->start_offset, &mins_aligned );
-	vec3a_mulf ( &ray->start_offset, 0.5f );
+	vec3a_add( &ray->start_offset, &mins_aligned );
+	vec3a_mulf( &ray->start_offset, 0.5f );
 	ray->start = src_aligned;
-	vec3a_add ( &ray->start, &ray->start_offset );
-	vec3a_mulf ( &ray->start_offset, -1.0f );
+	vec3a_add( &ray->start, &ray->start_offset );
+	vec3a_mulf( &ray->start_offset, -1.0f );
 
 	return ray;
 }
 
 typedef struct itrace itrace;
 
-VIRTUAL ( itrace, int, get_point_contents, 0, (  pos, mask, ent ), vec3* pos, trace_mask mask, entity* ent );
-VIRTUAL ( itrace, int, get_point_contents_world_only, 1, (  pos, mask ), vec3* pos, trace_mask mask );
-VIRTUAL ( itrace, int, get_point_contents_collideable, 2, (  collideable, pos ), void* collideable, vec3* pos );
-VIRTUAL ( itrace, void, clip_ray_to_entity, 3, (  r, mask, ent, tr ), ray* r, trace_mask mask, entity* ent, trace* tr );
-VIRTUAL ( itrace, void, clip_ray_to_collideable, 4, (  r, mask, collideable, tr ), ray* r, trace_mask mask, void* collideable, trace* tr );
-VIRTUAL ( itrace, void, trace_ray, 5, (  r, mask, filter, tr ), ray* r, trace_mask mask, trace_filter* filter, trace* tr );
+VIRTUAL( itrace, int, get_point_contents, cs_idx_itrace_get_point_contents, ( this, pos, mask, ent ), vec3* pos, trace_mask mask, entity* ent );
+VIRTUAL( itrace, int, get_point_contents_world_only, 1, ( this, pos, mask ), vec3* pos, trace_mask mask );
+VIRTUAL( itrace, int, get_point_contents_collideable, 2, ( this, collideable, pos ), void* collideable, vec3* pos );
+VIRTUAL( itrace, void, clip_ray_to_entity, 3, ( this, r, mask, ent, tr ), ray* r, trace_mask mask, entity* ent, trace* tr );
+VIRTUAL( itrace, void, clip_ray_to_collideable, 4, ( this, r, mask, collideable, tr ), ray* r, trace_mask mask, void* collideable, trace* tr );
+VIRTUAL( itrace, void, trace_ray, 5, ( this, r, mask, filter, tr ), ray* r, trace_mask mask, trace_filter* filter, trace* tr );
 
 #endif // !SDK_TRACE_H

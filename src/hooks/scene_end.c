@@ -1,7 +1,7 @@
-#include "include/hooks/hooks.h"
+#include "hooks/hooks.h"
 
-void __fastcall hooks_scene_end ( REG ) {
-	typedef void ( __fastcall* hooks_scene_end_fn )( REG );
+__attribute__( ( thiscall ) ) void hooks_scene_end( irenderview* this ) {
+	typedef __attribute__( ( thiscall ) ) void( *hooks_scene_end_fn )( irenderview* this );
 
-	( ( hooks_scene_end_fn ) subhook_get_trampoline ( hooks_subhooks [ subhook_scene_end ] ) )( REG_OUT );
+	( ( hooks_scene_end_fn )subhook_get_trampoline( hooks_subhooks[ subhook_scene_end ] ) )( this );
 }
