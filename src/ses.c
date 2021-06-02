@@ -27,7 +27,7 @@ static int ses_init( HMODULE mod ) {
 #endif
 
     sds errors_out = NULL;
-
+    
     /* create sesame folders */ {
         char ses_dir[ MAX_PATH ] = { 0 };
 

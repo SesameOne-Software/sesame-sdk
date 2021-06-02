@@ -14,7 +14,7 @@ add_compile_definitions(NK_INCLUDE_STANDARD_IO)
 add_compile_definitions(NK_INCLUDE_STANDARD_VARARGS)
 add_compile_definitions(NK_INCLUDE_VERTEX_BUFFER_OUTPUT)
 add_compile_definitions(NK_INCLUDE_FONT_BAKING)
-add_compile_options(-w -std=c11 -masm=intel -mmmx -msse2 -fmax-errors=100)
+add_compile_options(-w -g -std=c11 -masm=intel -mmmx -msse2 -fmax-errors=100)
 
 file(GLOB_RECURSE SOURCE_FILES
 lib/*/*.c

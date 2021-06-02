@@ -241,7 +241,7 @@ static inline bool cs_offsets_dump( sds errors ) {
 	cs_dump_offset( cs_offsets.player_bone_count, *( ptrdiff_t* )( pattern_search( "client.dll", "8B 87 ? ? ? ? 8B 4D 0C" ) + 2 ) );
 	cs_dump_offset( cs_offsets.player_bone_cache, *( ptrdiff_t* )( pattern_search( "client.dll", "FF B7 ? ? ? ? 52" ) + 2 ) );
 	cs_dump_offset( cs_offsets.player_use_new_animstate, *( ptrdiff_t* )( pattern_search( "client.dll", "80 BE ? ? ? ? ? 74 36 8B" ) + 2 ) );
-	cs_dump_offset( cs_offsets.player_is_local, *( ptrdiff_t* )( pattern_search( "client.dll", "74 4C 8A 86 ? ? ? ?" ) + 4 ) );
+	cs_dump_offset( cs_offsets.player_is_local, *(ptrdiff_t*)(pattern_search("client.dll", "74 4C 8A 86") + 4));
 	cs_dump_offset( cs_offsets.player_is_strafing, *( ptrdiff_t* )( pattern_search( "client.dll", "F3 0F 10 4C 24 ? 80 B9" ) + 8 ) );
 	cs_dump_offset( cs_offsets.player_buttons, *( ptrdiff_t* )( pattern_search( "client.dll", "89 96 ? ? ? ? 23 C2" ) + 2 ) );
 
