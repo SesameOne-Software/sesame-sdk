@@ -124,6 +124,7 @@ void features_movement_run( usercmd* cmd ) {
 	}
 	/* on ground stuff */
 	else {
+        /* check old sesame - have a better check that won't fail for this. */
 		if ( ses_cfg_get_item( &ses_cfg, misc, movement, fast_stop, bool )
 			&& !( cmd->buttons & ( in_forward | in_back | in_moveleft | in_moveright ) )
 			&& speed_2d > 1.11f ) {
