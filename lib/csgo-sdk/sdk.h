@@ -175,7 +175,7 @@ if (!var) {\
 	return false;\
 }
 
-static inline bool cs_offsets_dump( sds errors ) {
+static inline bool cs_offsets_dump( sds* errors ) {
 	cs_dump_offset( cs_offsets.iclientstate_nc, 0x9C );
 	cs_dump_offset( cs_offsets.iclientstate_choked, 0x4D30 );
 	cs_dump_offset( cs_offsets.iclientstate_last_cmd_ack, 0x4D34 );
@@ -265,7 +265,7 @@ static inline bool cs_offsets_dump( sds errors ) {
 	cs_dump_offset( cs_offsets.econitem_update_equipped_state_fn, pattern_search( "client.dll", "55 8B EC 8B 45 08 8B D0 C1 EA 10" ) );
 	cs_dump_offset( cs_offsets.econitem_clean_inventory_image_cache_dir_fn, pattern_search( "client.dll", "55 8B EC 81 EC ? ? ? ? 80 3D ? ? ? ? ? 56 0F 85" ) );
 	cs_dump_offset( cs_offsets.econitem_set_or_add_attribute_by_name_fn, pattern_search( "client.dll", "55 8B EC 83 EC 30 53 56 8B F1 F3" ) )
-		cs_dump_offset( cs_offsets.econitem_set_custom_name_fn, pattern_rip( pattern_search( "client.dll", "E8 ? ? ? ? 8B 46 78 C1 E8 0A A8 01 74 13 8B 46 34" ) ) );
+    cs_dump_offset( cs_offsets.econitem_set_custom_name_fn, pattern_rip( pattern_search( "client.dll", "E8 ? ? ? ? 8B 46 78 C1 E8 0A A8 01 74 13 8B 46 34" ) ) );
 	cs_dump_offset( cs_offsets.econitem_set_custom_desc_fn, pattern_rip( pattern_search( "client.dll", "E8 ? ? ? ? 33 DB 39 5E 3C 7E 5E" ) ) );
 	cs_dump_offset( cs_offsets.econitem_get_item_schema_fn, pattern_search( "client.dll", "A1 ? ? ? ? 85 C0 75 53" ) );
 	cs_dump_offset( cs_offsets.econitem_set_dynamic_attribute_val_fn, pattern_search( "client.dll", "55 8B EC 83 E4 F8 83 EC 3C 53 8B 5D 08 56 57 6A 00" ) );
@@ -282,6 +282,8 @@ static inline bool cs_offsets_dump( sds errors ) {
 	cs_dump_offset( cs_offsets.list_leaves_in_box_ret, pattern_search( "client.dll", "56 52 FF 50 18" ) + 5 );
 
 	cs_dump_offset( cs_offsets.enable_invalidate_bone_cache, *( ptrdiff_t* )( pattern_search( "client.dll", "C6 05 ? ? ? ? 00 F3 0F 5F 05 ? ? ? ? F3 0F 11 47 74" ) + 2 ) );
+
+    return true;
 }
 
 static inline bool cs_init( sds* errors ) {
@@ -324,6 +326,8 @@ static inline bool cs_init( sds* errors ) {
 	cs_dump_offset( cs_imemalloc, *( imemalloc** )GetProcAddress( GetModuleHandleA( "tier0.dll" ), "g_pMemAlloc" ) );
 	cs_dump_offset( cs_id3ddev, **( IDirect3DDevice9*** )( pattern_search( "shaderapidx9.dll", "A1 ? ? ? ? 50 8B 08 FF 51 0C" ) + 1 ) );
 	cs_dump_offset( cs_local_ptr, ( player** )( *( uintptr_t* )( pattern_search( "client.dll", "8D 34 85 ? ? ? ? 89 15 ? ? ? ? 8B 41 08 8B 48 04 83 F9 FF" ) + 3 ) + 4 ) );
+
+    return true;
 }
 
 static inline bool cs_free( ) {
