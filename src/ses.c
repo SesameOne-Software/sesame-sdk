@@ -3,6 +3,8 @@
 #include "hooks/hooks.h"
 #include "gui/config.h"
 
+#include "features/esp.h"
+
 #include <windows.h>
 #include <process.h>
 #include <shlobj.h>
@@ -67,6 +69,8 @@ static int ses_init( HMODULE mod ) {
 
     if ( !hooks_init( ) ) ses_fail( mod, sdsnew( "Failed to install hooks.\n" ) );
     else utils_print_console( &( uint8_t[ ] ) { 0, 255, 0, 255 }, sdsnew( "Installed hooks.\n" ) );
+    if ( !features_esp_init( ) ) ses_fail( mod, sdsnew( "Failed to initialize ESP system.\n" ) );
+    else utils_print_console( &( uint8_t[ ] ) { 0, 255, 0, 255 }, sdsnew( "Initialized ESP system.\n" ) );
 
     utils_print_console( &( uint8_t[ ] ) { 255, 100, 255, 255 }, sdsnew( "Startup was successful!\n" ) );
 
@@ -89,6 +93,9 @@ static int ses_init( HMODULE mod ) {
     else utils_print_console( &( uint8_t[ ] ) { 0, 255, 0, 255 }, sdsnew( "Freed SDK allocations.\n" ) );
     if ( !ses_cfg_free( &ses_cfg ) ) ses_fail( mod, sdsnew( "Failed to free config memory allocations.\n" ) );
     else utils_print_console( &( uint8_t[ ] ) { 0, 255, 0, 255 }, sdsnew( "Freed config allocations.\n" ) );
+    if ( !features_esp_free( &ses_cfg ) ) ses_fail( mod, sdsnew( "Failed to free ESP system allocations.\n" ) );
+    else utils_print_console( &( uint8_t[ ] ) { 0, 255, 0, 255 }, sdsnew( "Freed ESP system allocations.\n" ) );
+
 
     utils_print_console( &( uint8_t[ ] ) { 255, 100, 255, 255 }, sdsnew( "Unload was successful!\n" ) );
 

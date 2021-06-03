@@ -43,6 +43,8 @@ typedef enum {
     subhook_send_net_msg,
     subhook_setup_bones,
     subhook_should_skip_anim_frame,
+    subhook_level_init,
+    subhook_level_shutdown,
     subhook_max
 } subhooks_list;
 
@@ -80,6 +82,8 @@ __attribute__( ( thiscall ) ) int hooks_send_datagram( void* this, void* datagra
 __attribute__( ( thiscall ) ) bool hooks_send_net_msg( void* this, void* msg, bool force_reliable, bool voice );
 __attribute__( ( thiscall ) ) bool hooks_setup_bones( renderable* this, mat3x4* out, int max_bones, uint32_t mask, float time );
 __attribute__( ( thiscall ) ) bool hooks_should_skip_anim_frame( renderable* this );
+__attribute__( ( thiscall ) ) void hooks_level_init( void* this, const char* map_name ); 
+__attribute__( ( thiscall ) ) void hooks_level_shutdown( void* this );
 
 __attribute__( ( stdcall ) ) LRESULT window_proc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 
@@ -152,6 +156,8 @@ static inline bool hooks_init( ) {
         CREATE_HOOK( pattern_search( "engine.dll", "55 8B EC 83 EC 08 56 8B F1 8B 86 ? ? ? ? 85 C0" ), hooks_send_net_msg, subhook_send_net_msg );
         CREATE_HOOK( pattern_search( "client.dll", "55 8B EC 83 E4 F0 B8 ? ? ? ? E8 ? ? ? ? 56 57 8B F9" ), hooks_setup_bones, subhook_setup_bones );
         CREATE_HOOK( pattern_search( "client.dll", "57 8B F9 8B 07 8B 80 ? ? ? ? FF D0 84 C0 75 02" ), hooks_should_skip_anim_frame, subhook_should_skip_anim_frame );
+        CREATE_HOOK( pattern_search( "client.dll", "57 8B F9 8B 07 8B 80 ? ? ? ? FF D0 84 C0 75 02" ), hooks_level_init, subhook_level_init );
+        CREATE_HOOK( pattern_rip(pattern_search( "client.dll", "E8 ? ? ? ? A1 ? ? ? ? 8D BE" )), hooks_level_shutdown, subhook_level_shutdown );
     }
 
     return true;

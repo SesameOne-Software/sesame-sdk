@@ -11,6 +11,6 @@ __attribute__( ( thiscall ) ) void hooks_build_transformations( player* this, st
 
 	( ( hooks_build_transformations_fn )subhook_get_trampoline( hooks_subhooks[ subhook_build_transformations ] ) )( this, hdr, pos, quaternion, matrix, mask, computed );
 
-	/* make sure to restore... causes memory leaks? */
+	/* make sure to restore... causes memory leaks if we dont? */
 	*player_jiggle_bones( this ) = backup_jiggle_bones;
 }

@@ -82,7 +82,7 @@ static inline float cs_ticks2time( int t ) {
 }
 
 #define cs_for_each_player() \
-for ( struct { int idx; player* ent } iter = {0}; iter.idx <= cs_iglobals->max_clients; iter.player = (player*) ientlist_get_entity(cs_ientlist, ++iter.idx) )
+for ( struct { int idx; player* ent } iter = {0}; iter.idx <= cs_iglobals->max_clients - 1; iter.player = (player*) ientlist_get_entity(cs_ientlist, ++iter.idx) )
 
 static inline void cs_rotate_movement( usercmd* cmd, float backup_side_move, float backup_forward_move, const vec3* old_angles ) {
 	float dv = 0.0f;
