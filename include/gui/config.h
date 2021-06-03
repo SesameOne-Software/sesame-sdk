@@ -56,6 +56,9 @@ ses_cfg_add ( misc, movement, auto_strafer, 0, int, 0 );\
 ses_cfg_add ( gui, state, test_int, 0, int, 0 );\
 ses_cfg_add ( gui, state, test_float, 0.0f, float, 0 );\
 ses_cfg_add ( gui, state, test_bool, false, bool, 0 );\
+ses_cfg_add ( visuals, players, esp, false, bool, 0 );\
+ses_cfg_add ( visuals, players, chams, false, bool, 0 );\
+ses_cfg_add ( visuals, players, glow, false, bool, 0 );\
 
 typedef struct {
 	ses_cfg_set_defaults
