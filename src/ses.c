@@ -48,9 +48,9 @@ static int ses_init( HMODULE mod ) {
 
         if ( CreateDirectoryA( ses_ctx.ses_dir, NULL )
             || GetLastError( ) == ERROR_ALREADY_EXISTS )
-            utils_print_console( &( uint8_t[ ] ) { 0, 255, 0, 255 }, sdsnew( "Created sesame folder.\n" ) );
+            utils_print_console( &( uint8_t[ ] ) { 0, 255, 0, 255 }, sdsnew( "Created sesame configs folder.\n" ) );
         else
-            ses_fail( mod, sdsnew( "Failed to create sesame folder.\n" ) );
+            ses_fail( mod, sdsnew( "Failed to create sesame configs folder.\n" ) );
 
         sdsfree( ses_ctx.ses_dir );
         ses_ctx.ses_dir = sdscat( sdsnew( ses_dir ), "\\sesame" );

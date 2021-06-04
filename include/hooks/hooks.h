@@ -142,7 +142,7 @@ static inline bool hooks_init( ) {
         CREATE_HOOK( utils_vfunc( cs_ipred, 14 ), hooks_in_prediction, subhook_in_prediction );
         CREATE_HOOK( utils_vfunc( cs_iengine, 27 ), hooks_is_connected, subhook_is_connected );
         CREATE_HOOK( utils_vfunc( cs_iengine, 93 ), hooks_is_hltv, subhook_is_hltv );
-        CREATE_HOOK( utils_vfunc( ( ( __attribute__( ( thiscall ) ) void* ( * )( void* ) ) utils_vfunc( cs_iengine, 43 ) )( cs_iengine ), 6 ), hooks_list_leaves_in_box, subhook_list_leaves_in_box );
+        //CREATE_HOOK( utils_vfunc( ( ( __attribute__( ( thiscall ) ) void* ( * )( void* ) ) utils_vfunc( cs_iengine, 43 ) )( cs_iengine ), 6 ), hooks_list_leaves_in_box, subhook_list_leaves_in_box );
         CREATE_HOOK( utils_vfunc( cs_isurface, 67 ), hooks_lock_cursor, subhook_lock_cursor );
         CREATE_HOOK( pattern_rip( pattern_search( "client.dll", "57 E8 ? ? ? ? 8B 06 8B CE FF 90" ) + 1 ), hooks_modify_eye_pos, subhook_modify_eye_pos );
         CREATE_HOOK( pattern_search( "client.dll", "F3 0F 11 86 98 00 00 00 5E 5D C2 08 00" ) - 57, hooks_notify_on_layer_change_cycle, subhook_notify_on_layer_change_cycle );
@@ -156,7 +156,7 @@ static inline bool hooks_init( ) {
         CREATE_HOOK( pattern_search( "engine.dll", "55 8B EC 83 EC 08 56 8B F1 8B 86 ? ? ? ? 85 C0" ), hooks_send_net_msg, subhook_send_net_msg );
         CREATE_HOOK( pattern_search( "client.dll", "55 8B EC 83 E4 F0 B8 ? ? ? ? E8 ? ? ? ? 56 57 8B F9" ), hooks_setup_bones, subhook_setup_bones );
         CREATE_HOOK( pattern_search( "client.dll", "57 8B F9 8B 07 8B 80 ? ? ? ? FF D0 84 C0 75 02" ), hooks_should_skip_anim_frame, subhook_should_skip_anim_frame );
-        CREATE_HOOK( pattern_search( "client.dll", "57 8B F9 8B 07 8B 80 ? ? ? ? FF D0 84 C0 75 02" ), hooks_level_init, subhook_level_init );
+        CREATE_HOOK( pattern_search( "client.dll", "55 8B EC 83 E4 F8 83 EC 20 56 57 8B F9 8B 4F" ), hooks_level_init, subhook_level_init );
         CREATE_HOOK( pattern_rip(pattern_search( "client.dll", "E8 ? ? ? ? A1 ? ? ? ? 8D BE" )), hooks_level_shutdown, subhook_level_shutdown );
     }
 

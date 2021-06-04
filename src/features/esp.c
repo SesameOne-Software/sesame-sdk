@@ -1,5 +1,6 @@
 #include "features/esp.h"
 #include "gui/config.h"
+#include "nuklear/nuklear.h"
 
 typedef enum {
     esp_flags_health = (1 << 0),
@@ -38,7 +39,7 @@ typedef struct {
 
 typedef struct {
     int idx;
-    bool flags[esp_flags];
+    bool flags[esp_flags_max];
     sds player_name;
     sds weapon_name;
     esp_lerp_valf health, armor, box_alpha, weapon_alpha; 
@@ -53,7 +54,6 @@ bool features_esp_init() {
 }
 
 bool features_esp_free() {
-    
     if (esp_records) {
         for (size_t i = 0; i < vector_size(esp_records); i++) {
             esp_record* record = &esp_records[i];
@@ -73,7 +73,7 @@ bool features_esp_level_init() {
 
     esp_records = vector_create();
 
-    for_each_player() {
+    cs_for_each_player() {
         esp_record* temp = vector_add_asg(&esp_records);
         
         memset(temp, 0, sizeof(*temp));
@@ -110,7 +110,7 @@ void features_esp_run() {
     cs_for_each_player() {
         esp_record* record = &esp_records[iter.idx];
         
-        if (!iter.idx || !iter.ent || !entity_is_player((entity*)iter.ent) || !player_is_alive(iter.ent)) {
+        if (!iter.idx || !iter.player || !entity_is_player((entity*)iter.player) || !player_is_alive(iter.player)) {
             /* reset esp variables */
             continue;
         }
@@ -118,7 +118,7 @@ void features_esp_run() {
         bool updated = false;
 
         /* set esp variables, set up bounding box */
-        vec3 origin = *player_abs_origin(iter.ent);
+        vec3 origin = *player_abs_origin(iter.player);
 
         /* do dynamic updates (using sound and radar) */
 
@@ -127,7 +127,7 @@ void features_esp_run() {
         /* lerp esp boxes in between positions when dormant */
 
         /* handle dormancy */
-        if (*entity_dormant((entity*)iter.ent)) {
+        if (*entity_dormant((entity*)iter.player)) {
 
         }
         else {
