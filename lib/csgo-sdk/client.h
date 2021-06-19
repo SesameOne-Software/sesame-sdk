@@ -34,8 +34,8 @@ struct recv_prop {
 };
 
 struct client_class {
-	void* ( *create_fn )( int, int );
-	void* ( *create_event_fn )( );
+	__attribute__((cdecl)) void* ( *create_fn )( int, int );
+	__attribute__((cdecl)) void* ( *create_event_fn )( );
 	const char* network_name;
 	recv_table* recv_table;
 	client_class* next;

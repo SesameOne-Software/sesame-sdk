@@ -30,7 +30,7 @@ static bool gui_just_refreshed_subtabs = false;
 
 static int gui_first_group_y = 0;
 
-static void gui_reload_config_list( ) {
+static void gui_reload_config_list( void ) {
 	/* refresh config list */
 			/* delete current configs list */
 	if ( gui_configs_list ) {
@@ -156,13 +156,13 @@ static inline void gui_header( const char* name, const char* section ) {
 	nk_style_pop_font( ses_ctx.nk_ctx );
 }
 
-static bool gui_group_begin( ) {
+static bool gui_group_begin( void ) {
 	gui_first_group_y = ses_ctx.nk_ctx->current->layout->at_y + GUI_LINE_HEIGHT;
 	ses_ctx.nk_ctx->current->layout->at_x += ses_ctx.nk_ctx->style.tab.indent + ses_ctx.nk_ctx->style.tab.border;
 	ses_ctx.nk_ctx->current->layout->bounds.w -= ses_ctx.nk_ctx->style.tab.indent + ses_ctx.nk_ctx->style.tab.border;
 }
 
-static void gui_group_end( ) {
+static void gui_group_end( void ) {
 	ses_ctx.nk_ctx->current->layout->at_x -= ses_ctx.nk_ctx->style.tab.indent + ses_ctx.nk_ctx->style.tab.border;
 	ses_ctx.nk_ctx->current->layout->bounds.w += ses_ctx.nk_ctx->style.tab.indent + ses_ctx.nk_ctx->style.tab.border;
 
@@ -269,7 +269,7 @@ static void gui_tab( const char* name, int* selected ) {
 	gui_cur_tab_idx++;
 }
 
-static void gui_tabs_end( ) {
+static void gui_tabs_end( void ) {
 	gui_tab_count = 0;
 	gui_cur_tab_idx = 0;
 }
@@ -563,7 +563,7 @@ static inline bool gui_begin( const char* title, struct nk_rect* bounds, nk_flag
 	return true;
 }
 
-static inline void gui_end( ) {
+static inline void gui_end( void ) {
 	nk_end( ses_ctx.nk_ctx );
 	nk_style_pop_font( ses_ctx.nk_ctx );
 }

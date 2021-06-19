@@ -39,7 +39,6 @@ typedef struct {
 typedef struct cvar cvar;
 
 struct cvar {
-	PAD( 4 );
 	cvar* next;
 	int registered;
 	const char* name;

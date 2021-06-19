@@ -64,7 +64,7 @@ extern IDirect3DDevice9* cs_id3ddev;
 extern player** cs_local_ptr;
 extern HWND cs_window;
 
-static inline player* cs_get_local( ) {
+static inline player* cs_get_local( void ) {
 	return *cs_local_ptr;
 }
 
@@ -73,16 +73,19 @@ static inline void* cs_create_interface( const char* module, const char* name ) 
 	return create_interface_export( name, 0 );
 }
 
-static inline int cs_time2ticks( float t ) {
+static inline int cs_time_to_ticks( float t ) {
 	return ( int )( t / cs_iglobals->tick_interval + 0.5f );
 }
 
-static inline float cs_ticks2time( int t ) {
+static inline float cs_ticks_to_time( int t ) {
 	return ( float )t * cs_iglobals->tick_interval;
 }
 
+/* https://github.com/perilouswithadollarsign/cstrike15_src/blob/f82112a2388b841d72cb62ca48ab1846dfcc11c8/game/shared/shareddefs.h */
+#define MAX_PLAYERS 64
+
 #define cs_for_each_player() \
-for ( struct { int idx; player* player; } iter = {0}; iter.idx <= cs_iglobals->max_clients - 1; iter.player = (player*) ientlist_get_entity(cs_ientlist, ++iter.idx) )
+for ( struct { int idx; player* player; } iter = { 0 }; iter.idx <= cs_iglobals->max_clients - 1; iter.player = (player*) ientlist_get_entity(cs_ientlist, ++iter.idx) )
 
 static inline void cs_rotate_movement( usercmd* cmd, float backup_side_move, float backup_forward_move, const vec3* old_angles ) {
 	float dv = 0.0f;
@@ -152,7 +155,7 @@ static inline void cs_vector_transform( const vec3* in, const mat3x4* mat, vec3*
 	} );
 }
 
-static inline bool cs_is_valve_server( ) {
+static inline bool cs_is_valve_server( void ) {
 	return *( uintptr_t* )cs_offsets.sdk_game_rules && *( bool* )( *( uintptr_t* )cs_offsets.sdk_game_rules + cs_offsets.sdk_is_valve_ds );
 }
 
@@ -192,6 +195,8 @@ static inline bool cs_offsets_dump( sds* errors ) {
 	cs_dump_offset( cs_offsets.entity_effects, 0xF0 );
 	cs_dump_offset( cs_offsets.entity_abs_vel, 0x94 );
 	cs_dump_offset( cs_offsets.entity_model_ptr, *( ptrdiff_t* )( pattern_search( "client.dll", "8B 86 ? ? ? ? 85 C0 74 05 83 38 00 75 02 33 C0 5E" ) + 2 ) );
+	cs_dump_offset( cs_offsets.entity_can_use_fast_path, *( ptrdiff_t* )( pattern_search( "client.dll", "88 87 ? ? ? ? 84 C0 74 39" ) + 2 ) - 4 /* have to sub 4 because offset is off renderable */ );
+
 	cs_dump_offset( cs_offsets.player_playback_rate, 0xA18 );
 	cs_dump_offset( cs_offsets.player_cycle, 0xA14 );
 	cs_dump_offset( cs_offsets.player_movetype, 0x25C );
@@ -236,6 +241,7 @@ static inline bool cs_offsets_dump( sds* errors ) {
 	cs_dump_offset( cs_offsets.player_create_animstate_fn, pattern_search( "client.dll", "55 8B EC 56 8B F1 B9 ? ? ? ? C7 46" ) );
 	cs_dump_offset( cs_offsets.player_set_abs_angles_fn, pattern_search( "client.dll", "55 8B EC 83 E4 F8 83 EC 64 53 56 57 8B F1 E8" ) );
 	cs_dump_offset( cs_offsets.player_set_abs_origin_fn, pattern_search( "client.dll", "55 8B EC 83 E4 F8 51 53 56 57 8B F1 E8 ? ? ? ? 8B 7D" ) );
+	cs_dump_offset( cs_offsets.player_baseclass_post_data_update_fn, pattern_search( "client.dll", "55 8B EC 83 E4 F0 83 EC 1C 56 83 EC 08" ) );
 	cs_dump_offset( cs_offsets.player_animstate, *( ptrdiff_t* )( pattern_search( "client.dll", "8B 8E ? ? ? ? F3 0F 10 48 04 E8 ? ? ? ? E9" ) + 2 ) );
 	//cs_dump_offset ( cs_offsets.player_weapon_shootposition, pattern_rip ( pattern_search ( "client.dll", "57 E8 ? ? ? ? 8B 06 8B CE FF 90" ) + 1 ) );
 	cs_dump_offset( cs_offsets.player_bone_count, *( ptrdiff_t* )( pattern_search( "client.dll", "8B 87 ? ? ? ? 8B 4D 0C" ) + 2 ) );
@@ -279,6 +285,7 @@ static inline bool cs_offsets_dump( sds* errors ) {
 	cs_dump_offset( cs_offsets.maintain_sequence_transitions_ret, pattern_search( "client.dll", "84 C0 74 17 8B 87" ) );
 	cs_dump_offset( cs_offsets.loadout_allowed_ret, pattern_search( "client.dll", "75 04 B0 01 5F" ) - 2 );
 	cs_dump_offset( cs_offsets.accumulate_layers_ret, pattern_search( "client.dll", "84 C0 75 0D F6 87" ) );
+	cs_dump_offset( cs_offsets.reevauluate_anim_lod_ret, pattern_search( "client.dll", "84 C0 0F 85 ? ? ? ? A1 ? ? ? ? 8B B7" ) );
 	cs_dump_offset( cs_offsets.list_leaves_in_box_ret, pattern_search( "client.dll", "56 52 FF 50 18" ) + 5 );
 
 	cs_dump_offset( cs_offsets.enable_invalidate_bone_cache, *( ptrdiff_t* )( pattern_search( "client.dll", "C6 05 ? ? ? ? 00 F3 0F 5F 05 ? ? ? ? F3 0F 11 47 74" ) + 2 ) );
@@ -291,6 +298,7 @@ static inline bool cs_init( sds* errors ) {
 
 	memset( &cs_offsets, 0, sizeof( cs_offsets_s ) );
 
+    /* offsets */
 	cs_offsets_dump( errors );
 
 	cs_dump_offset( cs_window, FindWindowA( NULL, "Counter-Strike: Global Offensive" ) );
@@ -302,6 +310,7 @@ static inline bool cs_init( sds* errors ) {
 		return false;
 	}
 
+    /* interfaces */
 	cs_dump_offset( cs_iglobals, **( iglobals*** )( pattern_search( "client.dll", "A1 ? ? ? ? 5E 8B 40 10" ) + 1 ) );
 	cs_dump_offset( cs_ientlist, cs_create_interface( "client.dll", "VClientEntityList003" ) );
 	cs_dump_offset( cs_imatsys, cs_create_interface( "materialsystem.dll", "VMaterialSystem080" ) );
@@ -330,7 +339,7 @@ static inline bool cs_init( sds* errors ) {
     return true;
 }
 
-static inline bool cs_free( ) {
+static inline bool cs_free( void ) {
 	return true;
 }
 

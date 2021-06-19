@@ -47,8 +47,8 @@ void server_animstate_update_animlayer( server_animstate* this, animlayer_idx id
 
 		animlayer_set_seq( layer, seq );
 		animlayer_set_playback_rate( layer, playback_rate );
-		animlayer_set_cycle( layer, clampf( cycle, 0.0f, 1.0f ) );
-		animlayer_set_weight( layer, clampf( weight, 0.0f, 1.0f ) );
+		animlayer_set_cycle( layer, clamp( cycle, 0.0f, 1.0f ) );
+		animlayer_set_weight( layer, clamp( weight, 0.0f, 1.0f ) );
 
 		server_animstate_update_layer_order_preset( this, weight, idx, seq );
 
@@ -82,7 +82,7 @@ void server_animstate_set_up_velocity( server_animstate* this ) {
 	const float max_speed_run = this->base.weapon ? max( max_weapon_speed, 0.001f ) : CS_PLAYER_SPEED_RUN;
 	assert( max_speed_run > 0.0f );
 
-	this->base.speed_to_run_fraction = clampf( this->base.vel_len2d / max_speed_run, 0.0f, 1.0f );
+	this->base.speed_to_run_fraction = clamp( this->base.vel_len2d / max_speed_run, 0.0f, 1.0f );
 	this->base.speed_to_walk_fraction = this->base.vel_len2d / ( max_speed_run * CS_PLAYER_SPEED_WALK_MODIFIER );
 	this->base.speed_to_crouch_fraction = this->base.vel_len2d / ( max_speed_run * CS_PLAYER_SPEED_DUCK_MODIFIER );
 
@@ -126,14 +126,14 @@ void server_animstate_set_up_velocity( server_animstate* this ) {
 
 	// if the player is looking far enough to either side, turn the feet to keep them within the extent of the aim matrix
 	this->base.last_foot_yaw = this->base.foot_yaw;
-	this->base.foot_yaw = clampf( this->base.foot_yaw, -360.0f, 360.0f );
+	this->base.foot_yaw = clamp( this->base.foot_yaw, -360.0f, 360.0f );
 	const float eye_foot_delta = cs_angle_diff( this->base.eye_yaw, this->base.foot_yaw );
 
 	// narrow the available aim matrix width as speed increases
-	float aim_matrix_width = lerpf( clampf( this->base.speed_to_walk_fraction, 0.0f, 1.0f ), 1.0f, lerpf( this->base.walk_to_run_fraction, CSGO_ANIM_AIM_NARROW_WALK, CSGO_ANIM_AIM_NARROW_RUN ) );
+	float aim_matrix_width = lerp( 1.0f, lerp( CSGO_ANIM_AIM_NARROW_WALK, CSGO_ANIM_AIM_NARROW_RUN, this->base.walk_to_run_fraction), clamp( this->base.speed_to_walk_fraction, 0.0f, 1.0f ) );
 
 	if ( this->base.duck_amount > 0.0f )
-		aim_matrix_width = lerpf( this->base.duck_amount * clampf( this->base.speed_to_crouch_fraction, 0.0f, 1.0f ), aim_matrix_width, CSGO_ANIM_AIM_NARROW_CROUCHMOVING );
+		aim_matrix_width = lerp( aim_matrix_width, CSGO_ANIM_AIM_NARROW_CROUCHMOVING, this->base.duck_amount * clamp( this->base.speed_to_crouch_fraction, 0.0f, 1.0f ));
 
 	const float temp_yaw_max = this->base.aim_yaw_max * aim_matrix_width;
 	const float temp_yaw_min = this->base.aim_yaw_min * aim_matrix_width;
@@ -218,7 +218,7 @@ void server_animstate_set_up_velocity( server_animstate* this ) {
 			this->base.move_yaw = this->base.ideal_move_yaw;;
 		}
 		else {
-			const float weight_perms = lerpf( this->base.duck_amount, clampf( this->base.speed_to_walk_fraction, 0.0f, 1.0f ), clampf( this->base.speed_to_crouch_fraction, 0.0f, 1.0f ) );
+			const float weight_perms = lerp( clamp( this->base.speed_to_walk_fraction, 0.0f, 1.0f ), clamp( this->base.speed_to_crouch_fraction, 0.0f, 1.0f ), this->base.duck_amount );
 			const float fraction_waiting = cs_bias( weight_perms, 0.18f ) + 0.1f;
 
 			this->base.move_yaw = cs_norm_rotation( this->base.move_yaw + ( this->base.move_yaw_to_ideal * fraction_waiting ) );
@@ -314,7 +314,7 @@ void server_animstate_set_up_movement( server_animstate* this ) {
 		else
 			this->base.walk_to_run_fraction -= this->base.last_update_delta_time * CSGO_ANIM_WALK_TO_RUN_TRANSITION_SPEED;
 
-		this->base.walk_to_run_fraction = clampf( this->base.walk_to_run_fraction, 0.0f, 1.0f );
+		this->base.walk_to_run_fraction = clamp( this->base.walk_to_run_fraction, 0.0f, 1.0f );
 	}
 
 	if ( this->base.vel_len2d > ( CS_PLAYER_SPEED_RUN * CS_PLAYER_SPEED_WALK_MODIFIER ) && this->base.walk_to_run_state == ANIM_TRANSITION_RUN_TO_WALK ) {
@@ -344,9 +344,9 @@ void server_animstate_set_up_movement( server_animstate* this ) {
 		this->base.stutter_step += 10.0f;
 
 	this->base.last_move_state = *player_move_state( this->base.player );
-	this->base.stutter_step = clampf( cs_approachf( 0.0f, this->base.stutter_step, this->base.last_update_delta_time * 40.0f ), 0.0f, 100.0f );
+	this->base.stutter_step = clamp( cs_approachf( 0.0f, this->base.stutter_step, this->base.last_update_delta_time * 40.0f ), 0.0f, 100.0f );
 
-	const float target_move_weight = lerpf( this->base.duck_amount, clampf( this->base.speed_to_walk_fraction, 0.0f, 1.0f ), clampf( this->base.speed_to_crouch_fraction, 0.0f, 1.0f ) );
+	const float target_move_weight = lerp( clamp( this->base.speed_to_walk_fraction, 0.0f, 1.0f ), clamp( this->base.speed_to_crouch_fraction, 0.0f, 1.0f ), this->base.duck_amount );
 
 	if ( this->base.move_weight <= target_move_weight )
 		this->base.move_weight = target_move_weight;
@@ -367,13 +367,13 @@ void server_animstate_set_up_movement( server_animstate* this ) {
 		const float move_dist_vs_rate = player_get_sequence_move_distance( this->base.player, move_seq ) / ( 1.0f / move_cycle_rate );
 		const float seq_ground_speed = max( move_dist_vs_rate, 0.001f );
 		move_cycle_rate *= this->base.vel_len2d / seq_ground_speed;
-		move_cycle_rate *= lerpf( this->base.walk_to_run_fraction, 1.0f, CSGO_ANIM_RUN_ANIM_PLAYBACK_MULTIPLIER );
+		move_cycle_rate *= lerp( 1.0f, CSGO_ANIM_RUN_ANIM_PLAYBACK_MULTIPLIER, this->base.walk_to_run_fraction );
 	}
 
 	const float cycle_increment = move_cycle_rate * this->base.last_update_delta_time;
 	this->base.primary_cycle = cs_clamp_cycle( this->base.primary_cycle + cycle_increment );
 
-	move_weight_with_air_smooth = clampf( move_weight_with_air_smooth, 0.0f, 1.0f );
+	move_weight_with_air_smooth = clamp( move_weight_with_air_smooth, 0.0f, 1.0f );
 	server_animstate_update_animlayer( this, animlayer_movement_move, move_seq, cycle_increment, move_weight_with_air_smooth, this->base.primary_cycle );
 
 	if ( player_is_local( this->base.player ) ) {
@@ -420,7 +420,7 @@ void server_animstate_set_up_movement( server_animstate* this ) {
 			this->base.strafe_change_weight = cs_approachf( 0.0f, this->base.strafe_change_weight, this->base.last_update_delta_time * 5.0f );
 
 		this->base.strafe_seq = player_lookup_sequence( this->base.player, "strafe" );
-		this->base.strafe_change_cycle = clampf( this->base.strafe_change_cycle + this->base.last_update_delta_time * player_get_sequence_cycle_rate_server( this->base.player, this->base.strafe_seq ), 0.0f, 1.0f );
+		this->base.strafe_change_cycle = clamp( this->base.strafe_change_cycle + this->base.last_update_delta_time * player_get_sequence_cycle_rate_server( this->base.player, this->base.strafe_seq ), 0.0f, 1.0f );
 	}
 
 	if ( this->base.strafe_change_weight <= 0.0f )
@@ -439,19 +439,19 @@ void server_animstate_set_up_movement( server_animstate* this ) {
 		const float distance_fell = fabsf( this->base.left_ground_height - this->base.pos.z );
 		const float distance_fell_norm_bias_range = cs_bias( cs_remap_val_clamped( distance_fell, 12.0f, 72.0f, 0.0f, 1.0f ), 0.4f );
 
-		this->base.land_anim_factor = clampf( cs_bias( this->base.air_time, 0.3f ), 0.1f, 1.0f );
+		this->base.land_anim_factor = clamp( cs_bias( this->base.air_time, 0.3f ), 0.1f, 1.0f );
 		this->base.duck_additional = max( this->base.land_anim_factor, distance_fell_norm_bias_range );
 	}
 	else {
 		this->base.duck_additional = cs_approachf( 0.0f, this->base.duck_additional, this->base.last_update_delta_time * 2.0f );
 	}
 
-	this->base.air_lerp = cs_approachf( this->base.on_ground ? 1.0f : 0.0f, this->base.air_lerp, lerpf( this->base.duck_amount, CSGO_ANIM_ONGROUND_FUZZY_APPROACH, CSGO_ANIM_ONGROUND_FUZZY_APPROACH_CROUCH ) * this->base.last_update_delta_time );
-	this->base.air_lerp = clampf( this->base.air_lerp, 0.0f, 1.0f );
+	this->base.air_lerp = cs_approachf( this->base.on_ground ? 1.0f : 0.0f, this->base.air_lerp, lerp( CSGO_ANIM_ONGROUND_FUZZY_APPROACH, CSGO_ANIM_ONGROUND_FUZZY_APPROACH_CROUCH, this->base.duck_amount ) * this->base.last_update_delta_time );
+	this->base.air_lerp = clamp( this->base.air_lerp, 0.0f, 1.0f );
 
 	this->base.strafe_change_weight *= 1.0f - this->base.duck_amount;
 	this->base.strafe_change_weight *= this->base.air_lerp;
-	this->base.strafe_change_weight = clampf( this->base.strafe_change_weight, 0.0f, 1.0f );
+	this->base.strafe_change_weight = clamp( this->base.strafe_change_weight, 0.0f, 1.0f );
 
 	if ( this->base.strafe_seq != -1 )
 		server_animstate_update_animlayer( this, animlayer_movement_strafechange, this->base.strafe_seq, 0.0f, this->base.strafe_change_weight, this->base.strafe_change_cycle );
@@ -470,14 +470,14 @@ void server_animstate_set_up_movement( server_animstate* this ) {
 		else
 			this->base.ladder_speed = cs_approachf( 0.0f, this->base.ladder_speed, this->base.last_update_delta_time * 10.0f );
 
-		this->base.ladder_speed = clampf( this->base.ladder_speed, 0.0f, 1.0f );
+		this->base.ladder_speed = clamp( this->base.ladder_speed, 0.0f, 1.0f );
 
 		if ( this->base.on_ladder )
 			this->base.ladder_weight = cs_approachf( 1.0f, this->base.ladder_weight, this->base.last_update_delta_time * 5.0f );
 		else
 			this->base.ladder_weight = cs_approachf( 0.0f, this->base.ladder_weight, this->base.last_update_delta_time * 10.0f );
 
-		this->base.ladder_weight = clampf( this->base.ladder_weight, 0.0f, 1.0f );
+		this->base.ladder_weight = clamp( this->base.ladder_weight, 0.0f, 1.0f );
 
 		vec3 ladder_angle = *player_ladder_norm( this->base.player );
 		vec3_to_angle( &ladder_angle );
@@ -485,7 +485,7 @@ void server_animstate_set_up_movement( server_animstate* this ) {
 		animstate_pose_param_cache_set_value( &this->base.pose_param_map[ pose_param_ladder_yaw ], this->base.player, cs_angle_diff( ladder_angle.y, this->base.foot_yaw ) );
 
 		float climb_cycle = ( *player_animlayers( this->base.player ) )[ animlayer_movement_land_or_climb ].cycle;
-		climb_cycle += ( this->base.pos.z - this->base.last_pos.z ) * lerpf( this->base.ladder_speed, 0.010f, 0.004f );
+		climb_cycle += ( this->base.pos.z - this->base.last_pos.z ) * lerp( 0.010f, 0.004f, this->base.ladder_speed );
 
 		animstate_pose_param_cache_set_value( &this->base.pose_param_map[ pose_param_ladder_speed ], this->base.player, this->base.ladder_speed );
 
@@ -531,7 +531,7 @@ void server_animstate_set_up_movement( server_animstate* this ) {
 			else {
 				float land_weight = server_animstate_get_layer_ideal_weight_from_seq_cycle( this, animlayer_movement_land_or_climb ) * this->base.land_anim_factor;
 
-				land_weight *= clampf( 1.0f - this->base.duck_amount, 0.2f, 1.0f );
+				land_weight *= clamp( 1.0f - this->base.duck_amount, 0.2f, 1.0f );
 
 				animlayer_set_weight( &( ( *player_animlayers( this->base.player ) )[ animlayer_movement_land_or_climb ] ), land_weight );
 
@@ -573,7 +573,7 @@ void server_animstate_set_up_movement( server_animstate* this ) {
 			animlayer_set_weight( &( ( *player_animlayers( this->base.player ) )[ animlayer_movement_land_or_climb ] ), lingering_land_weight );
 		}
 
-		animstate_pose_param_cache_set_value( &this->base.pose_param_map[ pose_param_jump_fall ], this->base.player, clampf( cs_smoothstep_bounds( 0.72f, 1.52f, this->base.air_time ), 0.0f, 1.0f ) );
+		animstate_pose_param_cache_set_value( &this->base.pose_param_map[ pose_param_jump_fall ], this->base.player, clamp( cs_smoothstep_bounds( 0.72f, 1.52f, this->base.air_time ), 0.0f, 1.0f ) );
 	}
 
 	MDLCACHE_CRITICAL_SECTION_END;
@@ -720,7 +720,7 @@ void server_animstate_update( server_animstate* this, vec3* ang, bool force ) {
 		}
 	}
 
-	this->base.duck_amount = clampf( cs_approachf( clampf( *player_duck_amount( this->base.player ) + this->base.duck_additional, 0.0f, 1.0f ), this->base.duck_amount, this->base.last_update_delta_time * 6.0f ), 0.0f, 1.0f );
+	this->base.duck_amount = clamp( cs_approachf( clamp( *player_duck_amount( this->base.player ) + this->base.duck_additional, 0.0f, 1.0f ), this->base.duck_amount, this->base.last_update_delta_time * 6.0f ), 0.0f, 1.0f );
 
 	MDLCACHE_CRITICAL_SECTION_START;
 	player_set_sequence( this->base.player, 0 );
@@ -760,7 +760,7 @@ void server_animstate_update( server_animstate* this, vec3* ang, bool force ) {
 	this->base.last_update_time = cs_iglobals->curtime;
 
 #ifdef SES_ANIMSTATE_ADJUSTMENTS
-	this->base.last_update_frame = cs_time2ticks( cs_iglobals->curtime );
+	this->base.last_update_frame = cs_time_to_ticks( cs_iglobals->curtime );
 #else
 	this->base.last_update_frame = cs_iglobals->framecount;
 #endif

@@ -1,5 +1,6 @@
 #include "hooks/hooks.h"
 
+/* modify viewmodel fov */
 __attribute__( ( thiscall ) ) float hooks_get_viewmodel_fov( void* this ) {
 	typedef __attribute__( ( thiscall ) ) float( *hooks_get_viewmodel_fov_fn )( void* this );
 

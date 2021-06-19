@@ -6,6 +6,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_COMPILER i686-w64-mingw32-gcc)
 
 add_compile_definitions(WIN32)
+add_compile_definitions(_DEBUG)
 add_compile_definitions(_USE_MATH_DEFINES)
 add_compile_definitions(NK_INCLUDE_FIXED_TYPES)
 add_compile_definitions(NK_INCLUDE_STANDARD_BOOL)

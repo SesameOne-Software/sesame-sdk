@@ -48,7 +48,7 @@ static inline float cs_remap_val_clamped( float val, float a, float b, float c, 
 	if ( a == b )
 		return val >= b ? d : c;
 
-	return d + ( d - c ) * clampf( ( val - a ) / ( b - a ), 0.0f, 1.0f );
+	return d + ( d - c ) * clamp( ( val - a ) / ( b - a ), 0.0f, 1.0f );
 }
 
 static inline float cs_anglemod( float a ) {
@@ -122,7 +122,7 @@ static inline float cs_gain( float x, float amount ) {
 }
 
 static inline float cs_smoothstep_bounds( float a, float b, float x ) {
-	const auto r = clampf( ( x - a ) * b, 0.0f, 1.0f );
+	const float r = clamp( ( x - a ) * b, 0.0f, 1.0f );
 	return ( 3.0f - ( r + r ) ) * ( r * r );
 };
 
@@ -146,12 +146,12 @@ static inline vec3* vec3##_zero ( vec3* this ) {\
 }
 
 #define VEC3_IS_VALID(vec3)\
-static inline bool vec3##_is_valid ( vec3* this ) {\
+static inline bool vec3##_is_valid ( const vec3* this ) {\
 	return isfinite ( this->x ) && isfinite ( this->y ) && isfinite ( this->z );\
 }
 
 #define VEC3_IS_ZERO(vec3)\
-static inline bool vec3##_is_zero ( vec3* this ) {\
+static inline bool vec3##_is_zero ( const vec3* this ) {\
 	return !this->x && !this->y && !this->z;\
 }
 
@@ -161,7 +161,7 @@ static inline bool vec3##_equals ( vec3* this, vec3* src ) {\
 }
 
 #define VEC3_ADD(vec3)\
-static inline vec3* vec3##_add ( vec3* this, vec3* src ) {\
+static inline vec3* vec3##_add ( vec3* this, const vec3* src ) {\
 	this->x += src->x;\
 	this->y += src->y;\
 	this->z += src->z;\
@@ -169,7 +169,7 @@ static inline vec3* vec3##_add ( vec3* this, vec3* src ) {\
 }
 
 #define VEC3_ADDF(vec3)\
-static inline vec3* vec3##_addf ( vec3* this, float src ) {\
+static inline vec3* vec3##_addf ( vec3* this, const float src ) {\
 	this->x += src;\
 	this->y += src;\
 	this->z += src;\
@@ -177,7 +177,7 @@ static inline vec3* vec3##_addf ( vec3* this, float src ) {\
 }
 
 #define VEC3_SUB(vec3)\
-static inline vec3* vec3##_sub ( vec3* this, vec3* src ) {\
+static inline vec3* vec3##_sub ( vec3* this, const vec3* src ) {\
 	this->x -= src->x;\
 	this->y -= src->y;\
 	this->z -= src->z;\
@@ -185,7 +185,7 @@ static inline vec3* vec3##_sub ( vec3* this, vec3* src ) {\
 }
 
 #define VEC3_SUBF(vec3)\
-static inline vec3* vec3##_subf ( vec3* this, float src ) {\
+static inline vec3* vec3##_subf ( vec3* this, const float src ) {\
 	this->x -= src;\
 	this->y -= src;\
 	this->z -= src;\
@@ -193,7 +193,7 @@ static inline vec3* vec3##_subf ( vec3* this, float src ) {\
 }
 
 #define VEC3_MUL(vec3)\
-static inline vec3* vec3##_mul ( vec3* this, vec3* src ) {\
+static inline vec3* vec3##_mul ( vec3* this, const vec3* src ) {\
 	this->x *= src->x;\
 	this->y *= src->y;\
 	this->z *= src->z;\
@@ -201,7 +201,7 @@ static inline vec3* vec3##_mul ( vec3* this, vec3* src ) {\
 }
 
 #define VEC3_MULF(vec3)\
-static inline vec3* vec3##_mulf ( vec3* this, float src ) {\
+static inline vec3* vec3##_mulf ( vec3* this, const float src ) {\
 	this->x *= src;\
 	this->y *= src;\
 	this->z *= src;\
@@ -209,7 +209,7 @@ static inline vec3* vec3##_mulf ( vec3* this, float src ) {\
 }
 
 #define VEC3_DIV(vec3)\
-static inline vec3* vec3##_div ( vec3* this, vec3* src ) {\
+static inline vec3* vec3##_div ( vec3* this, const vec3* src ) {\
 	this->x /= src->x;\
 	this->y /= src->y;\
 	this->z /= src->z;\
@@ -217,7 +217,7 @@ static inline vec3* vec3##_div ( vec3* this, vec3* src ) {\
 }
 
 #define VEC3_DIVF(vec3)\
-static inline vec3* vec3##_divf ( vec3* this, float src ) {\
+static inline vec3* vec3##_divf ( vec3* this, const float src ) {\
 	this->x /= src;\
 	this->y /= src;\
 	this->z /= src;\
@@ -225,22 +225,22 @@ static inline vec3* vec3##_divf ( vec3* this, float src ) {\
 }
 
 #define VEC3_LEN(vec3)\
-static inline float vec3##_len ( vec3* this ) {\
+static inline float vec3##_len ( const vec3* this ) {\
 	return sqrtf( this->x * this->x + this->y * this->y + this->z * this->z );\
 }
 
 #define VEC3_LEN_SQR(vec3)\
-static inline float vec3##_len_sqr ( vec3* this ) {\
+static inline float vec3##_len_sqr ( const vec3* this ) {\
 	return this->x * this->x + this->y * this->y + this->z * this->z;\
 }
 
 #define VEC3_LEN2D(vec3)\
-static inline float vec3##_len2d ( vec3* this ) {\
+static inline float vec3##_len2d ( const vec3* this ) {\
 	return sqrtf ( this->x * this->x + this->y * this->y );\
 }
 
 #define VEC3_LEN2D_SQR(vec3)\
-static inline float vec3##_len2d_sqr ( vec3* this ) {\
+static inline float vec3##_len2d_sqr ( const vec3* this ) {\
 	return this->x * this->x + this->y * this->y;\
 }
 
@@ -255,12 +255,12 @@ static inline vec3* vec3##_norm ( vec3* this ) {\
 }
 
 #define VEC3_DIST(vec3)\
-static inline float vec3##_dist ( vec3* this, vec3* to ) {\
+static inline float vec3##_dist ( const vec3* this, const vec3* to ) {\
 	return vec3##_len( &( vec3 ) { this->x - to->x, this->y - to->y, this->z - to->z } );\
 }
 
 #define VEC3_DIST_SQR(vec3)\
-static inline float vec3##_dist_sqr ( vec3* this, vec3* to ) {\
+static inline float vec3##_dist_sqr ( const vec3* this, const vec3* to ) {\
 	return vec3##_len_sqr ( &( vec3 ) { this->x - to->x, this->y - to->y, this->z - to->z } );\
 }
 
@@ -270,7 +270,7 @@ static inline float vec3##_dot ( const vec3* this, const vec3* src ) {\
 }
 
 #define VEC3_CROSS(vec3)\
-static inline vec3* vec3##_cross ( vec3* this, vec3* src ) {\
+static inline vec3* vec3##_cross ( vec3* this, const vec3* src ) {\
 	vec3 backup_this = *this;\
 	this->x = backup_this.y * src->z - backup_this.z * src->y;\
 	this->y = backup_this.z * src->x - backup_this.x * src->z;\
@@ -282,8 +282,8 @@ static inline vec3* vec3##_cross ( vec3* this, vec3* src ) {\
 static inline vec3* vec3##_clamp_angle ( vec3* this ) {\
 	this->x = cs_norm_rotation( this->x );\
 	this->y = cs_norm_rotation( this->y );\
-	this->x = clampf( this->x, -89.0f, 89.0f );\
-	this->y = clampf( this->y, -180.0f, 180.0f );\
+	this->x = clamp( this->x, -89.0f, 89.0f );\
+	this->y = clamp( this->y, -180.0f, 180.0f );\
 	this->z = 0.0f;\
 	return this;\
 }
@@ -375,7 +375,7 @@ static inline void vec3##_approach_vec ( const vec3* a, const vec3* b, float rat
 }
 
 #define VEC3_ANGLE_TO(vec3)\
-static inline vec3* vec3##_angle_to( vec3* this, vec3* towards ) {\
+static inline vec3* vec3##_angle_to( vec3* this, const vec3* towards ) {\
 	vec3 delta = *towards;\
 	*this = *vec3##_to_angle( vec3##_sub(&delta, this) );\
 	vec3##_clamp_angle(this);\
@@ -383,7 +383,7 @@ static inline vec3* vec3##_angle_to( vec3* this, vec3* towards ) {\
 }
 
 #define VEC3_FOV_TO(vec3)\
-static inline float vec3##_fov_to( vec3* this, vec3* angs_towards ) {\
+static inline float vec3##_fov_to( const vec3* this, vec3* const angs_towards ) {\
 	vec3 fwd_vec = *this, aim_vec = *angs_towards;\
 	vec3##_to_vec(&fwd_vec);\
 	vec3##_to_vec(&aim_vec);\

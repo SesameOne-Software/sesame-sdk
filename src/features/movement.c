@@ -106,7 +106,7 @@ void features_movement_run( usercmd* cmd ) {
 
 			const float vel_dir = cs_rad2deg( atan2f( ses_ctx.unpredicted_vel.y, ses_ctx.unpredicted_vel.x ) );
 			const float target_vel_diff = cs_norm_rotation( ses_ctx.input_angles.y - vel_dir );
-			const float max_angle_change = clampf( cs_rad2deg( atan2f( 15.0f, speed_2d ) ), 0.0f, 45.0f );
+			const float max_angle_change = clamp( cs_rad2deg( atan2f( 15.0f, speed_2d ) ), 0.0f, 45.0f );
 
 			ses_ctx.input_angles.y = cs_norm_rotation( vel_dir - copysignf( max_angle_change, -target_vel_diff ) );
 			ses_ctx.input_side_move = copysignf( 450.0f, -target_vel_diff );

@@ -6,7 +6,7 @@ __attribute__( ( thiscall ) ) void hooks_accumulate_layers( player* this, void* 
 	if ( !this || !entity_is_player( ( entity* )this ) || !player_is_alive( this ) || !*player_animlayers( this ) )
 		return ( ( hooks_accumulate_layers_fn )subhook_get_trampoline( hooks_subhooks[ subhook_accumulate_layers ] ) )( this, setup, pos, q, time );
 
-	for ( auto i = 0; i < *player_num_animlayers( this ); i++ ) {
+	for ( int i = 0; i < *player_num_animlayers( this ); i++ ) {
 		const animlayer* layer = *player_animlayers( this ) + i;
 
 		if ( layer->weight > 0.0f && layer->order >= 0 && layer->order < *player_num_animlayers( this ) )

@@ -44,9 +44,9 @@ __attribute__( ( thiscall ) ) bool hooks_create_move( void* this, float sample_t
 	vec3_clamp_angle( &cmd->angles );
 
 	/* clamp movement */
-	cmd->forward_move = clampf( cmd->forward_move, -450.0f, 450.0f );
-	cmd->side_move = clampf( cmd->side_move, -450.0f, 450.0f );
-	cmd->up_move = clampf( cmd->up_move, -450.0f, 450.0f );
+	cmd->forward_move = clamp( cmd->forward_move, -450.0f, 450.0f );
+	cmd->side_move = clamp( cmd->side_move, -450.0f, 450.0f );
+	cmd->up_move = clamp( cmd->up_move, -450.0f, 450.0f );
 
 	/* fix movement */
 	cs_rotate_movement( cmd, ses_ctx.input_side_move, ses_ctx.input_forward_move, &ses_ctx.input_angles );

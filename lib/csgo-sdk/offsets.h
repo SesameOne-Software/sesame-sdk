@@ -167,6 +167,7 @@ typedef struct {
 	ptrdiff_t entity_effects;
 	ptrdiff_t entity_abs_vel;
 	ptrdiff_t entity_model_ptr;
+	ptrdiff_t entity_can_use_fast_path;
 
 	ptrdiff_t player_playback_rate;
 	ptrdiff_t player_cycle;
@@ -208,6 +209,7 @@ typedef struct {
 	ptrdiff_t player_create_animstate_fn;
 	ptrdiff_t player_set_abs_angles_fn;
 	ptrdiff_t player_set_abs_origin_fn;
+	ptrdiff_t player_baseclass_post_data_update_fn;
 	ptrdiff_t player_animstate;
 	ptrdiff_t player_bone_count;
 	ptrdiff_t player_bone_cache;
@@ -250,6 +252,7 @@ typedef struct {
 	ptrdiff_t maintain_sequence_transitions_ret;
 	ptrdiff_t loadout_allowed_ret;
 	ptrdiff_t accumulate_layers_ret;
+    ptrdiff_t reevauluate_anim_lod_ret;
 	ptrdiff_t list_leaves_in_box_ret;
 
 	ptrdiff_t enable_invalidate_bone_cache;

@@ -1927,10 +1927,10 @@ static inline float server_animstate_get_max_desync( server_animstate* this ) {
 	if ( !this || !this->base.player )
 		return 0.0f;
 
-	float aim_matrix_width = lerpf( clampf( this->base.speed_to_walk_fraction, 0.0f, 1.0f ), 1.0f, lerpf( this->base.walk_to_run_fraction, CSGO_ANIM_AIM_NARROW_WALK, CSGO_ANIM_AIM_NARROW_RUN ) );
+	float aim_matrix_width = lerp( 1.0f, lerp( this->base.walk_to_run_fraction, CSGO_ANIM_AIM_NARROW_WALK, CSGO_ANIM_AIM_NARROW_RUN ), clamp( this->base.speed_to_walk_fraction, 0.0f, 1.0f ) );
 
 	if ( this->base.duck_amount > 0.0f )
-		aim_matrix_width = lerpf( this->base.duck_amount * clampf( this->base.speed_to_crouch_fraction, 0.0f, 1.0f ), aim_matrix_width, CSGO_ANIM_AIM_NARROW_CROUCHMOVING );
+		aim_matrix_width = lerp( aim_matrix_width, CSGO_ANIM_AIM_NARROW_CROUCHMOVING, this->base.duck_amount * clamp( this->base.speed_to_crouch_fraction, 0.0f, 1.0f ));
 
 	return aim_matrix_width * this->base.aim_yaw_max;
 }

@@ -103,7 +103,7 @@ static inline struct nk_image image_load( uint8_t* data, size_t size ) {
     return nk_image_id( ( int )tex );
 }
 
-static inline void menu_set_theme( ) {
+static inline void menu_set_theme( void ) {
     struct nk_color table[ NK_COLOR_COUNT ];
 
     table[ NK_COLOR_TEXT ] = nk_rgba( 255, 255, 255, 255 );
@@ -129,7 +129,7 @@ static inline void menu_set_theme( ) {
     nk_style_from_table( ses_ctx.nk_ctx, table );
 }
 
-bool menu_is_open( ) {
+bool menu_is_open( void ) {
     return menu_open;
 }
 
@@ -137,7 +137,7 @@ void menu_set_opened( bool open ) {
     menu_open = open;
 }
 
-void menu_release( ) {
+void menu_release( void ) {
     nk_d3d9_release( );
 }
 
@@ -156,11 +156,11 @@ static void font_scale_brightness_func( unsigned char* map, int map_size ) {
     for ( int i = 0; i < map_size; i++ ) {
         const float norm = ( float )i / ( float )( map_size - 1 );
         const float func = 1.0f / ( 1.0f + expf( -k * ( norm - c ) ) );
-        map[ i ] = ( unsigned char )( int )clampf( roundf( func * ( float )( map_size - 1 ) ), 0.0f, ( float )( map_size - 1 ) );
+        map[ i ] = ( unsigned char )( int )clamp( roundf( func * ( float )( map_size - 1 ) ), 0.0f, ( float )( map_size - 1 ) );
     }
 }
 
-void menu_init( ) {
+void menu_init( void ) {
     CLEAR_START;
     VM_SHARK_BLACK_START;
     STR_ENCRYPT_START;
@@ -274,11 +274,11 @@ void menu_init( ) {
     CLEAR_END;
 }
 
-void menu_free( ) {
+void menu_free( void ) {
     nk_d3d9_shutdown( );
 }
 
-void menu_draw( ) {
+void menu_draw( void ) {
     VM_TIGER_WHITE_START;
     STR_ENCRYPT_START;
 

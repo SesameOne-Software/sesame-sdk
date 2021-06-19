@@ -6,7 +6,5 @@ __attribute__( ( thiscall ) ) void hooks_draw_model( imdlrender* this, void* res
 	renderable* renderable = *( void** )( ( uintptr_t )info + 0x18 );
 	player* entity = ( player* )( ( uintptr_t )renderable - 0x4 );
 
-
-
 	( ( hooks_draw_model_fn )subhook_get_trampoline( hooks_subhooks[ subhook_draw_model ] ) )( this, results, info, matrix, weights, delayed_weights, origin, flags );
 }

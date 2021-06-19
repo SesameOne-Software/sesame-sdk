@@ -12,6 +12,13 @@ typedef struct {
 	int tickcount;
 	float tick_interval;
 	float interpolation;
+    int sim_ticks_this_frame;
+    int net_protocol;
+    void* save_data;
+    bool is_client;
+    bool is_remote_client;
+    int timestamp_net_base;
+    int timestamp_rand_window;
 } iglobals;
 
 #endif // !SDK_GLOBALS_H

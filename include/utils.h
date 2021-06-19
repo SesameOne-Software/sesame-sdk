@@ -16,40 +16,41 @@
 #include "csgo-sdk/offsets.h"
 
 /* utility macros */
-//#define _CLAMP_TYPE(type, extension)\
-//static inline type clamp##extension(type x, type a, type b) {\
-//	return max(a, min(x, b));\
-//}
-//_CLAMP_TYPE(int, i)
-//_CLAMP_TYPE(long, l)
-//_CLAMP_TYPE(float, f)
-//_CLAMP_TYPE(double, d)
-//
-//#define clamp(x, a, b) _Generic((x), \
-//	int: clampi, \
-//	long: clampl, \
-//	float: clampf, \
-//	double: clampd, \
-//	default: clampf \
-//)(x, a, b)
-
-//static inline vec3* lerpvec3 ( float t, vec3* a, vec3* b, vec3* out ) {
-//	*out = *b;
-//	return vec3_add ( vec3_mulf ( vec3_sub ( out, a ), t ), a );
-//}
-//
-//static inline vec3a* lerpvec3a ( float t, vec3a* a, vec3a* b, vec3a* out ) {
-//	*out = *b;
-//	return vec3a_add ( vec3a_mulf ( vec3a_sub ( out, a ), t ), a );
-//}
-
-static inline float lerpf( float t, float a, float b ) {
-	return a + ( b - a ) * t;
+#define _CLAMP_TYPE(type, extension)\
+static inline type clamp##extension(type x, type a, type b) {\
+	return max(a, min(x, b));\
 }
 
-static inline float clampf( float x, float a, float b ) {
-	return max( a, min( x, b ) );
+_CLAMP_TYPE(int, i)
+_CLAMP_TYPE(long, l)
+_CLAMP_TYPE(float, f)
+_CLAMP_TYPE(double, d)
+
+#define clamp(x, a, b) _Generic((x), \
+	int: clampi, \
+	long: clampl, \
+	float: clampf, \
+    double: clampd, \
+	default: clampf \
+)(x, a, b)
+
+#define _LERP_TYPE(type, extension)\
+static inline type lerp##extension(type a, type b, float t) {\
+	return a + (type)((float)( b - a ) * t);\
 }
+
+_LERP_TYPE(int, i)
+_LERP_TYPE(long, l)
+_LERP_TYPE(float, f)
+_LERP_TYPE(double, d)
+
+#define lerp(x, a, b) _Generic((x), \
+	int: lerpi, \
+	long: lerpl, \
+	float: lerpf, \
+    double: lerpd, \
+	default: lerpf \
+)(x, a, b)
 
 /* from google's chromium project */
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
@@ -69,6 +70,17 @@ static inline float clampf( float x, float a, float b ) {
 static inline type COMBINE( COMBINE(_struct, _), name ) ( _struct* this __VA_OPT__(, __VA_ARGS__) ) { \
     __attribute__( ( thiscall ) ) type(* fn)(_struct* this __VA_OPT__(, __VA_ARGS__)) = utils_vfunc(this, idx);\
     return fn _args; \
+}
+
+#define for_each(iter, list) \
+for ( typeof(*list)* iter = list; iter < list + COUNT_OF(list); iter++ )
+
+#define MAKE_STATIC(var, val) \
+ NULL; \
+static bool init_##var = false; \
+if ( !init_##var ) { \
+    var = val; \
+    init_##var = true; \
 }
 
 /* generic utility functions */
@@ -129,7 +141,7 @@ static inline bool utils_last_key_state( int vkey ) {
 }
 
 static inline void utils_update_key_states( ) {
-	for ( auto i = 0; i < 512; i++ ) {
+	for ( int i = 0; i < 512; i++ ) {
 		if ( !utils_key_state( i ) && utils_last_key_state( i ) )
 			key_toggled[ i ] = !key_toggled[ i ];
 

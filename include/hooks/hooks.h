@@ -18,12 +18,11 @@ typedef enum {
     subhook_build_transformations,
     subhook_cl_fire_events,
     subhook_cs_blood_spray_callback,
-    subhook_do_extra_bone_processing,
+    subhook_do_procedural_foot_plant,
     subhook_draw_model,
     subhook_emit_sound,
     subhook_entity_listener,
     subhook_event_listener,
-    subhook_frame_stage_notify,
     subhook_cvar_get_int,
     subhook_get_viewmodel_fov,
     subhook_in_prediction,
@@ -45,6 +44,12 @@ typedef enum {
     subhook_should_skip_anim_frame,
     subhook_level_init,
     subhook_level_shutdown,
+    subhook_player_post_data_update,
+    subhook_is_renderable_in_pvs,
+    subhook_on_render_start,
+    subhook_update_clientside_animations,
+    subhook_animstate_reset,
+    subhook_animstate_update,
     subhook_max
 } subhooks_list;
 
@@ -57,13 +62,12 @@ __attribute__( ( stdcall ) ) HRESULT hooks_d3d9_end_scene( IDirect3DDevice9* dev
 __attribute__( ( stdcall ) ) HRESULT hooks_d3d9_reset( IDirect3DDevice9* device, D3DPRESENT_PARAMETERS* present_params );
 __attribute__( ( thiscall ) ) void hooks_accumulate_layers( player* this, void* setup, vec3* pos, void* q, float time );
 __attribute__( ( thiscall ) ) void hooks_build_transformations( player* this, studiohdr* hdr, vec3* pos, void* quaternion, mat3x4a* matrix, uint32_t mask, bool* computed );
-__attribute__( ( stdcall ) ) void hooks_cl_fire_events( );
+__attribute__( ( cdecl ) ) void hooks_cl_fire_events( void );
 __attribute__( ( cdecl ) ) void hooks_cs_blood_spray_callback( const void* pdata );
 __attribute__( ( thiscall ) ) int hooks_cvar_get_int( cvar* this );
-__attribute__( ( thiscall ) ) void hooks_do_extra_bone_processing( player* this, int a2, int a3, int a4, int a5, int a6, int a7 );
+__attribute__( ( thiscall ) ) void hooks_do_procedural_foot_plant( player* this, int a2, int a3, int a4, int a5 );
 __attribute__( ( thiscall ) ) void hooks_draw_model( imdlrender* this, void* results, void* info, const mat3x4* matrix, float* weights, float* delayed_weights, const vec3* origin, int flags );
 __attribute__( ( thiscall ) ) int hooks_emit_sound( void* this, void* filter, int ent_idx, int chan, const char* sound_entry, unsigned int sound_entry_hash, const char* sample, float volume, float attenuation, int seed, int flags, int pitch, const vec3* origin, const vec3* dir, vec3* vec_origins, bool update_positions, float sound_time, int speaker_ent, void* sound_params );
-__attribute__( ( thiscall ) ) void hooks_frame_stage_notify( iclient* this, int stage );
 __attribute__( ( thiscall ) ) float hooks_get_viewmodel_fov( void* this );
 __attribute__( ( thiscall ) ) bool hooks_in_prediction( ipred* this );
 __attribute__( ( thiscall ) ) bool hooks_is_connected( iengine* this );
@@ -84,6 +88,12 @@ __attribute__( ( thiscall ) ) bool hooks_setup_bones( renderable* this, mat3x4* 
 __attribute__( ( thiscall ) ) bool hooks_should_skip_anim_frame( renderable* this );
 __attribute__( ( thiscall ) ) void hooks_level_init( void* this, const char* map_name ); 
 __attribute__( ( thiscall ) ) void hooks_level_shutdown( void* this );
+__attribute__( ( thiscall ) ) void hooks_player_post_data_update( player* this );
+__attribute__( ( thiscall ) ) bool hooks_is_renderable_in_pvs( void* this, renderable* renderable );
+__attribute__( ( cdecl ) ) void hooks_on_render_start( void );
+__attribute__( ( cdecl ) ) void hooks_update_clientside_animations( void );
+__attribute__( ( thiscall ) ) void hooks_animstate_reset( animstate* this );
+__attribute__( ( thiscall ) ) void hooks_animstate_update( animstate* this /*, float pitch<xmm1>, float yaw<xmm2> */, bool force_update );
 
 __attribute__( ( stdcall ) ) LRESULT window_proc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 
@@ -92,7 +102,7 @@ hooks_subhooks[id] = subhook_new( (void*)(target), hook_func, 0 );\
 if ( !hooks_subhooks[id] || !subhook_get_trampoline(hooks_subhooks[id]) || subhook_install( hooks_subhooks[id] ) < 0 )\
     return false;\
 
-static inline bool hooks_patch_bp( ) {
+static inline bool hooks_patch_bp( void ) {
     const void* client_bp = ( void* )pattern_search( "client.dll", "CC F3 0F 10 4D 18" );
 
     DWORD old_prot = 0;
@@ -117,7 +127,7 @@ static inline bool hooks_patch_bp( ) {
     return true;
 }
 
-static inline bool hooks_init( ) {
+static inline bool hooks_init( void ) {
     hooks_backup_window_proc = ( WNDPROC )SetWindowLongA( cs_window, GWLP_WNDPROC, ( LONG )window_proc );
 
     /* start menu opened */
@@ -134,15 +144,14 @@ static inline bool hooks_init( ) {
         CREATE_HOOK( pattern_rip( pattern_search( "engine.dll", "E8 ? ? ? ? 84 DB 0F 84 ? ? ? ? 8B 0D" ) ), hooks_cl_fire_events, subhook_cl_fire_events );
         CREATE_HOOK( pattern_search( "client.dll", "55 8B EC 8B 4D 08 F3 0F 10 51 ? 8D 51 18" ), hooks_cs_blood_spray_callback, subhook_cs_blood_spray_callback );
         CREATE_HOOK( pattern_search( "client.dll", "8B 51 1C 3B D1 75 06" ), hooks_cvar_get_int, subhook_cvar_get_int );
-        CREATE_HOOK( pattern_search( "client.dll", "55 8B EC 83 E4 F8 81 EC FC 00 00 00 53 56 8B F1 57" ), hooks_do_extra_bone_processing, subhook_do_extra_bone_processing );
+        CREATE_HOOK( pattern_search( "client.dll", "55 8B EC 83 E4 F0 83 EC 78 56 8B F1 57 8B 56" ), hooks_do_procedural_foot_plant, subhook_do_procedural_foot_plant );
         CREATE_HOOK( utils_vfunc( cs_imdlrender, 0 ), hooks_draw_model, subhook_draw_model );
         CREATE_HOOK( pattern_rip( pattern_search( "engine.dll", "E8 ? ? ? ? 8B E5 5D C2 3C 00 55" ) ), hooks_emit_sound, subhook_emit_sound );
-        CREATE_HOOK( pattern_search( "client.dll", "55 8B EC 8B 0D ? ? ? ? 8B 01 8B 80 74 01 00 00 FF D0 A2" ), hooks_frame_stage_notify, subhook_frame_stage_notify );
         CREATE_HOOK( utils_vfunc( **( void*** )( ( *( uintptr_t** )cs_iclient )[ 10 ] + 5 ), 35 ), hooks_get_viewmodel_fov, subhook_get_viewmodel_fov );
         CREATE_HOOK( utils_vfunc( cs_ipred, 14 ), hooks_in_prediction, subhook_in_prediction );
         CREATE_HOOK( utils_vfunc( cs_iengine, 27 ), hooks_is_connected, subhook_is_connected );
         CREATE_HOOK( utils_vfunc( cs_iengine, 93 ), hooks_is_hltv, subhook_is_hltv );
-        //CREATE_HOOK( utils_vfunc( ( ( __attribute__( ( thiscall ) ) void* ( * )( void* ) ) utils_vfunc( cs_iengine, 43 ) )( cs_iengine ), 6 ), hooks_list_leaves_in_box, subhook_list_leaves_in_box );
+        //CREATE_HOOK( utils_vfunc( ((__attribute__((thiscall)) void*(*)(iengine*))utils_vfunc( cs_iengine, 43 ))(cs_iengine), 6 ), hooks_list_leaves_in_box, subhook_list_leaves_in_box );
         CREATE_HOOK( utils_vfunc( cs_isurface, 67 ), hooks_lock_cursor, subhook_lock_cursor );
         CREATE_HOOK( pattern_rip( pattern_search( "client.dll", "57 E8 ? ? ? ? 8B 06 8B CE FF 90" ) + 1 ), hooks_modify_eye_pos, subhook_modify_eye_pos );
         CREATE_HOOK( pattern_search( "client.dll", "F3 0F 11 86 98 00 00 00 5E 5D C2 08 00" ) - 57, hooks_notify_on_layer_change_cycle, subhook_notify_on_layer_change_cycle );
@@ -157,13 +166,19 @@ static inline bool hooks_init( ) {
         CREATE_HOOK( pattern_search( "client.dll", "55 8B EC 83 E4 F0 B8 ? ? ? ? E8 ? ? ? ? 56 57 8B F9" ), hooks_setup_bones, subhook_setup_bones );
         CREATE_HOOK( pattern_search( "client.dll", "57 8B F9 8B 07 8B 80 ? ? ? ? FF D0 84 C0 75 02" ), hooks_should_skip_anim_frame, subhook_should_skip_anim_frame );
         CREATE_HOOK( pattern_search( "client.dll", "55 8B EC 83 E4 F8 83 EC 20 56 57 8B F9 8B 4F" ), hooks_level_init, subhook_level_init );
-        CREATE_HOOK( pattern_rip(pattern_search( "client.dll", "E8 ? ? ? ? A1 ? ? ? ? 8D BE" )), hooks_level_shutdown, subhook_level_shutdown );
+        CREATE_HOOK( pattern_rip( pattern_search( "client.dll", "E8 ? ? ? ? A1 ? ? ? ? 8D BE" ) ), hooks_level_shutdown, subhook_level_shutdown );
+        CREATE_HOOK( pattern_search( "client.dll", "55 8B EC 83 E4 F8 51 A1 ? ? ? ? 56 8B F1 8B" ), hooks_player_post_data_update, subhook_player_post_data_update );
+        CREATE_HOOK( pattern_search( "client.dll", "55 8B EC 81 EC ? ? ? ? 56 8B F1 8B 4D 08" ), hooks_is_renderable_in_pvs, subhook_is_renderable_in_pvs );
+        CREATE_HOOK( pattern_search( "client.dll", "55 8B EC 83 E4 F8 83 EC 14 8B 0D" ), hooks_on_render_start, subhook_on_render_start );
+        //CREATE_HOOK( pattern_search( "client.dll", "8B 0D ? ? ? ? 53 56 57 8B 99 ? ? ? ? 85 DB 74 1C" ), hooks_update_clientside_animations, subhook_update_clientside_animations );
+        CREATE_HOOK( pattern_search( "client.dll", "56 6A 01 68 ? ? ? ? 8B F1" ), hooks_animstate_reset, subhook_animstate_reset );
+        CREATE_HOOK( pattern_search( "client.dll", "55 8B EC 83 E4 F8 83 EC 18 56 57 8B F9 F3" ), hooks_animstate_update, subhook_animstate_update );
     }
 
     return true;
 }
 
-static inline bool hooks_free( ) {
+static inline bool hooks_free( void ) {
     for ( int i = 0; i < subhook_max; i++ ) {
         const subhook_t hook = hooks_subhooks[ i ];
 
