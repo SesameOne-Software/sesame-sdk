@@ -107,6 +107,8 @@ static void ses_init( HMODULE mod ) {
     utils_print_console( &( uint8_t[ ] ) { 255, 100, 255, 255 }, sdsnew( "Unload was successful!\n" ) );
 
     FreeLibraryAndExitThread( mod, EXIT_SUCCESS );
+
+    return EXIT_SUCCESS;
 }
 
 static HMODULE get_current_module( void ) {

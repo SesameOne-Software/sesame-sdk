@@ -254,6 +254,7 @@ typedef struct {
 	ptrdiff_t accumulate_layers_ret;
     ptrdiff_t reevauluate_anim_lod_ret;
 	ptrdiff_t list_leaves_in_box_ret;
+	ptrdiff_t r_drawallrenderables_ret;
 
 	ptrdiff_t enable_invalidate_bone_cache;
 } cs_offsets_s;

@@ -14,15 +14,13 @@ __attribute__( ( thiscall ) ) void hooks_animstate_update( animstate* this /*, f
 		:: "xmm1", "xmm2"
 		);
 
-    utils_print_console( &( uint8_t[ ] ) { 0, 255, 0, 255 }, sdsnew( "Called CCSGOPlayerAnimState::Update!\n" ) );
+    //utils_print_console( &( uint8_t[ ] ) { 0, 255, 0, 255 }, sdsnew( "Called CCSGOPlayerAnimState::Update!\n" ) );
 
-    /*
     server_animstate* server_animstate = &game_animation_list[ *entity_idx( ( entity* ) this->player ) ].animstate;
 
     server_animstate_update( server_animstate, &( vec3 ) { pitch, yaw, 0.0f }, force_update );  
 
     *this = server_animstate->base;
-	*/
 
     asm volatile(
 		"movss xmm1, %0;"
@@ -30,6 +28,4 @@ __attribute__( ( thiscall ) ) void hooks_animstate_update( animstate* this /*, f
 		: "=g"( pitch ), "=g"( yaw )
 		:: "xmm1", "xmm2"
 		);
-
-    ( ( hooks_animstate_update_fn ) subhook_get_trampoline( hooks_subhooks[ subhook_animstate_update ] ) )( this, force_update );
 }

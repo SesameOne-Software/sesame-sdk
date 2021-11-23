@@ -28,7 +28,6 @@ typedef enum {
     subhook_in_prediction,
     subhook_is_connected,
     subhook_is_hltv,
-    subhook_list_leaves_in_box,
     subhook_lock_cursor,
     subhook_modify_eye_pos,
     subhook_notify_on_layer_change_cycle,
@@ -72,7 +71,6 @@ __attribute__( ( thiscall ) ) float hooks_get_viewmodel_fov( void* this );
 __attribute__( ( thiscall ) ) bool hooks_in_prediction( ipred* this );
 __attribute__( ( thiscall ) ) bool hooks_is_connected( iengine* this );
 __attribute__( ( thiscall ) ) bool hooks_is_hltv( iengine* this );
-__attribute__( ( thiscall ) ) int hooks_list_leaves_in_box( iengine* this, const vec3* mins, const vec3* maxs, const uint16_t* list, int list_max );
 __attribute__( ( thiscall ) ) void hooks_lock_cursor( isurface* this );
 __attribute__( ( thiscall ) ) void hooks_modify_eye_pos( animstate* this, vec3* pos );
 __attribute__( ( thiscall ) ) void hooks_notify_on_layer_change_cycle( animstate* this, animlayer* layer, float new_cycle );
@@ -151,7 +149,6 @@ static inline bool hooks_init( void ) {
         CREATE_HOOK( utils_vfunc( cs_ipred, 14 ), hooks_in_prediction, subhook_in_prediction );
         CREATE_HOOK( utils_vfunc( cs_iengine, 27 ), hooks_is_connected, subhook_is_connected );
         CREATE_HOOK( utils_vfunc( cs_iengine, 93 ), hooks_is_hltv, subhook_is_hltv );
-        //CREATE_HOOK( utils_vfunc( ((__attribute__((thiscall)) void*(*)(iengine*))utils_vfunc( cs_iengine, 43 ))(cs_iengine), 6 ), hooks_list_leaves_in_box, subhook_list_leaves_in_box );
         CREATE_HOOK( utils_vfunc( cs_isurface, 67 ), hooks_lock_cursor, subhook_lock_cursor );
         CREATE_HOOK( pattern_rip( pattern_search( "client.dll", "57 E8 ? ? ? ? 8B 06 8B CE FF 90" ) + 1 ), hooks_modify_eye_pos, subhook_modify_eye_pos );
         CREATE_HOOK( pattern_search( "client.dll", "F3 0F 11 86 98 00 00 00 5E 5D C2 08 00" ) - 57, hooks_notify_on_layer_change_cycle, subhook_notify_on_layer_change_cycle );
@@ -172,7 +169,7 @@ static inline bool hooks_init( void ) {
         CREATE_HOOK( pattern_search( "client.dll", "55 8B EC 83 E4 F8 83 EC 14 8B 0D" ), hooks_on_render_start, subhook_on_render_start );
         //CREATE_HOOK( pattern_search( "client.dll", "8B 0D ? ? ? ? 53 56 57 8B 99 ? ? ? ? 85 DB 74 1C" ), hooks_update_clientside_animations, subhook_update_clientside_animations );
         CREATE_HOOK( pattern_search( "client.dll", "56 6A 01 68 ? ? ? ? 8B F1" ), hooks_animstate_reset, subhook_animstate_reset );
-        CREATE_HOOK( pattern_search( "client.dll", "55 8B EC 83 E4 F8 83 EC 18 56 57 8B F9 F3" ), hooks_animstate_update, subhook_animstate_update );
+        //CREATE_HOOK( pattern_search( "client.dll", "55 8B EC 83 E4 F8 83 EC 18 56 57 8B F9 F3" ), hooks_animstate_update, subhook_animstate_update );
     }
 
     return true;

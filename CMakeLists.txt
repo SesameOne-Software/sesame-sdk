@@ -15,6 +15,10 @@ add_compile_definitions(NK_INCLUDE_STANDARD_IO)
 add_compile_definitions(NK_INCLUDE_STANDARD_VARARGS)
 add_compile_definitions(NK_INCLUDE_VERTEX_BUFFER_OUTPUT)
 add_compile_definitions(NK_INCLUDE_FONT_BAKING)
+
+# Remove -g and -o in Debug mode (produces debugging information)
+# Add -static -O3 on Release mode (inlines small and static functions, O3 will maximize program optimization)
+# Add -s option in Release mode to strip away symbols
 add_compile_options(-w -g -std=c11 -masm=intel -mmmx -msse2 -fmax-errors=100)
 
 file(GLOB_RECURSE SOURCE_FILES

@@ -1361,7 +1361,6 @@ typedef enum {
 	pose_param_move_blend_walk,
 	pose_param_move_blend_run,
 	pose_param_move_blend_crouch_walk,
-	pose_param_strafe_cross,
 	pose_param_count,
 } pose_param_idx;
 
@@ -1916,7 +1915,7 @@ static inline void server_animstate_reset( server_animstate* this ) {
 	this->last_flash_duration = 0.0f;
 
 	/* the reset can be done with the normal client func */
-	( ( __attribute__( ( thiscall ) ) void( * )( animstate* ) )cs_offsets.animstate_reset_fn ) ( &this->base );
+	//( ( __attribute__( ( thiscall ) ) void( * )( animstate* ) )cs_offsets.animstate_reset_fn ) ( &this->base );
 }
 
 static inline const char* server_animstate_get_weapon_move_animation( server_animstate* this ) {

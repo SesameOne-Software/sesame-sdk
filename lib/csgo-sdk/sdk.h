@@ -287,6 +287,7 @@ static inline bool cs_offsets_dump( sds* errors ) {
 	cs_dump_offset( cs_offsets.accumulate_layers_ret, pattern_search( "client.dll", "84 C0 75 0D F6 87" ) );
 	cs_dump_offset( cs_offsets.reevauluate_anim_lod_ret, pattern_search( "client.dll", "84 C0 0F 85 ? ? ? ? A1 ? ? ? ? 8B B7" ) );
 	cs_dump_offset( cs_offsets.list_leaves_in_box_ret, pattern_search( "client.dll", "56 52 FF 50 18" ) + 5 );
+	cs_dump_offset( cs_offsets.r_drawallrenderables_ret, pattern_search( "client.dll", "85 C0 74 64 8B 03" ) );
 
 	cs_dump_offset( cs_offsets.enable_invalidate_bone_cache, *( ptrdiff_t* )( pattern_search( "client.dll", "C6 05 ? ? ? ? 00 F3 0F 5F 05 ? ? ? ? F3 0F 11 47 74" ) + 2 ) );
 
